@@ -1,0 +1,10 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003ALLVMValueRef_002Ecs_002Fl_003AC_0021_003FUsers_003Fanten_003FAppData_003FRoaming_003FJetBrains_003FRider2026_002E1_003Fresharper_002Dhost_003FSourcesCache_003F8c5b80706974d111cdee63746de7e756e088149c28e3bc7cfd4b29473d96d6_003FLLVMValueRef_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003ALLVM_002Ecs_002Fl_003AC_0021_003FUsers_003Fanten_003FAppData_003FRoaming_003FJetBrains_003FRider2026_002E1_003Fresharper_002Dhost_003FDecompilerCache_003Fdecompiler_003F474c5a2d29284d9bafce478d1e76b81644ed8_003Fea_003Ff2e8d135_003FLLVM_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
+	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;&#xD;
+  &lt;Assembly Path="C:\Users\anten\.nuget\packages\antlr4.runtime.standard\4.13.1\lib\netstandard2.0\Antlr4.Runtime.Standard.dll" /&gt;&#xD;
+&lt;/AssemblyExplorer&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=d1544a05_002Dc64b_002D4b44_002D9ca1_002De6036c05c274/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="&amp;lt;SolidLang.Compilers.Tests&amp;gt; 中的所有测试" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;Project Location="D:\Workspace\solid-lang-compiler\test\SolidLang.Compilers.Tests" Presentation="&amp;lt;SolidLang.Compilers.Tests&amp;gt;" /&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	</wpf:ResourceDictionary>

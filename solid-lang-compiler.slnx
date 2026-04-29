@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="example/SolidLang.Compilers.Examples/SolidLang.Compilers.Examples.csproj" />
+  <Project Path="src/SolidLang.Compilers/SolidLang.Compilers.csproj" />
+  <Project Path="test/SolidLang.Compilers.Tests/SolidLang.Compilers.Tests.csproj" />
+</Solution>
