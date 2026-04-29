@@ -1,0 +1,49 @@
+namespace main;
+
+// Test nested structs and deep field access
+
+struct Inner {
+    x: i32,
+    y: i32
+}
+
+struct Middle {
+    inner: Inner,
+    value: i32
+}
+
+struct Outer {
+    middle: Middle,
+    id: i32
+}
+
+func process_inner(inp: *Inner): i32 {
+    return inp->x + inp->y;
+}
+
+func process_middle(mid: *Middle): i32 {
+    var inner_sum: i32 = process_inner(&mid->inner);
+    return inner_sum + mid->value;
+}
+
+func process_outer(out: *Outer): i32 {
+    var middle_sum: i32 = process_middle(&out->middle);
+    return middle_sum + out->id;
+}
+
+func main(): i32 {
+    var inner: Inner = Inner { x = 10, y = 20 };
+    var middle: Middle = Middle { inner = inner, value = 30 };
+    var outer: Outer = Outer { middle = middle, id = 40 };
+
+    // Test nested field access
+    var direct: i32 = outer.middle.inner.x + outer.middle.inner.y;
+
+    // Test through pointers
+    var ptr_result: i32 = process_outer(&outer);
+
+    // direct = 10 + 20 = 30
+    // ptr_result = (10+20) + 30 + 40 = 100
+    // Total: 30 + 100 = 130
+    return direct + ptr_result;
+}

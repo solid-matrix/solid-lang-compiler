@@ -1,0 +1,39 @@
+namespace main;
+
+// Test ternary expressions in various contexts
+
+func abs_ternary(x: i32): i32 {
+    return x < 0 ? 0 - x : x;
+}
+
+func sign(x: i32): i32 {
+    return x < 0 ? -1 : (x > 0 ? 1 : 0);
+}
+
+func clamp_ternary(val: i32, lo: i32, hi: i32): i32 {
+    return val < lo ? lo : (val > hi ? hi : val);
+}
+
+func nested_ternary(a: i32, b: i32, c: i32): i32 {
+    return a > b
+        ? (a > c ? a : c)
+        : (b > c ? b : c);
+}
+
+func main(): i32 {
+    var r1: i32 = abs_ternary(-50);          // 50
+    var r2: i32 = abs_ternary(30);           // 30
+    var r3: i32 = sign(-100);                // -1
+    var r4: i32 = sign(0);                   // 0
+    var r5: i32 = sign(100);                 // 1
+    var r6: i32 = clamp_ternary(5, 10, 20);  // 10
+    var r7: i32 = clamp_ternary(15, 10, 20); // 15
+    var r8: i32 = clamp_ternary(25, 10, 20); // 20
+    var r9: i32 = nested_ternary(3, 7, 5);   // 7 (max of 3,7,5)
+
+    // Inline ternary in arithmetic
+    var r10: i32 = (10 > 5 ? 100 : 200) + (3 < 2 ? 1 : 2);  // 100 + 2 = 102
+
+    // 50 + 30 + (-1) + 0 + 1 + 10 + 15 + 20 + 7 + 102 = 234
+    return r1 + r2 + r3 + r4 + r5 + r6 + r7 + r8 + r9 + r10;
+}

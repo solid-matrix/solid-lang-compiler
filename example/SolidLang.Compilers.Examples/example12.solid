@@ -1,0 +1,35 @@
+namespace main;
+
+// Test nested structs and pointers
+
+struct Point {
+    x: i32,
+    y: i32
+}
+
+struct Line {
+    start: Point,
+    end: Point
+}
+
+func point_sum(p: *Point): i32 {
+    return p->x + p->y;
+}
+
+func line_length_squared(l: *Line): i32 {
+    var dx: i32 = l->end.x - l->start.x;
+    var dy: i32 = l->end.y - l->start.y;
+    return dx * dx + dy * dy;
+}
+
+func main(): i32 {
+    var p1: Point = Point { x = 0, y = 0 };
+    var p2: Point = Point { x = 3, y = 4 };
+    var line: Line = Line { start = p1, end = p2 };
+
+    var r1: i32 = point_sum(&p1);        // 0 + 0 = 0
+    var r2: i32 = point_sum(&p2);        // 3 + 4 = 7
+    var r3: i32 = line_length_squared(&line); // 9 + 16 = 25
+
+    return r1 + r2 + r3;  // 0 + 7 + 25 = 32
+}

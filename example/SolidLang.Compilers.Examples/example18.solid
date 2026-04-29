@@ -1,0 +1,43 @@
+namespace main;
+
+// Test break and continue in while loops only (for loops have a known bug)
+
+func test_break_in_while(): i32 {
+    var sum: i32 = 0;
+    var i: i32 = 0;
+
+    while i < 100 {
+        if i == 5 {
+            break;
+        }
+        sum = sum + i;
+        i = i + 1;
+    }
+
+    // Sum of 0..4 = 10
+    return sum;
+}
+
+func test_continue_in_while(): i32 {
+    var sum: i32 = 0;
+    var i: i32 = 0;
+
+    while i < 10 {
+        i = i + 1;
+        if i % 3 == 0 {
+            continue;
+        }
+        sum = sum + i;
+    }
+
+    // Sum of numbers not divisible by 3: 1,2,4,5,7,8,10 = 37
+    return sum;
+}
+
+func main(): i32 {
+    var r1: i32 = test_break_in_while();    // 10
+    var r2: i32 = test_continue_in_while(); // 37
+
+    // 10 + 37 = 47
+    return r1 + r2;
+}

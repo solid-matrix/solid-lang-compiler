@@ -1,0 +1,70 @@
+namespace main;
+
+// Test complex expressions and operator precedence
+
+func test_arithmetic_precedence(): i32 {
+    var a: i32 = 2 + 3 * 4;        // 14, not 20
+    var b: i32 = 10 - 6 / 2;       // 7, not 2
+    var c: i32 = 2 * 3 + 4 * 5;    // 26
+    var d: i32 = 100 / 10 % 3;     // 1
+
+    return a + b + c + d;  // 14 + 7 + 26 + 1 = 48
+}
+
+func test_comparison_chains(): i32 {
+    var a: i32 = 5;
+    var b: i32 = 10;
+    var c: i32 = 15;
+
+    var r1: i32 = a < b && b < c ? 10 : 0;  // 10
+    var r2: i32 = a > b || b < c ? 20 : 0;  // 20
+    var r3: i32 = a != b ? 30 : 0;          // 30
+    var r4: i32 = a != b && b != c ? 40 : 0; // 40
+
+    return r1 + r2 + r3 + r4;  // 100
+}
+
+func test_bitwise_precedence(): i32 {
+    var a: i32 = 0xFF & 0x0F | 0xF0;   // 255
+    var b: i32 = 0x0F ^ 0xF0;          // 255
+    var c: i32 = 1 << 4;               // 16
+    var d: i32 = 256 >> 4;             // 16
+
+    return a + b + c + d;  // 255 + 255 + 16 + 16 = 542
+}
+
+func test_complex_expressions(): i32 {
+    var x: i32 = 10;
+    var y: i32 = 20;
+    var z: i32 = 30;
+
+    // Complex expression with all operators
+    var r1: i32 = (x + y) * z / (y - x);  // 30 * 30 / 10 = 90
+    var r2: i32 = x * x + y * y + z * z;  // 100 + 400 + 900 = 1400
+
+    return r1 + r2;  // 90 + 1400 = 1490
+}
+
+func test_unary_expressions(): i32 {
+    var x: i32 = 10;
+
+    var r1: i32 = -x;        // -10
+    var r2: i32 = -(-x);     // 10
+    var r3: i32 = ~0;        // -1 (all bits set)
+    var r4: i32 = ~(~x);     // 10
+    var r5: i32 = !0;        // 1 (true, since 0 is false)
+    var r6: i32 = !1;        // 0 (false, since 1 is true)
+
+    return r1 + r2 + r3 + r4 + r5 + r6;  // -10 + 10 + (-1) + 10 + 1 + 0 = 10
+}
+
+func main(): i32 {
+    var r1: i32 = test_arithmetic_precedence();  // 48
+    var r2: i32 = test_comparison_chains();      // 100
+    var r3: i32 = test_bitwise_precedence();     // 542
+    var r4: i32 = test_complex_expressions();    // 1490
+    var r5: i32 = test_unary_expressions();      // 10
+
+    // 48 + 100 + 542 + 1490 + 10 = 2190
+    return r1 + r2 + r3 + r4 + r5;
+}

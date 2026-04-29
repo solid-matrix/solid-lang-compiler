@@ -1,0 +1,31 @@
+namespace main;
+
+// Test enum-like patterns using constants
+
+func get_status_value(s: i32): i32 {
+    switch (s) {
+        0 => return 10;
+        1 => return 20;
+        2 => return 30;
+        3 => return 40;
+        else => return 0;
+    }
+}
+
+func main(): i32 {
+    var red: i32 = 1;
+    var green: i32 = 2;
+    var blue: i32 = 4;
+
+    var yellow: i32 = red | green;
+    var cyan: i32 = green | blue;
+    var magenta: i32 = red | blue;
+    var white: i32 = red | green | blue;
+
+    var pending_val: i32 = get_status_value(0);
+    var active_val: i32 = get_status_value(1);
+    var completed_val: i32 = get_status_value(2);
+    var failed_val: i32 = get_status_value(3);
+
+    return yellow + cyan + magenta + white + pending_val + active_val + completed_val + failed_val;
+}

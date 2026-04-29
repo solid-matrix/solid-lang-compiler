@@ -1,0 +1,42 @@
+namespace main;
+
+// Test various integer types and arithmetic operations
+
+func test_signed_operations(): i32 {
+    var a: i8 = -10i8;
+    var c: i32 = 100000i32;
+
+    // Test promotions and arithmetic
+    var sum: i32 = c + 1;
+
+    // Test that negative works (a is -10, so result is 10)
+    var neg: i32 = 0 - a;
+
+    return sum + neg;  // 100001 + 10 = 100011
+}
+
+func test_unsigned_operations(): i32 {
+    var a: u8 = 200u8;
+
+    // Test unsigned arithmetic
+    var half_a: u8 = a / 2u8;  // 100
+
+    return half_a + 1000;  // 100 + 1000 = 1100
+}
+
+func test_hex_octal_binary(): i32 {
+    var hex: i32 = 0xFF;          // 255
+    var oct: i32 = 0o777;         // 511
+    var bin: i32 = 0b11111111;    // 255
+
+    return hex + oct + bin;  // 255 + 511 + 255 = 1021
+}
+
+func main(): i32 {
+    var r1: i32 = test_signed_operations();
+    var r2: i32 = test_unsigned_operations();
+    var r3: i32 = test_hex_octal_binary();
+
+    // 100011 + 1100 + 1021 = 102132
+    return r1 + r2 + r3;
+}
