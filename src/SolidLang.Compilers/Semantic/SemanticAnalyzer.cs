@@ -140,6 +140,14 @@ public sealed class SemanticAnalyzer : SolidLangParserBaseListener
 
     private SolidType ResolveType(SolidLangParser.TypeContext typeContext)
     {
+        // Handle pointer type: *T or !*T
+        if (typeContext.pointer_type() is { } pointerType)
+        {
+            var isMutable = pointerType.NOT() == null;
+            var elementType = ResolveType(pointerType.type());
+            return new PointerType(elementType, isMutable);
+        }
+
         // Handle tuple type: (type1, type2, ...)
         if (typeContext.tuple_type() is { } tupleType)
         {

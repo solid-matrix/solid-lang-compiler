@@ -1,0 +1,38 @@
+namespace main;
+
+// 结构体声明：表示二维点
+struct Point {
+    x: i32,
+    y: i32
+}
+
+// 通过指针修改值
+func add_to_ptr(ptr: *i32, value: i32): i32 {
+    var current: i32 = *ptr;
+    var new_val: i32 = current + value;
+    *ptr = new_val;
+    return new_val;
+}
+
+// 通过指针读取结构体字段
+func get_x_through_ptr(p: *Point): i32 {
+    return p->x;
+}
+
+// 主函数
+func main(): i32 {
+    // 测试基本指针操作
+    var num: i32 = 10;
+    var ptr: *i32 = &num;
+    var result1: i32 = add_to_ptr(ptr, 5);
+    // result1 = 10 + 5 = 15
+
+    // 测试结构体指针读取
+    var p: Point = Point { x = 100, y = 200 };
+    var p_ptr: *Point = &p;
+    var result2: i32 = get_x_through_ptr(p_ptr);
+    // result2 = 100
+
+    // 返回 result1 + result2 = 15 + 100 = 115
+    return result1 + result2;
+}

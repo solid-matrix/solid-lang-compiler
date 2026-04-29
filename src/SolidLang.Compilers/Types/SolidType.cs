@@ -27,3 +27,9 @@ public sealed record EnumType(
 public sealed record TupleType(
     IReadOnlyList<SolidType> Elements
 ) : SolidType($"({string.Join(", ", Elements.Select(e => e.Name))})");
+
+public sealed record PointerType(
+    SolidType ElementType,
+    bool IsMutable
+) : SolidType($"{(IsMutable ? "" : "!")}{ElementType.Name}");
+

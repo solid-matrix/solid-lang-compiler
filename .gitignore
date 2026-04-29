@@ -11,3 +11,6 @@ riderModule.iml
 .claude
 .cache
 .knowledge.md
+*.ll
+*.o
+*.exe

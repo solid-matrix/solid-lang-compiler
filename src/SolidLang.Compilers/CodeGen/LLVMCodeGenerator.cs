@@ -484,11 +484,25 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
 
     private (LLVMValueRef Ptr, LLVMTypeRef Type) GetLValue(SolidLangParser.ExprContext expr)
     {
-        var postfix = expr.conditional_expr().or_expr().and_expr(0).bit_or_expr(0)
+        // Check for dereference: *ptr = value
+        var unaryExpr = expr.conditional_expr().or_expr().and_expr(0).bit_or_expr(0)
             .bit_xor_expr(0).bit_and_expr(0).eq_expr(0).cmp_expr(0)
-            .shift_expr(0).add_expr(0).mul_expr(0).unary_expr(0)
-            .postfix_expr();
+            .shift_expr(0).add_expr(0).mul_expr(0).unary_expr(0);
 
+        // Handle *ptr = value
+        if (unaryExpr != null && unaryExpr.children != null)
+        {
+            var op = unaryExpr.children.OfType<ITerminalNode>().FirstOrDefault();
+            if (op != null && op.Symbol.Type == SolidLangLexer.STAR)
+            {
+                // Get the pointer value
+                var ptrValue = GenerateUnaryExpr(unaryExpr.unary_expr());
+                // Return the pointer as the lvalue
+                return (ptrValue, LLVMTypeRef.Int32); // Assume i32 element type
+            }
+        }
+
+        var postfix = unaryExpr?.postfix_expr();
         if (postfix == null) return (default, default);
 
         var primaryExpr = postfix.primary_expr();
@@ -506,12 +520,45 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
                 var currentPtr = varInfo.Ptr;
                 var currentType = varInfo.Type;
                 var currentTypeName = _namedValueTypes.TryGetValue(name, out var tn) ? tn : FindTypeName(currentType);
+                var isPointer = false;
+
+                // Check if this is a pointer type
+                if (currentTypeName != null && currentTypeName.StartsWith("*"))
+                {
+                    isPointer = true;
+                    // Load the pointer value
+                    currentPtr = _builder.BuildLoad2(currentType, currentPtr, "ptrload");
+                    var elementTypeName = currentTypeName.Substring(1);
+                    if (_userTypes.TryGetValue(elementTypeName, out var elementType))
+                    {
+                        currentType = elementType;
+                        currentTypeName = elementTypeName;
+                    }
+                }
 
                 foreach (var suffix in suffixes)
                 {
+                    // Handle dot operator: p.x
                     if (suffix.DOT() != null && suffix.ID() is { } memberId)
                     {
                         var memberName = memberId.GetText();
+                        if (currentTypeName != null && _structFieldIndices.TryGetValue(currentTypeName, out var fields))
+                        {
+                            if (fields.TryGetValue(memberName, out var fieldIndex))
+                            {
+                                var idx0 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0);
+                                var idx1 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, fieldIndex);
+                                currentPtr = _builder.BuildInBoundsGEP2(currentType, currentPtr, new[] { idx0, idx1 }, memberName);
+                                var fieldKey = $"{currentTypeName}.{memberName}";
+                                currentType = _structFieldTypes.TryGetValue(fieldKey, out var ft) ? ft : LLVMTypeRef.Int32;
+                                currentTypeName = FindTypeName(currentType);
+                            }
+                        }
+                    }
+                    // Handle arrow operator: p->x
+                    else if (suffix.MINUSRARROW() != null && suffix.ID() is { } arrowMemberId)
+                    {
+                        var memberName = arrowMemberId.GetText();
                         if (currentTypeName != null && _structFieldIndices.TryGetValue(currentTypeName, out var fields))
                         {
                             if (fields.TryGetValue(memberName, out var fieldIndex))
@@ -551,8 +598,8 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         }
 
         _namedValues[varName] = (alloca, varType);
-        // Store type name for user-defined types
-        if (typeName != null && _userTypes.ContainsKey(typeName))
+        // Store type name for user-defined types and pointer types
+        if (typeName != null && (_userTypes.ContainsKey(typeName) || typeName.StartsWith("*")))
             _namedValueTypes[varName] = typeName;
     }
 
@@ -815,6 +862,20 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         if (op == null)
             throw new InvalidOperationException("Invalid unary expression");
 
+        // Handle address-of operator &
+        if (op.Symbol.Type == SolidLangLexer.AND)
+        {
+            return GenerateAddressOf(unaryExpr.unary_expr());
+        }
+
+        // Handle dereference operator *
+        if (op.Symbol.Type == SolidLangLexer.STAR)
+        {
+            var ptrValue = GenerateUnaryExpr(unaryExpr.unary_expr());
+            // We need the element type - assume i32 for now
+            return _builder.BuildLoad2(LLVMTypeRef.Int32, ptrValue, "deref");
+        }
+
         var operand = GenerateUnaryExpr(unaryExpr.unary_expr());
 
         return op.Symbol.Type switch
@@ -826,6 +887,27 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         };
     }
 
+    private LLVMValueRef GenerateAddressOf(SolidLangParser.Unary_exprContext unaryExpr)
+    {
+        // Get the lvalue (pointer) for the expression
+        var postfix = unaryExpr.postfix_expr();
+        if (postfix == null)
+            throw new InvalidOperationException("Cannot take address of this expression");
+
+        var primaryExpr = postfix.primary_expr();
+        if (primaryExpr?.ID() is { } id)
+        {
+            var name = id.GetText();
+            if (_namedValues.TryGetValue(name, out var varInfo))
+            {
+                // The variable is already stored as a pointer, return it directly
+                return varInfo.Ptr;
+            }
+        }
+
+        throw new InvalidOperationException("Cannot take address of this expression");
+    }
+
     private LLVMValueRef GeneratePostfixExpr(SolidLangParser.Postfix_exprContext postfixExpr)
     {
         var suffixes = postfixExpr.postfix_suffix();
@@ -833,12 +915,12 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         // Check if we have member access
         if (suffixes != null && suffixes.Length > 0)
         {
-            var hasMemberAccess = suffixes.Any(s => s.DOT() != null);
+            var hasMemberAccess = suffixes.Any(s => s.DOT() != null || s.MINUSRARROW() != null);
             var hasCall = suffixes.Any(s => s.LPAREN() != null);
 
             if (hasMemberAccess)
             {
-                // Handle member access: p.x
+                // Handle member access: p.x or p->x (through pointer)
                 var primaryExpr = postfixExpr.primary_expr();
                 if (primaryExpr?.ID() is { } id)
                 {
@@ -847,14 +929,52 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
                     {
                         var resultPtr = varInfo.Ptr;
                         var resultType = varInfo.Type;
-                        // Use stored type name or try to find it
+                        var isPointer = false;
+
+                        // Check if this is a pointer type
+                        if (_namedValueTypes.TryGetValue(name, out var typeName) && typeName.StartsWith("*"))
+                        {
+                            isPointer = true;
+                            // Load the pointer value
+                            resultPtr = _builder.BuildLoad2(resultType, resultPtr, "ptrload");
+                            // Get the element type
+                            var elementTypeName = typeName.Substring(1);
+                            if (_userTypes.TryGetValue(elementTypeName, out var elementType))
+                            {
+                                resultType = elementType;
+                                typeName = elementTypeName;
+                            }
+                        }
+
                         var resultTypeName = _namedValueTypes.TryGetValue(name, out var tn) ? tn : FindTypeName(resultType);
+                        if (isPointer && resultTypeName != null && resultTypeName.StartsWith("*"))
+                        {
+                            resultTypeName = resultTypeName.Substring(1);
+                        }
 
                         foreach (var suffix in suffixes)
                         {
+                            // Handle dot operator: p.x (direct member access)
                             if (suffix.DOT() != null && suffix.ID() is { } memberId)
                             {
                                 var memberName = memberId.GetText();
+                                if (resultTypeName != null && _structFieldIndices.TryGetValue(resultTypeName, out var fields))
+                                {
+                                    if (fields.TryGetValue(memberName, out var fieldIndex))
+                                    {
+                                        var idx0 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0);
+                                        var idx1 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, fieldIndex);
+                                        resultPtr = _builder.BuildInBoundsGEP2(resultType, resultPtr, new[] { idx0, idx1 }, memberName);
+                                        var fieldKey = $"{resultTypeName}.{memberName}";
+                                        resultType = _structFieldTypes.TryGetValue(fieldKey, out var ft) ? ft : LLVMTypeRef.Int32;
+                                        resultTypeName = FindTypeName(resultType);
+                                    }
+                                }
+                            }
+                            // Handle arrow operator: p->x (member access through pointer)
+                            else if (suffix.MINUSRARROW() != null && suffix.ID() is { } arrowMemberId)
+                            {
+                                var memberName = arrowMemberId.GetText();
                                 if (resultTypeName != null && _structFieldIndices.TryGetValue(resultTypeName, out var fields))
                                 {
                                     if (fields.TryGetValue(memberName, out var fieldIndex))
@@ -1140,12 +1260,20 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
             Types.UnionType unionType => _userTypes.TryGetValue(unionType.Name, out var ut) ? ut : LLVMTypeRef.Int32,
             Types.TupleType tupleType => LLVMTypeRef.CreateStruct(
                 tupleType.Elements.Select(e => GetLLVMType(e)).ToArray(), false),
+            Types.PointerType pointerType => LLVMTypeRef.CreatePointer(GetLLVMType(pointerType.ElementType), 0),
             _ => throw new NotSupportedException($"Unknown type: {type.Name}")
         };
     }
 
     private LLVMTypeRef GetLLVMTypeFromContext(SolidLangParser.TypeContext typeContext)
     {
+        // Handle pointer type: *T or !*T
+        if (typeContext.pointer_type() is { } pointerType)
+        {
+            var elementType = GetLLVMTypeFromContext(pointerType.type());
+            return LLVMTypeRef.CreatePointer(elementType, 0);
+        }
+
         if (typeContext.named_type() is { } namedType)
         {
             var typeName = namedType.ID().GetText();
