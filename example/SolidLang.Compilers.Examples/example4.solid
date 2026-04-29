@@ -1,0 +1,59 @@
+namespace main;
+
+// 使用switch语句判断星期几
+func day_name(day: i32): i32 {
+    switch (day) {
+        1 => return 1;
+        2 => return 2;
+        3 => return 3;
+        4 => return 4;
+        5 => return 5;
+        6 => return 6;
+        7 => return 7;
+        else => return 0;
+    }
+    return 0;
+}
+
+// 使用switch计算简单运算
+func calc(op: i32, a: i32, b: i32): i32 {
+    switch (op) {
+        1 => return a + b;
+        2 => return a - b;
+        3 => return a * b;
+        4 => return a / b;
+        else => return 0;
+    }
+    return 0;
+}
+
+// 使用switch实现分段函数
+func piecewise(x: i32): i32 {
+    if x < 0 {
+        return 0 - x;
+    }
+    if x == 0 {
+        return 0;
+    }
+    return x * 2;
+}
+
+// 主函数
+func main(): i32 {
+    // 测试day_name: day_name(3) = 3
+    var d: i32 = day_name(3);
+
+    // 测试calc: calc(1, 10, 20) = 30 (加法)
+    var sum: i32 = calc(1, 10, 20);
+
+    // 测试calc: calc(3, 5, 6) = 30 (乘法)
+    var prod: i32 = calc(3, 5, 6);
+
+    // 测试piecewise: piecewise(-5) = 5, piecewise(0) = 0, piecewise(3) = 6
+    var p1: i32 = piecewise(-5);
+    var p2: i32 = piecewise(0);
+    var p3: i32 = piecewise(3);
+
+    // 返回 sum + d = 30 + 3 = 33
+    return sum + d;
+}

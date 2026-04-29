@@ -139,6 +139,10 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
                 _builder.BuildBr(continueBB);
             }
         }
+        else if (stmt.switch_stmt() is { } switchStmt)
+        {
+            GenerateSwitchStmt(switchStmt, func, returnType);
+        }
     }
 
     private void GenerateIfStmt(SolidLangParser.If_stmtContext ifStmt, LLVMValueRef func, SolidType returnType)
@@ -301,6 +305,104 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         _builder.BuildBr(condBB);
 
         // Continue after loop
+        _builder.PositionAtEnd(afterBB);
+    }
+
+    private void GenerateSwitchStmt(SolidLangParser.Switch_stmtContext switchStmt, LLVMValueRef func, SolidType returnType)
+    {
+        var switchValue = GenerateExpression(switchStmt.expr());
+        var defaultBB = func.AppendBasicBlock("switch.default");
+        var afterBB = func.AppendBasicBlock("switch.after");
+
+        var cases = switchStmt.switch_cases()?.switch_case();
+        if (cases == null || cases.Length == 0)
+        {
+            _builder.BuildBr(afterBB);
+            _builder.PositionAtEnd(defaultBB);
+            _builder.BuildBr(afterBB);
+            _builder.PositionAtEnd(afterBB);
+            return;
+        }
+
+        // Collect all case values and their basic blocks
+        var caseValues = new List<(LLVMValueRef Value, LLVMBasicBlockRef Block)>();
+
+        foreach (var switchCase in cases)
+        {
+            var labels = switchCase.switch_labels().switch_label();
+            foreach (var label in labels)
+            {
+                if (label.ELSE() != null)
+                {
+                    // Default case - handled separately
+                    continue;
+                }
+
+                var caseExpr = label.expr();
+                var caseValue = GenerateExpression(caseExpr);
+                var caseBB = func.AppendBasicBlock("switch.case");
+                caseValues.Add((caseValue, caseBB));
+            }
+        }
+
+        // Build switch instruction
+        var switchInst = _builder.BuildSwitch(switchValue, defaultBB, (uint)caseValues.Count);
+
+        // Add all cases to switch
+        var caseIndex = 0;
+        foreach (var switchCase in cases)
+        {
+            var labels = switchCase.switch_labels().switch_label();
+            foreach (var label in labels)
+            {
+                if (label.ELSE() != null)
+                {
+                    continue;
+                }
+
+                var (caseValue, caseBB) = caseValues[caseIndex++];
+                switchInst.AddCase(caseValue, caseBB);
+            }
+        }
+
+        // Generate code for each case block
+        caseIndex = 0;
+        foreach (var switchCase in cases)
+        {
+            var labels = switchCase.switch_labels().switch_label();
+            foreach (var label in labels)
+            {
+                LLVMBasicBlockRef targetBB;
+
+                if (label.ELSE() != null)
+                {
+                    targetBB = defaultBB;
+                    _builder.PositionAtEnd(defaultBB);
+                }
+                else
+                {
+                    var (_, caseBB) = caseValues[caseIndex++];
+                    targetBB = caseBB;
+                    _builder.PositionAtEnd(caseBB);
+                }
+
+                GenerateStatement(switchCase.stmt(), func, returnType);
+
+                // Add fallthrough or break
+                if (_builder.InsertBlock.Terminator.Handle == IntPtr.Zero)
+                {
+                    _builder.BuildBr(afterBB);
+                }
+            }
+        }
+
+        // Ensure default block has terminator
+        _builder.PositionAtEnd(defaultBB);
+        if (defaultBB.Terminator.Handle == IntPtr.Zero)
+        {
+            _builder.BuildBr(afterBB);
+        }
+
         _builder.PositionAtEnd(afterBB);
     }
 
