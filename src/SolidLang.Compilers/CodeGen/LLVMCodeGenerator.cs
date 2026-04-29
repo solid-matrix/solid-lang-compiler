@@ -11,8 +11,12 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
     private readonly LLVMModuleRef _module;
     private readonly LLVMBuilderRef _builder;
     private readonly Dictionary<string, (LLVMValueRef Ptr, LLVMTypeRef Type)> _namedValues = new();
+    private readonly Dictionary<string, string> _namedValueTypes = new(); // variable name -> type name
     private readonly Dictionary<string, FunctionSymbol> _functions = new();
     private readonly Dictionary<string, LLVMTypeRef> _functionTypes = new();
+    private readonly Dictionary<string, LLVMTypeRef> _userTypes = new();
+    private readonly Dictionary<string, Dictionary<string, uint>> _structFieldIndices = new();
+    private readonly Dictionary<string, LLVMTypeRef> _structFieldTypes = new();
 
     // Loop context for break/continue
     private readonly Stack<(LLVMBasicBlockRef ContinueBB, LLVMBasicBlockRef BreakBB)> _loopContexts = new();
@@ -40,6 +44,24 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         var children = program.children;
         if (children == null) return;
 
+        // First pass: collect all struct/union/enum declarations
+        foreach (var child in children)
+        {
+            if (child is SolidLangParser.Struct_decl_stmtContext structDecl)
+            {
+                DeclareStructType(structDecl);
+            }
+            else if (child is SolidLangParser.Union_decl_stmtContext unionDecl)
+            {
+                DeclareUnionType(unionDecl);
+            }
+            else if (child is SolidLangParser.Enum_decl_stmtContext enumDecl)
+            {
+                DeclareEnumType(enumDecl);
+            }
+        }
+
+        // Second pass: generate functions
         foreach (var child in children)
         {
             if (child is SolidLangParser.Func_decl_stmtContext funcDecl)
@@ -49,9 +71,58 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         }
     }
 
+    private void DeclareStructType(SolidLangParser.Struct_decl_stmtContext context)
+    {
+        var name = context.ID().GetText();
+        var fieldTypes = new List<LLVMTypeRef>();
+        var fieldIndices = new Dictionary<string, uint>();
+        var fieldTypeMap = new Dictionary<string, LLVMTypeRef>();
+
+        var structFields = context.struct_fields();
+        if (structFields != null)
+        {
+            uint index = 0;
+            foreach (var field in structFields.struct_field())
+            {
+                var fieldName = field.ID().GetText();
+                var fieldType = GetLLVMTypeFromContext(field.type());
+                fieldTypes.Add(fieldType);
+                fieldIndices[fieldName] = index;
+                fieldTypeMap[$"{name}.{fieldName}"] = fieldType;
+                index++;
+            }
+        }
+
+        var structType = LLVMTypeRef.CreateStruct(fieldTypes.ToArray(), false);
+        _userTypes[name] = structType;
+        _structFieldIndices[name] = fieldIndices;
+        foreach (var kvp in fieldTypeMap)
+        {
+            _structFieldTypes[kvp.Key] = kvp.Value;
+        }
+    }
+
+    private void DeclareUnionType(SolidLangParser.Union_decl_stmtContext context)
+    {
+        var name = context.ID().GetText();
+        // Union represented as largest field size
+        var unionType = LLVMTypeRef.Int64; // Simplified: use i64
+        _userTypes[name] = unionType;
+    }
+
+    private void DeclareEnumType(SolidLangParser.Enum_decl_stmtContext context)
+    {
+        var name = context.ID().GetText();
+        var enumType = context.type() != null
+            ? GetLLVMTypeFromContext(context.type())
+            : LLVMTypeRef.Int32;
+        _userTypes[name] = enumType;
+    }
+
     private void GenerateFunction(SolidLangParser.Func_decl_stmtContext context)
     {
         _namedValues.Clear();
+        _namedValueTypes.Clear();
 
         var header = context.func_decl_header();
         var funcName = header.ID().GetText();
@@ -79,6 +150,9 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
             var alloca = _builder.BuildAlloca(paramType, param.Name);
             _builder.BuildStore(paramValue, alloca);
             _namedValues[param.Name] = (alloca, paramType);
+            // Store type name for struct types
+            if (param.Type is Types.StructType st)
+                _namedValueTypes[param.Name] = st.Name;
         }
 
         var body = context.body_stmt();
@@ -148,8 +222,6 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
     private void GenerateIfStmt(SolidLangParser.If_stmtContext ifStmt, LLVMValueRef func, SolidType returnType)
     {
         var condValue = GenerateExpression(ifStmt.expr());
-
-        // Convert condition to i1 if needed
         var condBool = _builder.BuildICmp(LLVMIntPredicate.LLVMIntNE, condValue,
             LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 0), "ifcond");
 
@@ -159,20 +231,17 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
 
         _builder.BuildCondBr(condBool, thenBB, elseBB);
 
-        // Generate then block
         _builder.PositionAtEnd(thenBB);
         var thenBody = ifStmt.body_stmt();
         if (thenBody != null && thenBody.Length > 0)
         {
             GenerateBody(thenBody[0], func, returnType);
         }
-        // Add terminator if not already present
         if (thenBB.Terminator.Handle == IntPtr.Zero)
         {
             _builder.BuildBr(mergeBB);
         }
 
-        // Generate else block
         _builder.PositionAtEnd(elseBB);
         if (ifStmt.ELSE() != null)
         {
@@ -190,13 +259,11 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
                 }
             }
         }
-        // Add terminator if not already present
         if (elseBB.Terminator.Handle == IntPtr.Zero)
         {
             _builder.BuildBr(mergeBB);
         }
 
-        // Continue at merge block
         _builder.PositionAtEnd(mergeBB);
     }
 
@@ -206,18 +273,14 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         var bodyBB = func.AppendBasicBlock("whilebody");
         var afterBB = func.AppendBasicBlock("whilecont");
 
-        // Jump to condition check
         _builder.BuildBr(condBB);
 
-        // Condition block
         _builder.PositionAtEnd(condBB);
         var condValue = GenerateExpression(whileStmt.expr());
         var condBool = _builder.BuildICmp(LLVMIntPredicate.LLVMIntNE, condValue,
             LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 0), "whilecond");
         _builder.BuildCondBr(condBool, bodyBB, afterBB);
 
-        // Body block - push loop context for break/continue
-        // continue goes to condBB, break goes to afterBB
         _builder.PositionAtEnd(bodyBB);
         _loopContexts.Push((condBB, afterBB));
 
@@ -228,15 +291,12 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
 
         _loopContexts.Pop();
 
-        // Check if current block needs a jump back to condition
-        // Note: after generating body, we may be in a different block than bodyBB
         var currentBB = _builder.InsertBlock;
         if (currentBB.Handle != IntPtr.Zero && currentBB.Terminator.Handle == IntPtr.Zero)
         {
             _builder.BuildBr(condBB);
         }
 
-        // Continue after loop
         _builder.PositionAtEnd(afterBB);
     }
 
@@ -247,12 +307,10 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         var updateBB = func.AppendBasicBlock("forupdate");
         var afterBB = func.AppendBasicBlock("forcont");
 
-        // Initialize
         if (forStmt.var_decl_pseudo_expr() is { } initDecl)
         {
-            // Parse var declaration from pseudo expr
             var varName = initDecl.ID().GetText();
-            var varType = GetLLVMType(initDecl.type().GetText());
+            var varType = GetLLVMTypeFromContext(initDecl.type());
             var alloca = _builder.BuildAlloca(varType, varName);
 
             if (initDecl.expr() is { } initExpr)
@@ -265,7 +323,6 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
 
         _builder.BuildBr(condBB);
 
-        // Condition block
         _builder.PositionAtEnd(condBB);
         if (forStmt.expr() is { } condExpr)
         {
@@ -276,12 +333,9 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         }
         else
         {
-            // No condition means infinite loop (condition is always true)
             _builder.BuildBr(bodyBB);
         }
 
-        // Body block - push loop context for break/continue
-        // continue goes to update block, break goes to after block
         _builder.PositionAtEnd(bodyBB);
         _loopContexts.Push((updateBB, afterBB));
         if (forStmt.body_stmt() is { } body)
@@ -290,13 +344,11 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         }
         _loopContexts.Pop();
 
-        // Jump to update if no terminator
         if (bodyBB.Terminator.Handle == IntPtr.Zero)
         {
             _builder.BuildBr(updateBB);
         }
 
-        // Update (increment) block
         _builder.PositionAtEnd(updateBB);
         if (forStmt.assign_pseudo_expr() is { } update)
         {
@@ -304,7 +356,6 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         }
         _builder.BuildBr(condBB);
 
-        // Continue after loop
         _builder.PositionAtEnd(afterBB);
     }
 
@@ -324,7 +375,6 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
             return;
         }
 
-        // Collect all case values and their basic blocks
         var caseValues = new List<(LLVMValueRef Value, LLVMBasicBlockRef Block)>();
 
         foreach (var switchCase in cases)
@@ -332,11 +382,7 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
             var labels = switchCase.switch_labels().switch_label();
             foreach (var label in labels)
             {
-                if (label.ELSE() != null)
-                {
-                    // Default case - handled separately
-                    continue;
-                }
+                if (label.ELSE() != null) continue;
 
                 var caseExpr = label.expr();
                 var caseValue = GenerateExpression(caseExpr);
@@ -345,50 +391,39 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
             }
         }
 
-        // Build switch instruction
         var switchInst = _builder.BuildSwitch(switchValue, defaultBB, (uint)caseValues.Count);
 
-        // Add all cases to switch
         var caseIndex = 0;
         foreach (var switchCase in cases)
         {
             var labels = switchCase.switch_labels().switch_label();
             foreach (var label in labels)
             {
-                if (label.ELSE() != null)
-                {
-                    continue;
-                }
+                if (label.ELSE() != null) continue;
 
                 var (caseValue, caseBB) = caseValues[caseIndex++];
                 switchInst.AddCase(caseValue, caseBB);
             }
         }
 
-        // Generate code for each case block
         caseIndex = 0;
         foreach (var switchCase in cases)
         {
             var labels = switchCase.switch_labels().switch_label();
             foreach (var label in labels)
             {
-                LLVMBasicBlockRef targetBB;
-
                 if (label.ELSE() != null)
                 {
-                    targetBB = defaultBB;
                     _builder.PositionAtEnd(defaultBB);
                 }
                 else
                 {
                     var (_, caseBB) = caseValues[caseIndex++];
-                    targetBB = caseBB;
                     _builder.PositionAtEnd(caseBB);
                 }
 
                 GenerateStatement(switchCase.stmt(), func, returnType);
 
-                // Add fallthrough or break
                 if (_builder.InsertBlock.Terminator.Handle == IntPtr.Zero)
                 {
                     _builder.BuildBr(afterBB);
@@ -396,7 +431,6 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
             }
         }
 
-        // Ensure default block has terminator
         _builder.PositionAtEnd(defaultBB);
         if (defaultBB.Terminator.Handle == IntPtr.Zero)
         {
@@ -416,51 +450,97 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         var targetExpr = assign.expr(0);
         var valueExpr = assign.expr(1);
 
-        // Get target variable
-        if (targetExpr.conditional_expr().or_expr().and_expr(0).bit_or_expr(0)
-            .bit_xor_expr(0).bit_and_expr(0).eq_expr(0).cmp_expr(0)
-            .shift_expr(0).add_expr(0).mul_expr(0).unary_expr(0)
-            .postfix_expr()?.primary_expr()?.ID() is { } targetId)
+        var (ptr, type) = GetLValue(targetExpr);
+        if (ptr.Handle != IntPtr.Zero)
         {
-            var varName = targetId.GetText();
-            if (_namedValues.TryGetValue(varName, out var varInfo))
+            var value = GenerateExpression(valueExpr);
+
+            var children = assign.children;
+            if (children == null) return;
+
+            var op = children.OfType<ITerminalNode>().FirstOrDefault();
+            if (op == null) return;
+
+            if (op.Symbol.Type == SolidLangLexer.EQ)
             {
-                var value = GenerateExpression(valueExpr);
-
-                var children = assign.children;
-                if (children == null) return;
-
-                var op = children.OfType<ITerminalNode>().FirstOrDefault();
-                if (op == null) return;
-
-                if (op.Symbol.Type == SolidLangLexer.EQ)
+                _builder.BuildStore(value, ptr);
+            }
+            else
+            {
+                var currentValue = _builder.BuildLoad2(type, ptr, "loadtmp");
+                LLVMValueRef newValue = op.Symbol.Type switch
                 {
-                    // Simple assignment
-                    _builder.BuildStore(value, varInfo.Ptr);
-                }
-                else
-                {
-                    // Compound assignment
-                    var currentValue = _builder.BuildLoad2(varInfo.Type, varInfo.Ptr, varName);
-                    LLVMValueRef newValue = op.Symbol.Type switch
-                    {
-                        SolidLangLexer.PLUSEQ => _builder.BuildAdd(currentValue, value, "addtmp"),
-                        SolidLangLexer.MINUSEQ => _builder.BuildSub(currentValue, value, "subtmp"),
-                        SolidLangLexer.STAREQ => _builder.BuildMul(currentValue, value, "multmp"),
-                        SolidLangLexer.SLASHEQ => _builder.BuildSDiv(currentValue, value, "divtmp"),
-                        SolidLangLexer.PERCENTEQ => _builder.BuildSRem(currentValue, value, "modtmp"),
-                        _ => throw new NotSupportedException($"Unsupported assignment operator: {op.GetText()}")
-                    };
-                    _builder.BuildStore(newValue, varInfo.Ptr);
-                }
+                    SolidLangLexer.PLUSEQ => _builder.BuildAdd(currentValue, value, "addtmp"),
+                    SolidLangLexer.MINUSEQ => _builder.BuildSub(currentValue, value, "subtmp"),
+                    SolidLangLexer.STAREQ => _builder.BuildMul(currentValue, value, "multmp"),
+                    SolidLangLexer.SLASHEQ => _builder.BuildSDiv(currentValue, value, "divtmp"),
+                    SolidLangLexer.PERCENTEQ => _builder.BuildSRem(currentValue, value, "modtmp"),
+                    _ => throw new NotSupportedException($"Unsupported assignment operator: {op.GetText()}")
+                };
+                _builder.BuildStore(newValue, ptr);
             }
         }
+    }
+
+    private (LLVMValueRef Ptr, LLVMTypeRef Type) GetLValue(SolidLangParser.ExprContext expr)
+    {
+        var postfix = expr.conditional_expr().or_expr().and_expr(0).bit_or_expr(0)
+            .bit_xor_expr(0).bit_and_expr(0).eq_expr(0).cmp_expr(0)
+            .shift_expr(0).add_expr(0).mul_expr(0).unary_expr(0)
+            .postfix_expr();
+
+        if (postfix == null) return (default, default);
+
+        var primaryExpr = postfix.primary_expr();
+        if (primaryExpr?.ID() is { } id)
+        {
+            var name = id.GetText();
+            if (_namedValues.TryGetValue(name, out var varInfo))
+            {
+                var suffixes = postfix.postfix_suffix();
+                if (suffixes == null || suffixes.Length == 0)
+                {
+                    return varInfo;
+                }
+
+                var currentPtr = varInfo.Ptr;
+                var currentType = varInfo.Type;
+                var currentTypeName = _namedValueTypes.TryGetValue(name, out var tn) ? tn : FindTypeName(currentType);
+
+                foreach (var suffix in suffixes)
+                {
+                    if (suffix.DOT() != null && suffix.ID() is { } memberId)
+                    {
+                        var memberName = memberId.GetText();
+                        if (currentTypeName != null && _structFieldIndices.TryGetValue(currentTypeName, out var fields))
+                        {
+                            if (fields.TryGetValue(memberName, out var fieldIndex))
+                            {
+                                var idx0 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0);
+                                var idx1 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, fieldIndex);
+                                currentPtr = _builder.BuildInBoundsGEP2(currentType, currentPtr, new[] { idx0, idx1 }, memberName);
+                                var fieldKey = $"{currentTypeName}.{memberName}";
+                                currentType = _structFieldTypes.TryGetValue(fieldKey, out var ft) ? ft : LLVMTypeRef.Int32;
+                                currentTypeName = FindTypeName(currentType);
+                            }
+                        }
+                    }
+                }
+
+                return (currentPtr, currentType);
+            }
+        }
+
+        return (default, default);
     }
 
     private void GenerateVarDecl(SolidLangParser.Var_decl_stmtContext varDecl)
     {
         var varName = varDecl.ID().GetText();
-        var varType = GetLLVMType(varDecl.type().GetText());
+        var typeName = varDecl.type()?.GetText();
+        var varType = varDecl.type() != null
+            ? GetLLVMTypeFromContext(varDecl.type())
+            : LLVMTypeRef.Int32;
 
         var alloca = _builder.BuildAlloca(varType, varName);
 
@@ -471,13 +551,16 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         }
 
         _namedValues[varName] = (alloca, varType);
+        // Store type name for user-defined types
+        if (typeName != null && _userTypes.ContainsKey(typeName))
+            _namedValueTypes[varName] = typeName;
     }
 
     private void GenerateReturn(SolidLangParser.Return_stmtContext returnStmt, SolidType returnType)
     {
         if (returnStmt.expr() is { } expr)
         {
-            var value = GenerateExpression(expr);
+            var value = GenerateExpression(returnStmt.expr());
             _builder.BuildRet(value);
         }
         else
@@ -567,7 +650,12 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         var eqExprs = bitAndExpr.eq_expr();
         var result = GenerateEqExpr(eqExprs[0]);
 
-        for (int i = 1; i < eqExprs.Length; i++)
+        var children = bitAndExpr.children;
+        if (children == null) return result;
+
+        var ops = children.OfType<ITerminalNode>().ToArray();
+
+        for (int i = 1; i < eqExprs.Length && i - 1 < ops.Length; i++)
         {
             var rhs = GenerateEqExpr(eqExprs[i]);
             result = _builder.BuildAnd(result, rhs, "bandtmp");
@@ -740,17 +828,129 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
 
     private LLVMValueRef GeneratePostfixExpr(SolidLangParser.Postfix_exprContext postfixExpr)
     {
-        var result = GeneratePrimaryExpr(postfixExpr.primary_expr());
+        var suffixes = postfixExpr.postfix_suffix();
 
-        foreach (var suffix in postfixExpr.postfix_suffix())
+        // Check if we have member access
+        if (suffixes != null && suffixes.Length > 0)
         {
-            if (suffix.LPAREN() != null)
+            var hasMemberAccess = suffixes.Any(s => s.DOT() != null);
+            var hasCall = suffixes.Any(s => s.LPAREN() != null);
+
+            if (hasMemberAccess)
             {
-                result = GenerateCall(result, suffix.call_args());
+                // Handle member access: p.x
+                var primaryExpr = postfixExpr.primary_expr();
+                if (primaryExpr?.ID() is { } id)
+                {
+                    var name = id.GetText();
+                    if (_namedValues.TryGetValue(name, out var varInfo))
+                    {
+                        var resultPtr = varInfo.Ptr;
+                        var resultType = varInfo.Type;
+                        // Use stored type name or try to find it
+                        var resultTypeName = _namedValueTypes.TryGetValue(name, out var tn) ? tn : FindTypeName(resultType);
+
+                        foreach (var suffix in suffixes)
+                        {
+                            if (suffix.DOT() != null && suffix.ID() is { } memberId)
+                            {
+                                var memberName = memberId.GetText();
+                                if (resultTypeName != null && _structFieldIndices.TryGetValue(resultTypeName, out var fields))
+                                {
+                                    if (fields.TryGetValue(memberName, out var fieldIndex))
+                                    {
+                                        var idx0 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0);
+                                        var idx1 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, fieldIndex);
+                                        resultPtr = _builder.BuildInBoundsGEP2(resultType, resultPtr, new[] { idx0, idx1 }, memberName);
+                                        var fieldKey = $"{resultTypeName}.{memberName}";
+                                        resultType = _structFieldTypes.TryGetValue(fieldKey, out var ft) ? ft : LLVMTypeRef.Int32;
+                                        resultTypeName = FindTypeName(resultType);
+                                    }
+                                }
+                            }
+                        }
+
+                        return _builder.BuildLoad2(resultType, resultPtr, "member");
+                    }
+                }
+            }
+            else if (hasCall)
+            {
+                // Handle function call
+                var result = GeneratePrimaryExpr(postfixExpr.primary_expr());
+
+                foreach (var suffix in suffixes)
+                {
+                    if (suffix.LPAREN() != null)
+                    {
+                        result = GenerateCall(result, suffix.call_args());
+                    }
+                }
+
+                return result;
             }
         }
 
-        return result;
+        // No suffix - generate normally
+        return GeneratePrimaryExpr(postfixExpr.primary_expr());
+    }
+
+    private string? FindTypeName(LLVMTypeRef type)
+    {
+        foreach (var kvp in _userTypes)
+        {
+            if (kvp.Value.Handle == type.Handle)
+            {
+                return kvp.Key;
+            }
+        }
+        return null;
+    }
+
+    private LLVMTypeRef GetPrimaryExprType(SolidLangParser.Primary_exprContext primaryExpr)
+    {
+        if (primaryExpr.ID() is { } id)
+        {
+            var name = id.GetText();
+            if (_namedValues.TryGetValue(name, out var varInfo))
+            {
+                return varInfo.Type;
+            }
+        }
+
+        if (primaryExpr.struct_literal() is { } structLit)
+        {
+            var structName = structLit.ID().GetText();
+            if (_userTypes.TryGetValue(structName, out var structType))
+            {
+                return structType;
+            }
+        }
+
+        return LLVMTypeRef.Int32;
+    }
+
+    private string? GetPrimaryExprTypeName(SolidLangParser.Primary_exprContext primaryExpr)
+    {
+        if (primaryExpr.ID() is { } id)
+        {
+            var name = id.GetText();
+            if (_namedValues.TryGetValue(name, out var varInfo))
+            {
+                foreach (var kvp in _userTypes)
+                {
+                    if (kvp.Value.Equals(varInfo.Type))
+                        return kvp.Key;
+                }
+            }
+        }
+
+        if (primaryExpr.struct_literal() is { } structLit)
+        {
+            return structLit.ID().GetText();
+        }
+
+        return null;
     }
 
     private LLVMValueRef GenerateCall(LLVMValueRef callee, SolidLangParser.Call_argsContext? callArgs)
@@ -765,18 +965,15 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
             }
         }
 
-        // Get function name from callee
         var funcName = callee.Name;
         LLVMTypeRef funcType;
 
-        // Look up stored function type
         if (!string.IsNullOrEmpty(funcName) && _functionTypes.TryGetValue(funcName, out var storedType))
         {
             funcType = storedType;
         }
         else
         {
-            // Fallback: construct function type from arguments (assuming i32 return type)
             var returnType = LLVMTypeRef.Int32;
             var paramTypes = args.Select(a => a.TypeOf).ToArray();
             funcType = LLVMTypeRef.CreateFunction(returnType, paramTypes);
@@ -797,6 +994,7 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
             var name = id.GetText();
             if (_namedValues.TryGetValue(name, out var valueInfo))
             {
+                // Load the value for use in expressions
                 return _builder.BuildLoad2(valueInfo.Type, valueInfo.Ptr, name);
             }
 
@@ -807,6 +1005,11 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
                     return func;
             }
 
+            if (name.Contains("::"))
+            {
+                return GenerateEnumMemberAccess(name);
+            }
+
             throw new InvalidOperationException($"Unknown variable or function: {name}");
         }
 
@@ -815,7 +1018,92 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
             return GenerateExpression(expr);
         }
 
+        if (primaryExpr.struct_literal() is { } structLit)
+        {
+            return GenerateStructLiteral(structLit);
+        }
+
+        if (primaryExpr.tuple_literal() is { } tupleLit)
+        {
+            return GenerateTupleLiteral(tupleLit);
+        }
+
         throw new NotSupportedException("Unsupported primary expression");
+    }
+
+    private LLVMValueRef GenerateEnumMemberAccess(string qualifiedName)
+    {
+        var parts = qualifiedName.Split("::");
+        if (parts.Length == 2)
+        {
+            var enumName = parts[0];
+            var memberName = parts[1];
+
+            if (_userTypes.TryGetValue(enumName, out var enumType))
+            {
+                // Would need proper enum value tracking
+                return LLVMValueRef.CreateConstInt(enumType, 0);
+            }
+        }
+
+        throw new InvalidOperationException($"Unknown enum member: {qualifiedName}");
+    }
+
+    private LLVMValueRef GenerateStructLiteral(SolidLangParser.Struct_literalContext structLit)
+    {
+        var structName = structLit.ID().GetText();
+
+        if (!_userTypes.TryGetValue(structName, out var structType))
+        {
+            throw new InvalidOperationException($"Unknown struct type: {structName}");
+        }
+
+        var alloca = _builder.BuildAlloca(structType, structName);
+
+        var fields = structLit.struct_literal_fields()?.struct_literal_field();
+        if (fields != null && _structFieldIndices.TryGetValue(structName, out var fieldIndices))
+        {
+            foreach (var field in fields)
+            {
+                var fieldName = field.ID().GetText();
+                var fieldValue = GenerateExpression(field.expr());
+
+                if (fieldIndices.TryGetValue(fieldName, out var fieldIndex))
+                {
+                    var idx0 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0);
+                    var idx1 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, fieldIndex);
+                    var fieldPtr = _builder.BuildInBoundsGEP2(structType, alloca, new[] { idx0, idx1 }, fieldName);
+                    _builder.BuildStore(fieldValue, fieldPtr);
+                }
+            }
+        }
+
+        return _builder.BuildLoad2(structType, alloca, structName);
+    }
+
+    private LLVMValueRef GenerateTupleLiteral(SolidLangParser.Tuple_literalContext tupleLit)
+    {
+        var elements = tupleLit.tuple_elements()?.expr();
+        if (elements == null || elements.Length == 0)
+        {
+            return LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0);
+        }
+
+        var elementTypes = elements.Select(e => LLVMTypeRef.Int32).ToArray();
+        var tupleType = LLVMTypeRef.CreateStruct(elementTypes, false);
+
+        var alloca = _builder.BuildAlloca(tupleType, "tuple");
+
+        for (uint i = 0; i < elements.Length; i++)
+        {
+            var elemValue = GenerateExpression(elements[i]);
+            var idx0 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0);
+            var idx1 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, i);
+            var elemPtr = _builder.BuildInBoundsGEP2(tupleType, alloca, new[] { idx0, idx1 }, $"elem{i}");
+            _builder.BuildStore(elemValue, elemPtr);
+        }
+
+        return _builder.BuildLoad2(tupleType, alloca, "tuple");
     }
 
     private LLVMValueRef GenerateLiteral(SolidLangParser.LiteralContext literal)
@@ -847,12 +1135,51 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
             I32Type => LLVMTypeRef.Int32,
             BoolType => LLVMTypeRef.Int1,
             VoidType => LLVMTypeRef.Void,
+            Types.StructType structType => _userTypes.TryGetValue(structType.Name, out var t) ? t : LLVMTypeRef.Int32,
+            Types.EnumType enumType => _userTypes.TryGetValue(enumType.Name, out var et) ? et : LLVMTypeRef.Int32,
+            Types.UnionType unionType => _userTypes.TryGetValue(unionType.Name, out var ut) ? ut : LLVMTypeRef.Int32,
+            Types.TupleType tupleType => LLVMTypeRef.CreateStruct(
+                tupleType.Elements.Select(e => GetLLVMType(e)).ToArray(), false),
             _ => throw new NotSupportedException($"Unknown type: {type.Name}")
         };
     }
 
+    private LLVMTypeRef GetLLVMTypeFromContext(SolidLangParser.TypeContext typeContext)
+    {
+        if (typeContext.named_type() is { } namedType)
+        {
+            var typeName = namedType.ID().GetText();
+
+            if (_userTypes.TryGetValue(typeName, out var userType))
+                return userType;
+
+            return typeName switch
+            {
+                "i32" => LLVMTypeRef.Int32,
+                "bool" => LLVMTypeRef.Int1,
+                "void" => LLVMTypeRef.Void,
+                _ => throw new NotSupportedException($"Unknown type: {typeName}")
+            };
+        }
+
+        if (typeContext.tuple_type() is { } tupleType)
+        {
+            var types = tupleType.type();
+            if (types == null || types.Length == 0)
+                return LLVMTypeRef.Void;
+
+            var elementTypes = types.Select(t => GetLLVMTypeFromContext(t)).ToArray();
+            return LLVMTypeRef.CreateStruct(elementTypes, false);
+        }
+
+        return LLVMTypeRef.Int32;
+    }
+
     private LLVMTypeRef GetLLVMType(string typeName)
     {
+        if (_userTypes.TryGetValue(typeName, out var userType))
+            return userType;
+
         return typeName switch
         {
             "i32" => LLVMTypeRef.Int32,

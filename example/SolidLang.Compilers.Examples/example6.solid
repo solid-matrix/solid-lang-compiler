@@ -1,0 +1,58 @@
+namespace main;
+
+// 结构体声明：表示二维点
+struct Point {
+    x: i32,
+    y: i32
+}
+
+// 结构体声明：表示矩形
+struct Rect {
+    width: i32,
+    height: i32
+}
+
+// 枚举声明：表示颜色
+enum Color {
+    Red = 0,
+    Green = 1,
+    Blue = 2
+}
+
+// 使用结构体的函数
+func make_point(x: i32, y: i32): Point {
+    return Point { x = x, y = y };
+}
+
+// 计算两点之间的曼哈顿距离
+func manhattan_distance(p1: Point, p2: Point): i32 {
+    var dx: i32 = p1.x - p2.x;
+    if dx < 0 { dx = 0 - dx; }
+    var dy: i32 = p1.y - p2.y;
+    if dy < 0 { dy = 0 - dy; }
+    return dx + dy;
+}
+
+// 计算矩形面积
+func rect_area(r: Rect): i32 {
+    var w: i32 = r.width;
+    var h: i32 = r.height;
+    return w * h;
+}
+
+// 主函数
+func main(): i32 {
+    // 测试结构体
+    var p1: Point = Point { x = 10, y = 20 };
+    var p2: Point = make_point(30, 40);
+    var dist: i32 = manhattan_distance(p1, p2);
+    // dist = |10-30| + |20-40| = 20 + 20 = 40
+
+    // 测试矩形
+    var r: Rect = Rect { width = 5, height = 6 };
+    var area: i32 = rect_area(r);
+    // area = 5 * 6 = 30
+
+    // 返回 dist - area = 40 - 30 = 10
+    return dist - area;
+}
