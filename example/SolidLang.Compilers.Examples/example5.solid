@@ -1,0 +1,57 @@
+namespace main;
+
+// 递归计算阶乘
+func factorial_rec(n: i32): i32 {
+    if n <= 1 { return 1; }
+    return n * factorial_rec(n - 1);
+}
+
+// 递归计算斐波那契
+func fib_rec(n: i32): i32 {
+    if n <= 1 { return n; }
+    return fib_rec(n - 1) + fib_rec(n - 2);
+}
+
+// 使用三元表达式计算绝对值
+func abs(x: i32): i32 {
+    return x < 0 ? 0 - x : x;
+}
+
+// 使用三元表达式计算最大值
+func max(a: i32, b: i32): i32 {
+    return a > b ? a : b;
+}
+
+// 使用三元表达式计算最小值
+func min(a: i32, b: i32): i32 {
+    return a < b ? a : b;
+}
+
+// 嵌套三元表达式：符号函数 sign(x)
+// sign(x) = -1 if x < 0, 0 if x == 0, 1 if x > 0
+func sign(x: i32): i32 {
+    return x < 0 ? -1 : (x == 0 ? 0 : 1);
+}
+
+// 主函数
+func main(): i32 {
+    // 测试递归阶乘: factorial_rec(5) = 120
+    var f5: i32 = factorial_rec(5);
+
+    // 测试递归斐波那契: fib_rec(10) = 55
+    var fib10: i32 = fib_rec(10);
+
+    // 测试abs: abs(-7) = 7
+    var a: i32 = abs(-7);
+
+    // 测试max: max(3, 8) = 8
+    var m: i32 = max(3, 8);
+
+    // 测试sign: sign(-5) = -1, sign(0) = 0, sign(5) = 1
+    var s1: i32 = sign(-5);
+    var s2: i32 = sign(0);
+    var s3: i32 = sign(5);
+
+    // 返回 f5 + fib10 = 120 + 55 = 175
+    return f5 + fib10;
+}
