@@ -44,7 +44,7 @@ using_decl_stmt: USING namespace_path SEMI;
 // 类型标注可选，未指定时由初始值推断
 // 初始值必须在编译期可计算
 // 此值不可取地址，不存在运行时中
-const_decl_stmt: annotations CONST (COLON type)? EQ expr SEMI;
+const_decl_stmt: annotations CONST ID (COLON type)? EQ expr SEMI;
 
 
 // 不可变静态变量声明
@@ -53,7 +53,7 @@ const_decl_stmt: annotations CONST (COLON type)? EQ expr SEMI;
 // 类型标注可选，未指定时由初始值推断
 // 初始值必须在编译期可计算
 // 此值为只读，存在程序.rodata中，不可变，但是可取地址
-const_static_decl_stmt: annotations CONST STATIC (COLON type)? EQ expr SEMI;
+const_static_decl_stmt: annotations CONST STATIC ID (COLON type)? EQ expr SEMI;
 
 
 // 结构体声明

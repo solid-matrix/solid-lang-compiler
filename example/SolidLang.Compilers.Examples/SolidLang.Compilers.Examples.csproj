@@ -7,7 +7,7 @@
         <Nullable>enable</Nullable>
         <RootNamespace>SolidLang.Compilers.Examples</RootNamespace>
     </PropertyGroup>
-    
+
     <ItemGroup>
       <ProjectReference Include="..\..\src\SolidLang.Compilers\SolidLang.Compilers.csproj" />
     </ItemGroup>

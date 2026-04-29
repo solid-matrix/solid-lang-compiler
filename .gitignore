@@ -14,3 +14,7 @@ riderModule.iml
 *.ll
 *.o
 *.exe
+
+# Generated parser files
+*.tokens
+*.interp

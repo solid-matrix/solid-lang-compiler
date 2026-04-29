@@ -1,0 +1,21 @@
+namespace main;
+
+// Test integer types with type suffixes
+func main(): i32 {
+    // Small integers with suffixes
+    var a: i8 = 100i8;
+    var b: i16 = 1000i16;
+    var c: i32 = 100000i32;
+    var d: i64 = 1000000i64;
+
+    // Unsigned integers
+    var e: u8 = 200u8;
+    var f: u16 = 50000u16;
+    var g: u32 = 3000000000u32;
+    var h: u64 = 10000000000u64;
+
+    // Simple calculations
+    var sum_i32: i32 = c + 1;
+
+    return sum_i32;
+}

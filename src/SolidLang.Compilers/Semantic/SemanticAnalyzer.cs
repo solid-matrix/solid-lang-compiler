@@ -7,10 +7,17 @@ namespace SolidLang.Compilers.Semantic;
 public sealed class SemanticAnalyzer : SolidLangParserBaseListener
 {
     private SymbolTable _currentScope = new();
+    private readonly Stack<SymbolTable> _scopeStack = new();
     private readonly List<FunctionSymbol> _functions = new();
     private readonly Dictionary<string, SolidType> _types = new();
+    private readonly List<ConstSymbol> _consts = new();
+    private readonly List<StaticSymbol> _statics = new();
+    private readonly List<ConstStaticSymbol> _constStatics = new();
 
     public IReadOnlyList<FunctionSymbol> Functions => _functions;
+    public IReadOnlyList<ConstSymbol> Consts => _consts;
+    public IReadOnlyList<StaticSymbol> Statics => _statics;
+    public IReadOnlyList<ConstStaticSymbol> ConstStatics => _constStatics;
 
     public override void EnterStruct_decl_stmt(SolidLangParser.Struct_decl_stmtContext context)
     {
@@ -117,6 +124,7 @@ public sealed class SemanticAnalyzer : SolidLangParserBaseListener
         _functions.Add(funcSymbol);
         _currentScope.Define(funcSymbol);
 
+        _scopeStack.Push(_currentScope);
         _currentScope = _currentScope.EnterScope();
         foreach (var param in parameters)
         {
@@ -126,7 +134,10 @@ public sealed class SemanticAnalyzer : SolidLangParserBaseListener
 
     public override void ExitFunc_decl_stmt(SolidLangParser.Func_decl_stmtContext context)
     {
-        _currentScope = new SymbolTable();
+        if (_scopeStack.Count > 0)
+        {
+            _currentScope = _scopeStack.Pop();
+        }
     }
 
     public override void EnterVar_decl_stmt(SolidLangParser.Var_decl_stmtContext context)
@@ -136,6 +147,47 @@ public sealed class SemanticAnalyzer : SolidLangParserBaseListener
             ? ResolveType(context.type())
             : new I32Type(); // Default type inference placeholder
         _currentScope.Define(new VariableSymbol(varName, varType));
+    }
+
+    // Handle top-level const declarations
+    public override void EnterConst_decl_stmt(SolidLangParser.Const_decl_stmtContext context)
+    {
+        var constName = context.ID().GetText();
+        var constType = context.type() != null
+            ? ResolveType(context.type())
+            : new I32Type();
+        var valueExpr = context.expr().GetText();
+
+        var constSymbol = new ConstSymbol(constName, constType, valueExpr);
+        _consts.Add(constSymbol);
+        _currentScope.Define(constSymbol);
+    }
+
+    // Handle top-level const static declarations
+    public override void EnterConst_static_decl_stmt(SolidLangParser.Const_static_decl_stmtContext context)
+    {
+        var constName = context.ID().GetText();
+        var constType = context.type() != null
+            ? ResolveType(context.type())
+            : new I32Type();
+        var valueExpr = context.expr().GetText();
+
+        var constStaticSymbol = new ConstStaticSymbol(constName, constType, valueExpr);
+        _constStatics.Add(constStaticSymbol);
+        _currentScope.Define(constStaticSymbol);
+    }
+
+    // Handle static variable declarations (both top-level and inside functions)
+    public override void EnterStatic_decl_stmt(SolidLangParser.Static_decl_stmtContext context)
+    {
+        var staticName = context.ID().GetText();
+        var staticType = context.type() != null
+            ? ResolveType(context.type())
+            : new I32Type();
+
+        var staticSymbol = new StaticSymbol(staticName, staticType);
+        _statics.Add(staticSymbol);
+        _currentScope.Define(staticSymbol);
     }
 
     private SolidType ResolveType(SolidLangParser.TypeContext typeContext)
@@ -175,7 +227,26 @@ public sealed class SemanticAnalyzer : SolidLangParserBaseListener
 
             return typeName switch
             {
+                // Signed integers
+                "i8" => new I8Type(),
+                "i16" => new I16Type(),
                 "i32" => new I32Type(),
+                "i64" => new I64Type(),
+                "i128" => new I128Type(),
+                "isize" => new IsizeType(),
+                // Unsigned integers
+                "u8" => new U8Type(),
+                "u16" => new U16Type(),
+                "u32" => new U32Type(),
+                "u64" => new U64Type(),
+                "u128" => new U128Type(),
+                "usize" => new UsizeType(),
+                // Floating-point
+                "f16" => new F16Type(),
+                "f32" => new F32Type(),
+                "f64" => new F64Type(),
+                "f128" => new F128Type(),
+                // Other
                 "void" => new VoidType(),
                 "bool" => new BoolType(),
                 _ => throw new NotSupportedException($"Unknown type: {typeName}")

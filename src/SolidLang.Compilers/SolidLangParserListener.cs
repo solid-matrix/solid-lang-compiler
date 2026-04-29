@@ -19,7 +19,6 @@
 // Ambiguous reference in cref attribute
 #pragma warning disable 419
 
-namespace SolidLang.Compilers {
 using Antlr4.Runtime.Misc;
 using IParseTreeListener = Antlr4.Runtime.Tree.IParseTreeListener;
 using IToken = Antlr4.Runtime.IToken;
@@ -882,4 +881,3 @@ public interface ISolidLangParserListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitCall_args([NotNull] SolidLangParser.Call_argsContext context);
 }
-} // namespace SolidLang.Compilers

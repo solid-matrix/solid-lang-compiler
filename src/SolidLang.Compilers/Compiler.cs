@@ -26,6 +26,9 @@ public static class Compiler
 
         using var codeGen = new LLVMCodeGenerator("solid_module");
         codeGen.SetFunctions(semanticAnalyzer.Functions);
+        codeGen.SetConsts(semanticAnalyzer.Consts);
+        codeGen.SetStatics(semanticAnalyzer.Statics);
+        codeGen.SetConstStatics(semanticAnalyzer.ConstStatics);
         codeGen.GenerateModule(tree);
 
         var ir = codeGen.GetIR();
@@ -51,6 +54,9 @@ public static class Compiler
 
         using var codeGen = new LLVMCodeGenerator("solid_module");
         codeGen.SetFunctions(semanticAnalyzer.Functions);
+        codeGen.SetConsts(semanticAnalyzer.Consts);
+        codeGen.SetStatics(semanticAnalyzer.Statics);
+        codeGen.SetConstStatics(semanticAnalyzer.ConstStatics);
         codeGen.GenerateModule(tree);
 
         codeGen.EmitObjectFile(outputFilePath);

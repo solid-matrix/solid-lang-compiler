@@ -1,0 +1,42 @@
+namespace main;
+
+// Test bitwise operators and assignments
+func test_bitwise(): i32 {
+    var a: i32 = 15;  // 1111 in binary
+    var b: i32 = 5;   // 0101 in binary
+
+    // Bitwise AND: 1111 & 0101 = 0101 = 5
+    var and_result: i32 = a & b;
+
+    // Bitwise OR: 1111 | 0101 = 1111 = 15
+    var or_result: i32 = a | b;
+
+    // Bitwise XOR: 1111 ^ 0101 = 1010 = 10
+    var xor_result: i32 = a ^ b;
+
+    // Left shift: 5 << 2 = 20
+    var shl_result: i32 = b << 2;
+
+    // Right shift: 15 >> 2 = 3
+    var shr_result: i32 = a >> 2;
+
+    // Bitwise NOT: ~0 = -1 (all bits set)
+    var not_result: i32 = ~0;
+
+    // Test compound assignments
+    var c: i32 = 10;
+    c &= 6;   // 10 & 6 = 2
+    c |= 8;   // 2 | 8 = 10
+    c ^= 5;   // 10 ^ 5 = 15
+    c <<= 1;  // 15 << 1 = 30
+    c >>= 2;  // 30 >> 2 = 7
+
+    // Return sum of all results (should be verifiable)
+    return and_result + or_result + xor_result + shl_result + shr_result + c;
+}
+
+func main(): i32 {
+    var result: i32 = test_bitwise();
+    // 5 + 15 + 10 + 20 + 3 + 7 = 60
+    return result;
+}

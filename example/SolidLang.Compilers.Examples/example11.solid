@@ -1,0 +1,46 @@
+namespace main;
+
+// Test all literal formats
+func main(): i32 {
+    // Decimal literals with suffixes
+    var dec_i8: i8 = 127i8;
+    var dec_i16: i16 = 32767i16;
+    var dec_i32: i32 = 2147483647i32;
+    var dec_i64: i64 = 100i64;
+    var dec_u8: u8 = 255u8;
+    var dec_u16: u16 = 65535u16;
+    var dec_u32: u32 = 100u32;
+    var dec_u64: u64 = 100u64;
+
+    // Hexadecimal literals (0x prefix)
+    var hex_i32: i32 = 0xFF;           // 255
+    var hex_u32: u32 = 0xFFFFu32;      // 65535
+    var hex_i64: i64 = 0xDEADBEEFi64;  // 3735928559
+
+    // Octal literals (0o prefix)
+    var oct_i32: i32 = 0o777;          // 511
+    var oct_u32: u32 = 0o755u32;       // 493
+
+    // Binary literals (0b prefix)
+    var bin_i32: i32 = 0b11111111;     // 255
+    var bin_u8: u8 = 0b10101010u8;     // 170
+
+    // Underscore separators
+    var sep_dec: i32 = 1_000_000;      // 1000000
+    var sep_hex: i32 = 0xFF_FF_FF;     // 16777215
+
+    // Float literals with suffixes
+    var f16_val: f16 = 1.5f16;
+    var f32_val: f32 = 3.14159f32;
+    var f64_val: f64 = 3.141592653589793f64;
+
+    // Float with exponent
+    var f32_exp: f32 = 1.0e10f32;
+    var f64_exp: f64 = 1.5e-5f64;
+
+    // Calculate result
+    // hex_i32 (255) + oct_i32 (511) + bin_i32 (255) = 1021
+    var result: i32 = hex_i32 + oct_i32 + bin_i32;
+
+    return result;
+}

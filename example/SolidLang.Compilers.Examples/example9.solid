@@ -1,0 +1,18 @@
+namespace main;
+
+// Test struct field access
+struct Pair {
+    first: i32,
+    second: i32
+}
+
+func main(): i32 {
+    var p: Pair = Pair { first = 10, second = 20 };
+
+    // Access struct fields
+    var a: i32 = p.first;
+    var b: i32 = p.second;
+
+    // Return sum: 10 + 20 = 30
+    return a + b;
+}

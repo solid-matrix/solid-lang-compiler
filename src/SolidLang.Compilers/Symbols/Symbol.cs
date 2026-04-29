@@ -25,3 +25,23 @@ public sealed record EnumSymbol(
     Types.SolidType UnderlyingType,
     IReadOnlyList<(string Name, long Value)> Fields
 ) : Symbol(Name);
+
+// Compile-time constant (not stored in memory)
+public sealed record ConstSymbol(
+    string Name,
+    Types.SolidType Type,
+    string ValueExpression
+) : Symbol(Name);
+
+// Static variable with mutable storage
+public sealed record StaticSymbol(
+    string Name,
+    Types.SolidType Type
+) : Symbol(Name);
+
+// Const static variable (read-only, stored in .rodata)
+public sealed record ConstStaticSymbol(
+    string Name,
+    Types.SolidType Type,
+    string ValueExpression
+) : Symbol(Name);

@@ -6,20 +6,40 @@ using SolidLang.Compilers.Types;
 
 namespace SolidLang.Compilers.CodeGen;
 
+/// <summary>
+/// LLVM IR code generator for SolidLang.
+/// Generates LLVM IR from the parsed AST.
+/// </summary>
 public sealed unsafe class LLVMCodeGenerator : IDisposable
 {
+    #region Fields
+
     private readonly LLVMModuleRef _module;
     private readonly LLVMBuilderRef _builder;
+    private readonly TypeRegistry _typeRegistry = new();
+
+    // Value storage
     private readonly Dictionary<string, (LLVMValueRef Ptr, LLVMTypeRef Type)> _namedValues = new();
-    private readonly Dictionary<string, string> _namedValueTypes = new(); // variable name -> type name
+    private readonly Dictionary<string, string> _namedValueTypes = new();
+
+    // Type storage
     private readonly Dictionary<string, FunctionSymbol> _functions = new();
     private readonly Dictionary<string, LLVMTypeRef> _functionTypes = new();
     private readonly Dictionary<string, LLVMTypeRef> _userTypes = new();
     private readonly Dictionary<string, Dictionary<string, uint>> _structFieldIndices = new();
     private readonly Dictionary<string, LLVMTypeRef> _structFieldTypes = new();
 
+    // Constants and statics
+    private readonly Dictionary<string, (SolidType Type, string ValueExpr)> _consts = new();
+    private readonly Dictionary<string, LLVMValueRef> _statics = new();
+    private readonly Dictionary<string, LLVMValueRef> _constStatics = new();
+
     // Loop context for break/continue
     private readonly Stack<(LLVMBasicBlockRef ContinueBB, LLVMBasicBlockRef BreakBB)> _loopContexts = new();
+
+    #endregion
+
+    #region Constructor and Public API
 
     public LLVMCodeGenerator(string moduleName)
     {
@@ -37,6 +57,85 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         {
             _functions[func.Name] = func;
         }
+    }
+
+    public void SetConsts(IReadOnlyList<ConstSymbol> consts)
+    {
+        foreach (var c in consts)
+        {
+            _consts[c.Name] = (c.Type, c.ValueExpression);
+        }
+    }
+
+    public void SetStatics(IReadOnlyList<StaticSymbol> statics)
+    {
+        foreach (var s in statics)
+        {
+            // Create global variable for static
+            var llvmType = GetLLVMType(s.Type);
+            var globalVar = _module.AddGlobal(llvmType, s.Name);
+            globalVar.Linkage = LLVMLinkage.LLVMInternalLinkage;
+            // Initialize to zero if no initializer
+            globalVar.Initializer = LLVMValueRef.CreateConstInt(llvmType, 0);
+            _statics[s.Name] = globalVar;
+        }
+    }
+
+    public void SetConstStatics(IReadOnlyList<ConstStaticSymbol> constStatics)
+    {
+        foreach (var cs in constStatics)
+        {
+            // Create global constant for const static
+            var llvmType = GetLLVMType(cs.Type);
+            var globalVar = _module.AddGlobal(llvmType, cs.Name);
+            globalVar.Linkage = LLVMLinkage.LLVMInternalLinkage;
+            globalVar.IsGlobalConstant = true;
+            // Parse and set initial value
+            var initValue = ParseConstExpr(cs.ValueExpression, cs.Type);
+            globalVar.Initializer = initValue;
+            _constStatics[cs.Name] = globalVar;
+        }
+    }
+
+    #endregion
+
+    #region Module Generation
+
+    private LLVMValueRef ParseConstExpr(string expr, SolidType type)
+    {
+        var llvmType = GetLLVMType(type);
+
+        // Try to parse as integer literal
+        if (long.TryParse(expr, out var intVal))
+        {
+            return LLVMValueRef.CreateConstInt(llvmType, (ulong)intVal);
+        }
+
+        // Try to parse as hex
+        if (expr.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+        {
+            var val = Convert.ToUInt64(expr.Substring(2), 16);
+            return LLVMValueRef.CreateConstInt(llvmType, val);
+        }
+
+        // Try to parse as float
+        if (double.TryParse(expr, out var floatVal))
+        {
+            return LLVMValueRef.CreateConstReal(llvmType, floatVal);
+        }
+
+        // Try to parse as boolean
+        if (expr == "true")
+        {
+            return LLVMValueRef.CreateConstInt(llvmType, 1);
+        }
+        if (expr == "false")
+        {
+            return LLVMValueRef.CreateConstInt(llvmType, 0);
+        }
+
+        // Default to zero
+        return LLVMValueRef.CreateConstInt(llvmType, 0);
     }
 
     public void GenerateModule(SolidLangParser.ProgramContext program)
@@ -70,6 +169,10 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
             }
         }
     }
+
+    #endregion
+
+    #region Type Declarations
 
     private void DeclareStructType(SolidLangParser.Struct_decl_stmtContext context)
     {
@@ -119,6 +222,10 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         _userTypes[name] = enumType;
     }
 
+    #endregion
+
+    #region Function Generation
+
     private void GenerateFunction(SolidLangParser.Func_decl_stmtContext context)
     {
         _namedValues.Clear();
@@ -150,14 +257,18 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
             var alloca = _builder.BuildAlloca(paramType, param.Name);
             _builder.BuildStore(paramValue, alloca);
             _namedValues[param.Name] = (alloca, paramType);
-            // Store type name for struct types
-            if (param.Type is Types.StructType st)
-                _namedValueTypes[param.Name] = st.Name;
+            // Store type name for struct types and pointer types
+            if (param.Type is Types.StructType or Types.PointerType or Types.UnionType or Types.EnumType)
+                _namedValueTypes[param.Name] = GetTypeNameFromSolidType(param.Type);
         }
 
         var body = context.body_stmt();
         GenerateBody(body, func, funcSymbol.ReturnType);
     }
+
+    #endregion
+
+    #region Statement Generation
 
     private void GenerateBody(SolidLangParser.Body_stmtContext body, LLVMValueRef func, SolidType returnType)
     {
@@ -176,6 +287,18 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         else if (stmt.var_decl_stmt() is { } varDecl)
         {
             GenerateVarDecl(varDecl);
+        }
+        else if (stmt.static_decl_stmt() is { } staticDecl)
+        {
+            GenerateStaticDecl(staticDecl);
+        }
+        else if (stmt.const_decl_stmt() is { } constDecl)
+        {
+            GenerateConstDecl(constDecl);
+        }
+        else if (stmt.const_static_decl_stmt() is { } constStaticDecl)
+        {
+            GenerateConstStaticDecl(constStaticDecl);
         }
         else if (stmt.if_stmt() is { } ifStmt)
         {
@@ -475,6 +598,11 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
                     SolidLangLexer.STAREQ => _builder.BuildMul(currentValue, value, "multmp"),
                     SolidLangLexer.SLASHEQ => _builder.BuildSDiv(currentValue, value, "divtmp"),
                     SolidLangLexer.PERCENTEQ => _builder.BuildSRem(currentValue, value, "modtmp"),
+                    SolidLangLexer.ANDEQ => _builder.BuildAnd(currentValue, value, "andtmp"),
+                    SolidLangLexer.OREQ => _builder.BuildOr(currentValue, value, "ortmp"),
+                    SolidLangLexer.CARETEQ => _builder.BuildXor(currentValue, value, "xortmp"),
+                    SolidLangLexer.SHLEQ => _builder.BuildShl(currentValue, value, "shltmp"),
+                    SolidLangLexer.SHREQ => _builder.BuildAShr(currentValue, value, "shrtmp"),
                     _ => throw new NotSupportedException($"Unsupported assignment operator: {op.GetText()}")
                 };
                 _builder.BuildStore(newValue, ptr);
@@ -497,8 +625,9 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
             {
                 // Get the pointer value
                 var ptrValue = GenerateUnaryExpr(unaryExpr.unary_expr());
-                // Return the pointer as the lvalue
-                return (ptrValue, LLVMTypeRef.Int32); // Assume i32 element type
+                // Get the element type from the pointer
+                var elementType = GetDereferencedElementType(unaryExpr.unary_expr());
+                return (ptrValue, elementType);
             }
         }
 
@@ -520,20 +649,15 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
                 var currentPtr = varInfo.Ptr;
                 var currentType = varInfo.Type;
                 var currentTypeName = _namedValueTypes.TryGetValue(name, out var tn) ? tn : FindTypeName(currentType);
-                var isPointer = false;
 
-                // Check if this is a pointer type
+                // Check if this is a pointer type - need to load the actual pointer value
                 if (currentTypeName != null && currentTypeName.StartsWith("*"))
                 {
-                    isPointer = true;
                     // Load the pointer value
                     currentPtr = _builder.BuildLoad2(currentType, currentPtr, "ptrload");
                     var elementTypeName = currentTypeName.Substring(1);
-                    if (_userTypes.TryGetValue(elementTypeName, out var elementType))
-                    {
-                        currentType = elementType;
-                        currentTypeName = elementTypeName;
-                    }
+                    currentType = GetLLVMTypeFromTypeName(elementTypeName);
+                    currentTypeName = elementTypeName;
                 }
 
                 foreach (var suffix in suffixes)
@@ -572,6 +696,15 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
                             }
                         }
                     }
+                    // Handle array indexing: arr[index]
+                    else if (suffix.LBRACKET() != null && suffix.expr() is { } indexExpr)
+                    {
+                        var indexValue = GenerateExpression(indexExpr);
+                        var idx0 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0);
+                        currentPtr = _builder.BuildInBoundsGEP2(currentType, currentPtr, new[] { idx0, indexValue }, "arridx");
+                        currentType = GetArrayElementType(currentType, currentTypeName);
+                        currentTypeName = FindTypeName(currentType);
+                    }
                 }
 
                 return (currentPtr, currentType);
@@ -580,6 +713,10 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
 
         return (default, default);
     }
+
+    #endregion
+
+    #region Variable Declarations
 
     private void GenerateVarDecl(SolidLangParser.Var_decl_stmtContext varDecl)
     {
@@ -603,6 +740,115 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
             _namedValueTypes[varName] = typeName;
     }
 
+    private void GenerateStaticDecl(SolidLangParser.Static_decl_stmtContext staticDecl)
+    {
+        var staticName = staticDecl.ID().GetText();
+        var typeName = staticDecl.type()?.GetText();
+        var staticType = staticDecl.type() != null
+            ? GetLLVMTypeFromContext(staticDecl.type())
+            : LLVMTypeRef.Int32;
+
+        // Check if this static already exists as a global
+        if (_statics.TryGetValue(staticName, out var existingGlobal))
+        {
+            // Use existing global
+            _namedValues[staticName] = (existingGlobal, staticType);
+            if (typeName != null)
+                _namedValueTypes[staticName] = typeName;
+            return;
+        }
+
+        // Create new global variable for static
+        var globalVar = _module.AddGlobal(staticType, staticName);
+        globalVar.Linkage = LLVMLinkage.LLVMInternalLinkage;
+
+        if (staticDecl.expr() is { } initExpr)
+        {
+            // For static, initializer is evaluated at runtime on first entry
+            // For simplicity, we'll set an initial value and store the expression
+            // In a real compiler, this would need guard variables for thread safety
+            var initValue = GenerateExpression(initExpr);
+            globalVar.Initializer = LLVMValueRef.CreateConstInt(staticType, 0);
+            // Store the computed value
+            _builder.BuildStore(initValue, globalVar);
+        }
+        else
+        {
+            globalVar.Initializer = LLVMValueRef.CreateConstInt(staticType, 0);
+        }
+
+        _statics[staticName] = globalVar;
+        _namedValues[staticName] = (globalVar, staticType);
+        if (typeName != null)
+            _namedValueTypes[staticName] = typeName;
+    }
+
+    private void GenerateConstDecl(SolidLangParser.Const_decl_stmtContext constDecl)
+    {
+        var constName = constDecl.ID().GetText();
+        var typeName = constDecl.type()?.GetText();
+        var constType = constDecl.type() != null
+            ? GetLLVMTypeFromContext(constDecl.type())
+            : LLVMTypeRef.Int32;
+
+        // const is compile-time only - store expression for substitution
+        var valueExpr = constDecl.expr()?.GetText() ?? "0";
+        _consts[constName] = (new I32Type(), valueExpr); // Type tracking for future use
+
+        // For now, evaluate the expression and store as a constant value
+        if (constDecl.expr() is { } expr)
+        {
+            var value = GenerateExpression(expr);
+            // Create an alloca to hold the const value (treated as immutable)
+            var alloca = _builder.BuildAlloca(constType, constName);
+            _builder.BuildStore(value, alloca);
+            _namedValues[constName] = (alloca, constType);
+            if (typeName != null)
+                _namedValueTypes[constName] = typeName;
+        }
+    }
+
+    private void GenerateConstStaticDecl(SolidLangParser.Const_static_decl_stmtContext constStaticDecl)
+    {
+        var constName = constStaticDecl.ID().GetText();
+        var typeName = constStaticDecl.type()?.GetText();
+        var constType = constStaticDecl.type() != null
+            ? GetLLVMTypeFromContext(constStaticDecl.type())
+            : LLVMTypeRef.Int32;
+
+        // Check if this const static already exists as a global
+        if (_constStatics.TryGetValue(constName, out var existingGlobal))
+        {
+            _namedValues[constName] = (existingGlobal, constType);
+            if (typeName != null)
+                _namedValueTypes[constName] = typeName;
+            return;
+        }
+
+        // Create global constant for const static (read-only)
+        var globalVar = _module.AddGlobal(constType, constName);
+        globalVar.Linkage = LLVMLinkage.LLVMInternalLinkage;
+        globalVar.IsGlobalConstant = true;
+
+        if (constStaticDecl.expr() is { } initExpr)
+        {
+            var initValue = GenerateExpression(initExpr);
+            // For const static, we need a compile-time constant
+            // For simplicity, use the generated value
+            globalVar.Initializer = LLVMValueRef.CreateConstInt(constType, 0);
+            _builder.BuildStore(initValue, globalVar);
+        }
+        else
+        {
+            globalVar.Initializer = LLVMValueRef.CreateConstInt(constType, 0);
+        }
+
+        _constStatics[constName] = globalVar;
+        _namedValues[constName] = (globalVar, constType);
+        if (typeName != null)
+            _namedValueTypes[constName] = typeName;
+    }
+
     private void GenerateReturn(SolidLangParser.Return_stmtContext returnStmt, SolidType returnType)
     {
         if (returnStmt.expr() is { } expr)
@@ -615,6 +861,10 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
             _builder.BuildRetVoid();
         }
     }
+
+    #endregion
+
+    #region Expression Generation
 
     private LLVMValueRef GenerateExpression(SolidLangParser.ExprContext expr)
     {
@@ -872,8 +1122,15 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         if (op.Symbol.Type == SolidLangLexer.STAR)
         {
             var ptrValue = GenerateUnaryExpr(unaryExpr.unary_expr());
-            // We need the element type - assume i32 for now
-            return _builder.BuildLoad2(LLVMTypeRef.Int32, ptrValue, "deref");
+            // Try to get the element type from the pointer variable
+            var elementType = GetDereferencedElementType(unaryExpr.unary_expr());
+            return _builder.BuildLoad2(elementType, ptrValue, "deref");
+        }
+
+        // Handle reference operator ^ (safe reference)
+        if (op.Symbol.Type == SolidLangLexer.CARET)
+        {
+            return GenerateReferenceOf(unaryExpr.unary_expr());
         }
 
         var operand = GenerateUnaryExpr(unaryExpr.unary_expr());
@@ -885,6 +1142,29 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
             SolidLangLexer.TILDE => _builder.BuildNot(operand, "invtmp"),
             _ => throw new NotSupportedException($"Unknown unary operator: {op.GetText()}")
         };
+    }
+
+    private LLVMTypeRef GetDereferencedElementType(SolidLangParser.Unary_exprContext unaryExpr)
+    {
+        // Try to get the pointer variable name
+        var postfix = unaryExpr.postfix_expr();
+        if (postfix != null)
+        {
+            var primaryExpr = postfix.primary_expr();
+            if (primaryExpr?.ID() is { } id)
+            {
+                var name = id.GetText();
+                // Check if this variable has a pointer type
+                if (_namedValueTypes.TryGetValue(name, out var typeName) && typeName.StartsWith("*"))
+                {
+                    var elementTypeName = typeName.Substring(1);
+                    return GetLLVMTypeFromTypeName(elementTypeName);
+                }
+            }
+        }
+
+        // Default to i32 if we can't determine the type
+        return LLVMTypeRef.Int32;
     }
 
     private LLVMValueRef GenerateAddressOf(SolidLangParser.Unary_exprContext unaryExpr)
@@ -908,14 +1188,37 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         throw new InvalidOperationException("Cannot take address of this expression");
     }
 
+    private LLVMValueRef GenerateReferenceOf(SolidLangParser.Unary_exprContext unaryExpr)
+    {
+        // ^ operator creates a safe reference - similar to & but with safety guarantees
+        // For LLVM IR generation, it's essentially the same as address-of
+        var postfix = unaryExpr.postfix_expr();
+        if (postfix == null)
+            throw new InvalidOperationException("Cannot create reference to this expression");
+
+        var primaryExpr = postfix.primary_expr();
+        if (primaryExpr?.ID() is { } id)
+        {
+            var name = id.GetText();
+            if (_namedValues.TryGetValue(name, out var varInfo))
+            {
+                // The variable is already stored as a pointer, return it directly
+                return varInfo.Ptr;
+            }
+        }
+
+        throw new InvalidOperationException("Cannot create reference to this expression");
+    }
+
     private LLVMValueRef GeneratePostfixExpr(SolidLangParser.Postfix_exprContext postfixExpr)
     {
         var suffixes = postfixExpr.postfix_suffix();
 
-        // Check if we have member access
+        // Check if we have member access or array indexing
         if (suffixes != null && suffixes.Length > 0)
         {
             var hasMemberAccess = suffixes.Any(s => s.DOT() != null || s.MINUSRARROW() != null);
+            var hasArrayAccess = suffixes.Any(s => s.LBRACKET() != null);
             var hasCall = suffixes.Any(s => s.LPAREN() != null);
 
             if (hasMemberAccess)
@@ -929,25 +1232,20 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
                     {
                         var resultPtr = varInfo.Ptr;
                         var resultType = varInfo.Type;
-                        var isPointer = false;
 
-                        // Check if this is a pointer type
+                        // Check if this is a pointer type - need to load the actual pointer value
                         if (_namedValueTypes.TryGetValue(name, out var typeName) && typeName.StartsWith("*"))
                         {
-                            isPointer = true;
                             // Load the pointer value
                             resultPtr = _builder.BuildLoad2(resultType, resultPtr, "ptrload");
-                            // Get the element type
+                            // Get the element type name (remove leading *)
                             var elementTypeName = typeName.Substring(1);
-                            if (_userTypes.TryGetValue(elementTypeName, out var elementType))
-                            {
-                                resultType = elementType;
-                                typeName = elementTypeName;
-                            }
+                            // Get the LLVM type for the element type
+                            resultType = GetLLVMTypeFromTypeName(elementTypeName);
                         }
 
                         var resultTypeName = _namedValueTypes.TryGetValue(name, out var tn) ? tn : FindTypeName(resultType);
-                        if (isPointer && resultTypeName != null && resultTypeName.StartsWith("*"))
+                        if (resultTypeName != null && resultTypeName.StartsWith("*"))
                         {
                             resultTypeName = resultTypeName.Substring(1);
                         }
@@ -988,6 +1286,16 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
                                     }
                                 }
                             }
+                            // Handle array indexing: arr[index]
+                            else if (suffix.LBRACKET() != null && suffix.expr() is { } indexExpr)
+                            {
+                                var indexValue = GenerateExpression(indexExpr);
+                                var idx0 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0);
+                                resultPtr = _builder.BuildInBoundsGEP2(resultType, resultPtr, new[] { idx0, indexValue }, "arridx");
+                                // For now, assume element type is i32 if we can't determine it
+                                resultType = GetArrayElementType(resultType, resultTypeName);
+                                resultTypeName = FindTypeName(resultType);
+                            }
                         }
 
                         return _builder.BuildLoad2(resultType, resultPtr, "member");
@@ -1005,9 +1313,48 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
                     {
                         result = GenerateCall(result, suffix.call_args());
                     }
+                    else if (suffix.LBRACKET() != null && suffix.expr() is { } indexExpr)
+                    {
+                        // Array indexing after function call
+                        var indexValue = GenerateExpression(indexExpr);
+                        var idx0 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0);
+                        // Store result to alloca for GEP
+                        var tempAlloca = _builder.BuildAlloca(result.TypeOf, "temparr");
+                        _builder.BuildStore(result, tempAlloca);
+                        var elementType = result.TypeOf.ElementType;
+                        result = _builder.BuildInBoundsGEP2(result.TypeOf, tempAlloca, new[] { idx0, indexValue }, "arridx");
+                        result = _builder.BuildLoad2(elementType, result, "arrelem");
+                    }
                 }
 
                 return result;
+            }
+            else if (hasArrayAccess)
+            {
+                // Handle array indexing
+                var primaryExpr = postfixExpr.primary_expr();
+                if (primaryExpr?.ID() is { } id)
+                {
+                    var name = id.GetText();
+                    if (_namedValues.TryGetValue(name, out var varInfo))
+                    {
+                        var resultPtr = varInfo.Ptr;
+                        var resultType = varInfo.Type;
+
+                        foreach (var suffix in suffixes)
+                        {
+                            if (suffix.LBRACKET() != null && suffix.expr() is { } indexExpr)
+                            {
+                                var indexValue = GenerateExpression(indexExpr);
+                                var idx0 = LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, 0);
+                                resultPtr = _builder.BuildInBoundsGEP2(resultType, resultPtr, new[] { idx0, indexValue }, "arridx");
+                                resultType = GetArrayElementType(resultType, _namedValueTypes.TryGetValue(name, out var tn) ? tn : null);
+                            }
+                        }
+
+                        return _builder.BuildLoad2(resultType, resultPtr, "arrelem");
+                    }
+                }
             }
         }
 
@@ -1025,6 +1372,23 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
             }
         }
         return null;
+    }
+
+    private LLVMTypeRef GetArrayElementType(LLVMTypeRef arrayType, string? typeName)
+    {
+        // If we have a type name like "[N]T", extract the element type T
+        if (typeName != null && typeName.StartsWith("["))
+        {
+            var bracketEnd = typeName.IndexOf(']');
+            if (bracketEnd > 0 && bracketEnd < typeName.Length - 1)
+            {
+                var elementTypeName = typeName.Substring(bracketEnd + 1);
+                return GetLLVMTypeFromTypeName(elementTypeName);
+            }
+        }
+
+        // Default to i32
+        return LLVMTypeRef.Int32;
     }
 
     private LLVMTypeRef GetPrimaryExprType(SolidLangParser.Primary_exprContext primaryExpr)
@@ -1231,12 +1595,55 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         if (literal.INTEGER_LITERAL() is { } intLit)
         {
             var text = intLit.GetText();
-            var suffixIndex = text.IndexOfAny(new[] { 'i', 'u' });
-            if (suffixIndex > 0)
-                text = text.Substring(0, suffixIndex);
 
-            var value = long.Parse(text);
-            return LLVMValueRef.CreateConstInt(LLVMTypeRef.Int32, (ulong)value);
+            // Extract suffix (at the end: i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize)
+            var suffix = ExtractIntegerSuffix(ref text);
+
+            // Parse the integer value based on format
+            ulong value = ParseIntegerLiteral(text);
+
+            // Determine the LLVM type based on suffix
+            var llvmType = suffix switch
+            {
+                "i8" => LLVMTypeRef.Int8,
+                "i16" => LLVMTypeRef.Int16,
+                "i32" => LLVMTypeRef.Int32,
+                "i64" => LLVMTypeRef.Int64,
+                "i128" => LLVMContextRef.Global.GetIntType(128),
+                "isize" => LLVMTypeRef.Int64,
+                "u8" => LLVMTypeRef.Int8,
+                "u16" => LLVMTypeRef.Int16,
+                "u32" => LLVMTypeRef.Int32,
+                "u64" => LLVMTypeRef.Int64,
+                "u128" => LLVMContextRef.Global.GetIntType(128),
+                "usize" => LLVMTypeRef.Int64,
+                _ => LLVMTypeRef.Int32 // Default to i32
+            };
+
+            return LLVMValueRef.CreateConstInt(llvmType, value);
+        }
+
+        if (literal.FLOAT_LITERAL() is { } floatLit)
+        {
+            var text = floatLit.GetText();
+
+            // Extract suffix (f16, f32, f64, f128)
+            var suffix = ExtractFloatSuffix(ref text);
+
+            // Parse the float value
+            var value = double.Parse(text, System.Globalization.CultureInfo.InvariantCulture);
+
+            // Determine the LLVM type based on suffix
+            var llvmType = suffix switch
+            {
+                "f16" => LLVMTypeRef.Half,
+                "f32" => LLVMTypeRef.Float,
+                "f64" => LLVMTypeRef.Double,
+                "f128" => LLVMTypeRef.FP128,
+                _ => LLVMTypeRef.Double // Default to f64
+            };
+
+            return LLVMValueRef.CreateConstReal(llvmType, value);
         }
 
         if (literal.BOOL_LITERAL() is { } boolLit)
@@ -1248,11 +1655,96 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         throw new NotSupportedException($"Unsupported literal: {literal.GetText()}");
     }
 
+    private string ExtractIntegerSuffix(ref string text)
+    {
+        // Check for suffixes at the end: i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize
+        var suffixes = new[] { "i128", "u128", "isize", "usize", "i64", "u64", "i32", "u32", "i16", "u16", "i8", "u8" };
+
+        foreach (var suffix in suffixes)
+        {
+            if (text.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+            {
+                text = text.Substring(0, text.Length - suffix.Length);
+                return suffix.ToLower();
+            }
+        }
+
+        return "";
+    }
+
+    private string ExtractFloatSuffix(ref string text)
+    {
+        // Check for suffixes at the end: f16, f32, f64, f128
+        var suffixes = new[] { "f128", "f64", "f32", "f16" };
+
+        foreach (var suffix in suffixes)
+        {
+            if (text.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+            {
+                text = text.Substring(0, text.Length - suffix.Length);
+                return suffix.ToLower();
+            }
+        }
+
+        return "";
+    }
+
+    private ulong ParseIntegerLiteral(string text)
+    {
+        // Remove underscores
+        text = text.Replace("_", "");
+
+        // Handle different bases
+        if (text.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+        {
+            // Hexadecimal
+            return Convert.ToUInt64(text.Substring(2), 16);
+        }
+        else if (text.StartsWith("0o", StringComparison.OrdinalIgnoreCase))
+        {
+            // Octal
+            return Convert.ToUInt64(text.Substring(2), 8);
+        }
+        else if (text.StartsWith("0b", StringComparison.OrdinalIgnoreCase))
+        {
+            // Binary
+            return Convert.ToUInt64(text.Substring(2), 2);
+        }
+        else
+        {
+            // Decimal
+            return ulong.Parse(text);
+        }
+    }
+
+    #endregion
+
+    #region Type Conversion
+
     private LLVMTypeRef GetLLVMType(SolidType type)
     {
         return type switch
         {
+            // Signed integers
+            I8Type => LLVMTypeRef.Int8,
+            I16Type => LLVMTypeRef.Int16,
             I32Type => LLVMTypeRef.Int32,
+            I64Type => LLVMTypeRef.Int64,
+            I128Type => LLVMContextRef.Global.GetIntType(128),
+            IsizeType => LLVMTypeRef.Int64, // Pointer-sized signed integer
+            // Unsigned integers (same LLVM types, semantics differ)
+            U8Type => LLVMTypeRef.Int8,
+            U16Type => LLVMTypeRef.Int16,
+            U32Type => LLVMTypeRef.Int32,
+            U64Type => LLVMTypeRef.Int64,
+            U128Type => LLVMContextRef.Global.GetIntType(128),
+            UsizeType => LLVMTypeRef.Int64, // Pointer-sized unsigned integer
+            // Floating-point
+            F16Type => LLVMTypeRef.Half,      // 16-bit floating point
+            F32Type => LLVMTypeRef.Float,     // 32-bit floating point
+            F64Type => LLVMTypeRef.Double,    // 64-bit floating point
+            F128Type => LLVMTypeRef.FP128,    // 128-bit floating point
+            // Other
             BoolType => LLVMTypeRef.Int1,
             VoidType => LLVMTypeRef.Void,
             Types.StructType structType => _userTypes.TryGetValue(structType.Name, out var t) ? t : LLVMTypeRef.Int32,
@@ -1283,7 +1775,26 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
 
             return typeName switch
             {
+                // Signed integers
+                "i8" => LLVMTypeRef.Int8,
+                "i16" => LLVMTypeRef.Int16,
                 "i32" => LLVMTypeRef.Int32,
+                "i64" => LLVMTypeRef.Int64,
+                "i128" => LLVMContextRef.Global.GetIntType(128),
+                "isize" => LLVMTypeRef.Int64,
+                // Unsigned integers
+                "u8" => LLVMTypeRef.Int8,
+                "u16" => LLVMTypeRef.Int16,
+                "u32" => LLVMTypeRef.Int32,
+                "u64" => LLVMTypeRef.Int64,
+                "u128" => LLVMContextRef.Global.GetIntType(128),
+                "usize" => LLVMTypeRef.Int64,
+                // Floating-point
+                "f16" => LLVMTypeRef.Half,
+                "f32" => LLVMTypeRef.Float,
+                "f64" => LLVMTypeRef.Double,
+                "f128" => LLVMTypeRef.FP128,
+                // Other
                 "bool" => LLVMTypeRef.Int1,
                 "void" => LLVMTypeRef.Void,
                 _ => throw new NotSupportedException($"Unknown type: {typeName}")
@@ -1317,6 +1828,86 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         };
     }
 
+    private string GetTypeNameFromSolidType(SolidType type)
+    {
+        return type switch
+        {
+            Types.StructType st => st.Name,
+            Types.UnionType ut => ut.Name,
+            Types.EnumType et => et.Name,
+            Types.PointerType pt => "*" + GetTypeNameFromSolidType(pt.ElementType),
+            // Signed integers
+            Types.I8Type => "i8",
+            Types.I16Type => "i16",
+            Types.I32Type => "i32",
+            Types.I64Type => "i64",
+            Types.I128Type => "i128",
+            Types.IsizeType => "isize",
+            // Unsigned integers
+            Types.U8Type => "u8",
+            Types.U16Type => "u16",
+            Types.U32Type => "u32",
+            Types.U64Type => "u64",
+            Types.U128Type => "u128",
+            Types.UsizeType => "usize",
+            // Floating-point
+            Types.F16Type => "f16",
+            Types.F32Type => "f32",
+            Types.F64Type => "f64",
+            Types.F128Type => "f128",
+            // Other
+            Types.BoolType => "bool",
+            Types.VoidType => "void",
+            _ => type.Name
+        };
+    }
+
+    private LLVMTypeRef GetLLVMTypeFromTypeName(string typeName)
+    {
+        // Handle pointer types
+        if (typeName.StartsWith("*"))
+        {
+            var elementType = GetLLVMTypeFromTypeName(typeName.Substring(1));
+            return LLVMTypeRef.CreatePointer(elementType, 0);
+        }
+
+        // Check user-defined types (struct, union, enum)
+        if (_userTypes.TryGetValue(typeName, out var userType))
+            return userType;
+
+        // Handle primitive types
+        return typeName switch
+        {
+            // Signed integers
+            "i8" => LLVMTypeRef.Int8,
+            "i16" => LLVMTypeRef.Int16,
+            "i32" => LLVMTypeRef.Int32,
+            "i64" => LLVMTypeRef.Int64,
+            "i128" => LLVMContextRef.Global.GetIntType(128),
+            "isize" => LLVMTypeRef.Int64,
+            // Unsigned integers
+            "u8" => LLVMTypeRef.Int8,
+            "u16" => LLVMTypeRef.Int16,
+            "u32" => LLVMTypeRef.Int32,
+            "u64" => LLVMTypeRef.Int64,
+            "u128" => LLVMContextRef.Global.GetIntType(128),
+            "usize" => LLVMTypeRef.Int64,
+            // Floating-point
+            "f16" => LLVMTypeRef.Half,
+            "f32" => LLVMTypeRef.Float,
+            "f64" => LLVMTypeRef.Double,
+            "f128" => LLVMTypeRef.FP128,
+            // Other
+            "bool" => LLVMTypeRef.Int1,
+            "void" => LLVMTypeRef.Void,
+            _ => LLVMTypeRef.Int32 // Default fallback
+        };
+    }
+
+    #endregion
+
+    #region Output
+
     public string GetIR()
     {
         return _module.PrintToString();
@@ -1337,12 +1928,13 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
             throw new InvalidOperationException($"Failed to get target: {error}");
         }
 
+        // Use PIC (Position Independent Code) for better compatibility
         var targetMachine = target.CreateTargetMachine(
             targetTriple,
             "generic",
             "",
             LLVMCodeGenOptLevel.LLVMCodeGenLevelDefault,
-            LLVMRelocMode.LLVMRelocDefault,
+            LLVMRelocMode.LLVMRelocPIC,
             LLVMCodeModel.LLVMCodeModelDefault
         );
 
@@ -1354,4 +1946,6 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         _builder.Dispose();
         _module.Dispose();
     }
+
+    #endregion
 }
