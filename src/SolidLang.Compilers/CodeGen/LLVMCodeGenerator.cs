@@ -14,6 +14,9 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
     private readonly Dictionary<string, FunctionSymbol> _functions = new();
     private readonly Dictionary<string, LLVMTypeRef> _functionTypes = new();
 
+    // Loop context for break/continue
+    private readonly Stack<(LLVMBasicBlockRef ContinueBB, LLVMBasicBlockRef BreakBB)> _loopContexts = new();
+
     public LLVMCodeGenerator(string moduleName)
     {
         LLVM.InitializeNativeTarget();
@@ -99,6 +102,256 @@ public sealed unsafe class LLVMCodeGenerator : IDisposable
         else if (stmt.var_decl_stmt() is { } varDecl)
         {
             GenerateVarDecl(varDecl);
+        }
+        else if (stmt.if_stmt() is { } ifStmt)
+        {
+            GenerateIfStmt(ifStmt, func, returnType);
+        }
+        else if (stmt.while_stmt() is { } whileStmt)
+        {
+            GenerateWhileStmt(whileStmt, func, returnType);
+        }
+        else if (stmt.for_stmt() is { } forStmt)
+        {
+            GenerateForStmt(forStmt, func, returnType);
+        }
+        else if (stmt.assign_stmt() is { } assignStmt)
+        {
+            GenerateAssignStmt(assignStmt);
+        }
+        else if (stmt.expr_stmt() is { } exprStmt)
+        {
+            GenerateExpression(exprStmt.expr());
+        }
+        else if (stmt.break_stmt() is { })
+        {
+            if (_loopContexts.Count > 0)
+            {
+                var (_, breakBB) = _loopContexts.Peek();
+                _builder.BuildBr(breakBB);
+            }
+        }
+        else if (stmt.continue_stmt() is { })
+        {
+            if (_loopContexts.Count > 0)
+            {
+                var (continueBB, _) = _loopContexts.Peek();
+                _builder.BuildBr(continueBB);
+            }
+        }
+    }
+
+    private void GenerateIfStmt(SolidLangParser.If_stmtContext ifStmt, LLVMValueRef func, SolidType returnType)
+    {
+        var condValue = GenerateExpression(ifStmt.expr());
+
+        // Convert condition to i1 if needed
+        var condBool = _builder.BuildICmp(LLVMIntPredicate.LLVMIntNE, condValue,
+            LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 0), "ifcond");
+
+        var thenBB = func.AppendBasicBlock("then");
+        var elseBB = func.AppendBasicBlock("else");
+        var mergeBB = func.AppendBasicBlock("ifcont");
+
+        _builder.BuildCondBr(condBool, thenBB, elseBB);
+
+        // Generate then block
+        _builder.PositionAtEnd(thenBB);
+        var thenBody = ifStmt.body_stmt();
+        if (thenBody != null && thenBody.Length > 0)
+        {
+            GenerateBody(thenBody[0], func, returnType);
+        }
+        // Add terminator if not already present
+        if (thenBB.Terminator.Handle == IntPtr.Zero)
+        {
+            _builder.BuildBr(mergeBB);
+        }
+
+        // Generate else block
+        _builder.PositionAtEnd(elseBB);
+        if (ifStmt.ELSE() != null)
+        {
+            var elseBody = ifStmt.body_stmt();
+            if (elseBody != null && elseBody.Length > 1)
+            {
+                GenerateBody(elseBody[1], func, returnType);
+            }
+            else
+            {
+                var nestedIfs = ifStmt.if_stmt();
+                if (nestedIfs != null && nestedIfs.Length > 0)
+                {
+                    GenerateIfStmt(nestedIfs[0], func, returnType);
+                }
+            }
+        }
+        // Add terminator if not already present
+        if (elseBB.Terminator.Handle == IntPtr.Zero)
+        {
+            _builder.BuildBr(mergeBB);
+        }
+
+        // Continue at merge block
+        _builder.PositionAtEnd(mergeBB);
+    }
+
+    private void GenerateWhileStmt(SolidLangParser.While_stmtContext whileStmt, LLVMValueRef func, SolidType returnType)
+    {
+        var condBB = func.AppendBasicBlock("whilecond");
+        var bodyBB = func.AppendBasicBlock("whilebody");
+        var afterBB = func.AppendBasicBlock("whilecont");
+
+        // Jump to condition check
+        _builder.BuildBr(condBB);
+
+        // Condition block
+        _builder.PositionAtEnd(condBB);
+        var condValue = GenerateExpression(whileStmt.expr());
+        var condBool = _builder.BuildICmp(LLVMIntPredicate.LLVMIntNE, condValue,
+            LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 0), "whilecond");
+        _builder.BuildCondBr(condBool, bodyBB, afterBB);
+
+        // Body block - push loop context for break/continue
+        // continue goes to condBB, break goes to afterBB
+        _builder.PositionAtEnd(bodyBB);
+        _loopContexts.Push((condBB, afterBB));
+
+        if (whileStmt.body_stmt() is { } body)
+        {
+            GenerateBody(body, func, returnType);
+        }
+
+        _loopContexts.Pop();
+
+        // Check if current block needs a jump back to condition
+        // Note: after generating body, we may be in a different block than bodyBB
+        var currentBB = _builder.InsertBlock;
+        if (currentBB.Handle != IntPtr.Zero && currentBB.Terminator.Handle == IntPtr.Zero)
+        {
+            _builder.BuildBr(condBB);
+        }
+
+        // Continue after loop
+        _builder.PositionAtEnd(afterBB);
+    }
+
+    private void GenerateForStmt(SolidLangParser.For_stmtContext forStmt, LLVMValueRef func, SolidType returnType)
+    {
+        var condBB = func.AppendBasicBlock("forcond");
+        var bodyBB = func.AppendBasicBlock("forbody");
+        var updateBB = func.AppendBasicBlock("forupdate");
+        var afterBB = func.AppendBasicBlock("forcont");
+
+        // Initialize
+        if (forStmt.var_decl_pseudo_expr() is { } initDecl)
+        {
+            // Parse var declaration from pseudo expr
+            var varName = initDecl.ID().GetText();
+            var varType = GetLLVMType(initDecl.type().GetText());
+            var alloca = _builder.BuildAlloca(varType, varName);
+
+            if (initDecl.expr() is { } initExpr)
+            {
+                var initValue = GenerateExpression(initExpr);
+                _builder.BuildStore(initValue, alloca);
+            }
+            _namedValues[varName] = (alloca, varType);
+        }
+
+        _builder.BuildBr(condBB);
+
+        // Condition block
+        _builder.PositionAtEnd(condBB);
+        if (forStmt.expr() is { } condExpr)
+        {
+            var condValue = GenerateExpression(condExpr);
+            var condBool = _builder.BuildICmp(LLVMIntPredicate.LLVMIntNE, condValue,
+                LLVMValueRef.CreateConstInt(LLVMTypeRef.Int1, 0), "forcond");
+            _builder.BuildCondBr(condBool, bodyBB, afterBB);
+        }
+        else
+        {
+            // No condition means infinite loop (condition is always true)
+            _builder.BuildBr(bodyBB);
+        }
+
+        // Body block - push loop context for break/continue
+        // continue goes to update block, break goes to after block
+        _builder.PositionAtEnd(bodyBB);
+        _loopContexts.Push((updateBB, afterBB));
+        if (forStmt.body_stmt() is { } body)
+        {
+            GenerateBody(body, func, returnType);
+        }
+        _loopContexts.Pop();
+
+        // Jump to update if no terminator
+        if (bodyBB.Terminator.Handle == IntPtr.Zero)
+        {
+            _builder.BuildBr(updateBB);
+        }
+
+        // Update (increment) block
+        _builder.PositionAtEnd(updateBB);
+        if (forStmt.assign_pseudo_expr() is { } update)
+        {
+            GenerateAssignPseudoExpr(update);
+        }
+        _builder.BuildBr(condBB);
+
+        // Continue after loop
+        _builder.PositionAtEnd(afterBB);
+    }
+
+    private void GenerateAssignStmt(SolidLangParser.Assign_stmtContext assignStmt)
+    {
+        GenerateAssignPseudoExpr(assignStmt.assign_pseudo_expr());
+    }
+
+    private void GenerateAssignPseudoExpr(SolidLangParser.Assign_pseudo_exprContext assign)
+    {
+        var targetExpr = assign.expr(0);
+        var valueExpr = assign.expr(1);
+
+        // Get target variable
+        if (targetExpr.conditional_expr().or_expr().and_expr(0).bit_or_expr(0)
+            .bit_xor_expr(0).bit_and_expr(0).eq_expr(0).cmp_expr(0)
+            .shift_expr(0).add_expr(0).mul_expr(0).unary_expr(0)
+            .postfix_expr()?.primary_expr()?.ID() is { } targetId)
+        {
+            var varName = targetId.GetText();
+            if (_namedValues.TryGetValue(varName, out var varInfo))
+            {
+                var value = GenerateExpression(valueExpr);
+
+                var children = assign.children;
+                if (children == null) return;
+
+                var op = children.OfType<ITerminalNode>().FirstOrDefault();
+                if (op == null) return;
+
+                if (op.Symbol.Type == SolidLangLexer.EQ)
+                {
+                    // Simple assignment
+                    _builder.BuildStore(value, varInfo.Ptr);
+                }
+                else
+                {
+                    // Compound assignment
+                    var currentValue = _builder.BuildLoad2(varInfo.Type, varInfo.Ptr, varName);
+                    LLVMValueRef newValue = op.Symbol.Type switch
+                    {
+                        SolidLangLexer.PLUSEQ => _builder.BuildAdd(currentValue, value, "addtmp"),
+                        SolidLangLexer.MINUSEQ => _builder.BuildSub(currentValue, value, "subtmp"),
+                        SolidLangLexer.STAREQ => _builder.BuildMul(currentValue, value, "multmp"),
+                        SolidLangLexer.SLASHEQ => _builder.BuildSDiv(currentValue, value, "divtmp"),
+                        SolidLangLexer.PERCENTEQ => _builder.BuildSRem(currentValue, value, "modtmp"),
+                        _ => throw new NotSupportedException($"Unsupported assignment operator: {op.GetText()}")
+                    };
+                    _builder.BuildStore(newValue, varInfo.Ptr);
+                }
+            }
         }
     }
 

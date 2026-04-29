@@ -1,0 +1,54 @@
+namespace main;
+
+// 计算阶乘
+func factorial(n: i32): i32 {
+    var result: i32 = 1;
+    var i: i32 = 1;
+    while i <= n {
+        result = result * i;
+        i = i + 1;
+    }
+    return result;
+}
+
+// 计算斐波那契数列第n项
+func fibonacci(n: i32): i32 {
+    if n <= 1 {
+        return n;
+    }
+    var a: i32 = 0;
+    var b: i32 = 1;
+    var i: i32 = 2;
+    while i <= n {
+        var temp: i32 = a + b;
+        a = b;
+        b = temp;
+        i = i + 1;
+    }
+    return b;
+}
+
+// 使用for循环计算1到n的和
+func sum_to(n: i32): i32 {
+    var sum: i32 = 0;
+    for var i: i32 = 1; i <= n; i = i + 1 {
+        sum = sum + i;
+    }
+    return sum;
+}
+
+// 主函数：测试各种控制流
+func main(): i32 {
+    // 测试阶乘：5! = 120
+    var fact5: i32 = factorial(5);
+
+    // 测试斐波那契：fib(10) = 55
+    var fib10: i32 = fibonacci(10);
+
+    // 测试求和：sum(1..10) = 55
+    var sum10: i32 = sum_to(10);
+
+    // 返回验证结果：120 - 55 = 65, 然后 65 + 55 = 120
+    // 但我们直接返回 fib10 作为主返回值
+    return fib10;
+}

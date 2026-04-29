@@ -1,0 +1,82 @@
+namespace main;
+
+// 判断是否为质数
+func is_prime(n: i32): i32 {
+    if n <= 1 { return 0; }
+    if n <= 3 { return 1; }
+    if n % 2 == 0 { return 0; }
+    var i: i32 = 3;
+    while i * i <= n {
+        if n % i == 0 { return 0; }
+        i = i + 2;
+    }
+    return 1;
+}
+
+// 查找第一个大于start的质数
+func next_prime(start: i32): i32 {
+    var n: i32 = start + 1;
+    while 1 {
+        if is_prime(n) == 1 { return n; }
+        n = n + 1;
+    }
+    return 0;
+}
+
+// 计算前count个质数的和
+func sum_primes(count: i32): i32 {
+    var sum: i32 = 0;
+    var num: i32 = 2;
+    var cnt: i32 = 0;
+    while cnt < count {
+        if is_prime(num) == 1 {
+            sum = sum + num;
+            cnt = cnt + 1;
+        }
+        num = num + 1;
+    }
+    return sum;
+}
+
+// 使用break查找第一个能被7整除的数（在1到limit范围内）
+func find_divisible_by_7(limit: i32): i32 {
+    var i: i32 = 1;
+    while i <= limit {
+        if i % 7 == 0 { return i; }
+        i = i + 1;
+    }
+    return 0;
+}
+
+// 计算偶数之和，跳过奇数（演示逻辑运算）
+func sum_evens_with_skip(start: i32, end: i32): i32 {
+    var sum: i32 = 0;
+    var i: i32 = start;
+    while i <= end {
+        // 跳过奇数：如果i不能被2整除，则跳过
+        if i % 2 != 0 { i = i + 1;}
+        else {
+            sum = sum + i;
+            i = i + 1;
+        }
+    }
+    return sum;
+}
+
+// 主函数
+func main(): i32 {
+    // 验证质数：is_prime(17) = 1
+    var prime_check: i32 = is_prime(17);
+
+    // 前10个质数的和：2+3+5+7+11+13+17+19+23+29 = 129
+    var prime_sum: i32 = sum_primes(10);
+
+    // 查找第一个能被7整除的数：7
+    var div7: i32 = find_divisible_by_7(100);
+
+    // 计算10到20之间偶数的和：10+12+14+16+18+20 = 90
+    var even_sum: i32 = sum_evens_with_skip(10, 20);
+
+    // 返回 prime_sum = 129 进行验证
+    return prime_sum;
+}
