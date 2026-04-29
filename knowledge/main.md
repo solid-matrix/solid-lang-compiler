@@ -23,11 +23,9 @@
 
 - 配套工具文档
 
-  - antlr4 的命令 `java org.antlr.v4.Tool`， 后面跟参数使用
-  - 几个类似语言的g4 `.note\grammars`目录下
-  - LLVMSharp 源码在 `.note\LLVMSharp` 目录下
-  - altlr4的文档在 `.note\antlr4-doc` 目录下
-  - 
+  - 几个类似语言的g4 `./knowledge/grammars`目录下
+  - LLVMSharp 源码在 `./knowledge/LLVMSharp` 目录下
+  - altlr4的文档在 `/knowledge/antlr4-doc` 目录下
 
 - 要求
 
