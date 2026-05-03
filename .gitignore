@@ -1,0 +1,17 @@
+bin/
+obj/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+*.DotSettings
+*.DotSettings.user
+.idea
+.vs
+.vscode
+.claude
+.cache
+*.ll
+*.o
+*.exe
+*.tokens
+*.interp
