@@ -109,7 +109,21 @@ public class AstBuilder : SolidLangParserBaseVisitor<AstNode>
     public override AstNode VisitArray_type(SolidLangParser.Array_typeContext context)
     {
         var elementType = (TypeNode)Visit(context.type());
-        return new ArrayTypeNode(elementType, 0) { Location = GetLocation(context) };
+
+        // Parse the size expression - it should be an integer literal
+        ulong size = 0;
+        var exprContext = context.expr();
+        if (exprContext != null)
+        {
+            // Try to get the integer literal value
+            var expr = Visit(exprContext);
+            if (expr is IntegerLiteralNode intLit)
+            {
+                size = intLit.Value;
+            }
+        }
+
+        return new ArrayTypeNode(elementType, size) { Location = GetLocation(context) };
     }
 
     public override AstNode VisitTuple_type(SolidLangParser.Tuple_typeContext context)
@@ -178,7 +192,24 @@ public class AstBuilder : SolidLangParserBaseVisitor<AstNode>
         var type = context.type() != null ? (TypeNode)Visit(context.type()) : null;
         var initializer = context.expr() != null ? (ExpressionNode)Visit(context.expr()) : null;
 
+        // Check if this is in a statement context (for init) or declaration context
+        // For now, always return VarDeclarationNode for top-level
         return new VarDeclarationNode(null, name, type, initializer) { Location = GetLocation(context) };
+    }
+
+    // For init statement context
+    public override AstNode VisitFor_init(SolidLangParser.For_initContext context)
+    {
+        if (context.var_decl() is { } varDecl)
+        {
+            var name = varDecl.ID().GetText();
+            var type = varDecl.type() != null ? (TypeNode)Visit(varDecl.type()) : null;
+            var initializer = varDecl.expr() != null ? (ExpressionNode)Visit(varDecl.expr()) : null;
+            return new VarDeclStatementNode(null, name, type, initializer) { Location = GetLocation(context) };
+        }
+        if (context.assign_stmt() is { } assignStmt)
+            return Visit(assignStmt);
+        throw new InvalidOperationException("Unknown for init type");
     }
 
     public override AstNode VisitStatic_decl(SolidLangParser.Static_declContext context)
@@ -297,14 +328,48 @@ public class AstBuilder : SolidLangParserBaseVisitor<AstNode>
 
     public override AstNode VisitBody_stmt(SolidLangParser.Body_stmtContext context)
     {
-        var stmts = context.stmt().Select(s => (StatementNode)Visit(s)).ToList();
+        var stmts = new List<StatementNode>();
+        foreach (var s in context.stmt())
+        {
+            var node = Visit(s);
+            if (node is StatementNode stmt)
+            {
+                stmts.Add(stmt);
+            }
+            else if (node is VarDeclarationNode varDecl)
+            {
+                // Convert var declaration to statement
+                stmts.Add(new VarDeclStatementNode(
+                    varDecl.Annotations,
+                    varDecl.Name,
+                    varDecl.Type,
+                    varDecl.Initializer
+                ) { Location = varDecl.Location });
+            }
+            else if (node is ConstDeclarationNode constDecl)
+            {
+                // const in statement context - create local const
+                stmts.Add(new VarDeclStatementNode(
+                    constDecl.Annotations,
+                    constDecl.Name,
+                    constDecl.Type,
+                    constDecl.Initializer
+                ) { Location = constDecl.Location });
+            }
+        }
         return new BlockStatementNode(stmts) { Location = GetLocation(context) };
     }
 
     public override AstNode VisitAssign_stmt(SolidLangParser.Assign_stmtContext context)
     {
-        var target = (ExpressionNode)Visit(context.expr(0));
-        var value = (ExpressionNode)Visit(context.expr(1));
+        var exprs = context.expr();
+        if (exprs.Length < 2)
+        {
+            return new EmptyStatementNode() { Location = GetLocation(context) };
+        }
+
+        var target = (ExpressionNode)Visit(exprs[0]);
+        var value = (ExpressionNode)Visit(exprs[1]);
 
         var opText = context switch
         {
@@ -388,6 +453,120 @@ public class AstBuilder : SolidLangParserBaseVisitor<AstNode>
         return new ReturnStatementNode(value) { Location = GetLocation(context) };
     }
 
+    // Switch statement
+    public override AstNode VisitSwitch_stmt(SolidLangParser.Switch_stmtContext context)
+    {
+        var expr = (ExpressionNode)Visit(context.expr());
+        var arms = context.switch_arm().Select(a => (SwitchArmNode)Visit(a)).ToList();
+        return new SwitchStatementNode(expr, arms) { Location = GetLocation(context) };
+    }
+
+    public override AstNode VisitSwitch_arm(SolidLangParser.Switch_armContext context)
+    {
+        PatternNode? pattern = null;
+        if (context.pattern() is { } patternCtx)
+        {
+            pattern = (PatternNode)Visit(patternCtx);
+        }
+        // else branch (context.ELSE() != null)
+
+        var stmt = (StatementNode)Visit(context.stmt());
+        return new SwitchArmNode(pattern, stmt) { Location = GetLocation(context) };
+    }
+
+    public override AstNode VisitPattern(SolidLangParser.PatternContext context)
+    {
+        // Type::Member or Type::Member(binding) pattern - check this first
+        // because enum_literal (Color::Red) also matches literal rule
+        if (context.named_type() is { } namedType)
+        {
+            var type = (NamedTypeNode)Visit(namedType);
+            // The ID after SCOPE is the member name
+            var memberName = context.ID().GetText();
+            IReadOnlyList<PatternNode>? bindings = null;
+            if (context.pattern_binding() is { } bindingCtx)
+            {
+                bindings = bindingCtx.pattern().Select(p => (PatternNode)Visit(p)).ToList();
+            }
+            return new TypePatternNode(type, memberName, bindings) { Location = GetLocation(context) };
+        }
+
+        // literal pattern
+        if (context.literal() is { } literal)
+        {
+            // Check if this is an enum_literal (Type::Member form)
+            if (literal.enum_literal() is { } enumLit)
+            {
+                // Convert enum_literal to TypePattern
+                var type = (NamedTypeNode)Visit(enumLit.named_type());
+                var memberName = enumLit.ID().GetText();
+                return new TypePatternNode(type, memberName, null) { Location = GetLocation(context) };
+            }
+
+            var litExpr = (LiteralExpressionNode)Visit(literal);
+            return new LiteralPatternNode(litExpr) { Location = GetLocation(context) };
+        }
+
+        // Identifier pattern (variable binding) - just a single ID
+        if (context.ID() is { } id)
+        {
+            return new IdentifierPatternNode(id.GetText()) { Location = GetLocation(context) };
+        }
+
+        throw new InvalidOperationException("Unknown pattern type");
+    }
+
+    // For statements
+    public override AstNode VisitFor_stmt(SolidLangParser.For_stmtContext context)
+    {
+        if (context.for_infinite() is { } infinite)
+            return VisitFor_infinite(infinite);
+        if (context.for_cond() is { } cond)
+            return VisitFor_cond(cond);
+        if (context.for_cstyle() is { } cstyle)
+            return VisitFor_cstyle(cstyle);
+        if (context.@foreach() is { } each)
+            return VisitForeach(each);
+
+        throw new InvalidOperationException("Unknown for statement type");
+    }
+
+    public override AstNode VisitFor_infinite(SolidLangParser.For_infiniteContext context)
+    {
+        var body = (BlockStatementNode)Visit(context.body_stmt());
+        return new InfiniteForNode(body) { Location = GetLocation(context) };
+    }
+
+    public override AstNode VisitFor_cond(SolidLangParser.For_condContext context)
+    {
+        var condition = (ExpressionNode)Visit(context.expr());
+        var body = (BlockStatementNode)Visit(context.body_stmt());
+        return new ConditionalForNode(condition, body) { Location = GetLocation(context) };
+    }
+
+    public override AstNode VisitFor_cstyle(SolidLangParser.For_cstyleContext context)
+    {
+        StatementNode? init = null;
+        if (context.for_init() is { } initCtx)
+        {
+            init = (StatementNode)Visit(initCtx);
+        }
+
+        var condition = context.expr(0) != null ? (ExpressionNode)Visit(context.expr(0)) : null;
+        var update = context.expr(1) != null ? (ExpressionNode)Visit(context.expr(1)) : null;
+        var body = (BlockStatementNode)Visit(context.body_stmt());
+
+        return new CStyleForNode(init, condition, update, body) { Location = GetLocation(context) };
+    }
+
+    public override AstNode VisitForeach(SolidLangParser.ForeachContext context)
+    {
+        var varName = context.ID().GetText();
+        var iterable = (ExpressionNode)Visit(context.expr());
+        var body = (BlockStatementNode)Visit(context.body_stmt());
+        return new ForeachNode(varName, iterable, body) { Location = GetLocation(context) };
+    }
+
     // Expressions
     public override AstNode VisitExpr(SolidLangParser.ExprContext context)
     {
@@ -406,6 +585,315 @@ public class AstBuilder : SolidLangParserBaseVisitor<AstNode>
         }
 
         return orExpr;
+    }
+
+    public override AstNode VisitOr_expr(SolidLangParser.Or_exprContext context)
+    {
+        var andExprs = context.and_expr();
+        var result = (ExpressionNode)Visit(andExprs[0]);
+
+        for (int i = 1; i < andExprs.Length; i++)
+        {
+            var right = (ExpressionNode)Visit(andExprs[i]);
+            result = new BinaryExpressionNode(result, BinaryOperator.LogicalOr, right)
+            {
+                Location = GetLocation(context)
+            };
+        }
+
+        return result;
+    }
+
+    public override AstNode VisitAnd_expr(SolidLangParser.And_exprContext context)
+    {
+        var bitOrExprs = context.bit_or_expr();
+        var result = (ExpressionNode)Visit(bitOrExprs[0]);
+
+        for (int i = 1; i < bitOrExprs.Length; i++)
+        {
+            var right = (ExpressionNode)Visit(bitOrExprs[i]);
+            result = new BinaryExpressionNode(result, BinaryOperator.LogicalAnd, right)
+            {
+                Location = GetLocation(context)
+            };
+        }
+
+        return result;
+    }
+
+    public override AstNode VisitBit_or_expr(SolidLangParser.Bit_or_exprContext context)
+    {
+        var bitXorExprs = context.bit_xor_expr();
+        var result = (ExpressionNode)Visit(bitXorExprs[0]);
+
+        for (int i = 1; i < bitXorExprs.Length; i++)
+        {
+            var right = (ExpressionNode)Visit(bitXorExprs[i]);
+            result = new BinaryExpressionNode(result, BinaryOperator.BitwiseOr, right)
+            {
+                Location = GetLocation(context)
+            };
+        }
+
+        return result;
+    }
+
+    public override AstNode VisitBit_xor_expr(SolidLangParser.Bit_xor_exprContext context)
+    {
+        var bitAndExprs = context.bit_and_expr();
+        var result = (ExpressionNode)Visit(bitAndExprs[0]);
+
+        for (int i = 1; i < bitAndExprs.Length; i++)
+        {
+            var right = (ExpressionNode)Visit(bitAndExprs[i]);
+            result = new BinaryExpressionNode(result, BinaryOperator.BitwiseXor, right)
+            {
+                Location = GetLocation(context)
+            };
+        }
+
+        return result;
+    }
+
+    public override AstNode VisitBit_and_expr(SolidLangParser.Bit_and_exprContext context)
+    {
+        var eqExprs = context.eq_expr();
+        var result = (ExpressionNode)Visit(eqExprs[0]);
+
+        for (int i = 1; i < eqExprs.Length; i++)
+        {
+            var right = (ExpressionNode)Visit(eqExprs[i]);
+            result = new BinaryExpressionNode(result, BinaryOperator.BitwiseAnd, right)
+            {
+                Location = GetLocation(context)
+            };
+        }
+
+        return result;
+    }
+
+    public override AstNode VisitEq_expr(SolidLangParser.Eq_exprContext context)
+    {
+        var cmpExprs = context.cmp_expr();
+        var result = (ExpressionNode)Visit(cmpExprs[0]);
+
+        for (int i = 1; i < cmpExprs.Length; i++)
+        {
+            var right = (ExpressionNode)Visit(cmpExprs[i]);
+            var op = context.EQEQ(i - 1) != null ? BinaryOperator.Equal : BinaryOperator.NotEqual;
+            result = new BinaryExpressionNode(result, op, right)
+            {
+                Location = GetLocation(context)
+            };
+        }
+
+        return result;
+    }
+
+    public override AstNode VisitCmp_expr(SolidLangParser.Cmp_exprContext context)
+    {
+        var shiftExprs = context.shift_expr();
+        var result = (ExpressionNode)Visit(shiftExprs[0]);
+
+        for (int i = 1; i < shiftExprs.Length; i++)
+        {
+            var right = (ExpressionNode)Visit(shiftExprs[i]);
+            var op = GetComparisonOperator(context, i - 1);
+            result = new BinaryExpressionNode(result, op, right)
+            {
+                Location = GetLocation(context)
+            };
+        }
+
+        return result;
+    }
+
+    private static BinaryOperator GetComparisonOperator(SolidLangParser.Cmp_exprContext context, int index)
+    {
+        if (context.LT(index) != null) return BinaryOperator.Less;
+        if (context.GT(index) != null) return BinaryOperator.Greater;
+        if (context.LE(index) != null) return BinaryOperator.LessEqual;
+        if (context.GE(index) != null) return BinaryOperator.GreaterEqual;
+        return BinaryOperator.Less;
+    }
+
+    public override AstNode VisitShift_expr(SolidLangParser.Shift_exprContext context)
+    {
+        var addExprs = context.add_expr();
+        var result = (ExpressionNode)Visit(addExprs[0]);
+
+        for (int i = 1; i < addExprs.Length; i++)
+        {
+            var right = (ExpressionNode)Visit(addExprs[i]);
+            var op = context.SHL(i - 1) != null ? BinaryOperator.ShiftLeft : BinaryOperator.ShiftRight;
+            result = new BinaryExpressionNode(result, op, right)
+            {
+                Location = GetLocation(context)
+            };
+        }
+
+        return result;
+    }
+
+    public override AstNode VisitAdd_expr(SolidLangParser.Add_exprContext context)
+    {
+        var mulExprs = context.mul_expr();
+        var result = (ExpressionNode)Visit(mulExprs[0]);
+
+        for (int i = 1; i < mulExprs.Length; i++)
+        {
+            var right = (ExpressionNode)Visit(mulExprs[i]);
+            var op = context.PLUS(i - 1) != null ? BinaryOperator.Add : BinaryOperator.Subtract;
+            result = new BinaryExpressionNode(result, op, right)
+            {
+                Location = GetLocation(context)
+            };
+        }
+
+        return result;
+    }
+
+    public override AstNode VisitMul_expr(SolidLangParser.Mul_exprContext context)
+    {
+        var unaryExprs = context.unary_expr();
+        var result = (ExpressionNode)Visit(unaryExprs[0]);
+
+        for (int i = 1; i < unaryExprs.Length; i++)
+        {
+            var right = (ExpressionNode)Visit(unaryExprs[i]);
+            var op = GetMulOperator(context, i - 1);
+            result = new BinaryExpressionNode(result, op, right)
+            {
+                Location = GetLocation(context)
+            };
+        }
+
+        return result;
+    }
+
+    private static BinaryOperator GetMulOperator(SolidLangParser.Mul_exprContext context, int index)
+    {
+        if (context.STAR(index) != null) return BinaryOperator.Multiply;
+        if (context.SLASH(index) != null) return BinaryOperator.Divide;
+        if (context.MOD(index) != null) return BinaryOperator.Modulo;
+        return BinaryOperator.Multiply;
+    }
+
+    public override AstNode VisitUnary_expr(SolidLangParser.Unary_exprContext context)
+    {
+        // Check for unary operators
+        if (context.MINUS() != null)
+        {
+            var operand = (ExpressionNode)Visit(context.unary_expr());
+            return new UnaryExpressionNode(UnaryOperator.Negate, operand) { Location = GetLocation(context) };
+        }
+        if (context.NOT() != null)
+        {
+            var operand = (ExpressionNode)Visit(context.unary_expr());
+            return new UnaryExpressionNode(UnaryOperator.LogicalNot, operand) { Location = GetLocation(context) };
+        }
+        if (context.TILDE() != null)
+        {
+            var operand = (ExpressionNode)Visit(context.unary_expr());
+            return new UnaryExpressionNode(UnaryOperator.BitwiseNot, operand) { Location = GetLocation(context) };
+        }
+        if (context.AND() != null)
+        {
+            var operand = (ExpressionNode)Visit(context.unary_expr());
+            return new UnaryExpressionNode(UnaryOperator.AddressOf, operand) { Location = GetLocation(context) };
+        }
+        if (context.STAR() != null)
+        {
+            var operand = (ExpressionNode)Visit(context.unary_expr());
+            return new UnaryExpressionNode(UnaryOperator.Dereference, operand) { Location = GetLocation(context) };
+        }
+        // Check for ^ (ref) or ^! (mut ref)
+        if (context.CARET() != null)
+        {
+            var operand = (ExpressionNode)Visit(context.unary_expr());
+            // The lexer handles ^! as two separate tokens: CARET and NOT
+            // We need to check if NOT follows CARET in the unary expression
+            // For simplicity, just check if NOT exists in the context
+            var op = context.NOT() != null ? UnaryOperator.MutRef : UnaryOperator.Ref;
+            return new UnaryExpressionNode(op, operand) { Location = GetLocation(context) };
+        }
+
+        return Visit(context.postfix_expr());
+    }
+
+    public override AstNode VisitPostfix_expr(SolidLangParser.Postfix_exprContext context)
+    {
+        var result = (ExpressionNode)Visit(context.primary_expr());
+
+        foreach (var suffix in context.postfix_suffix())
+        {
+            result = ApplyPostfixSuffix(result, suffix);
+        }
+
+        return result;
+    }
+
+    private ExpressionNode ApplyPostfixSuffix(ExpressionNode target, SolidLangParser.Postfix_suffixContext suffix)
+    {
+        if (suffix.DOT() != null)
+        {
+            var fieldName = suffix.ID().GetText();
+            return new FieldAccessExpressionNode(target, fieldName) { Location = GetLocation(suffix) };
+        }
+        if (suffix.LBRACKET() != null)
+        {
+            var index = (ExpressionNode)Visit(suffix.expr());
+            return new IndexExpressionNode(target, index) { Location = GetLocation(suffix) };
+        }
+        if (suffix.LPAREN() != null)
+        {
+            var args = suffix.call_args()?.call_arg().Select(a =>
+            {
+                if (a.expr() != null)
+                    return new CallArgumentNode((ExpressionNode)Visit(a.expr()), null);
+                var namedArg = a.ID()?.GetText();
+                return new CallArgumentNode((ExpressionNode)Visit(a.expr()), namedArg);
+            }).ToList() ?? new List<CallArgumentNode>();
+            return new CallExpressionNode(target, args) { Location = GetLocation(suffix) };
+        }
+
+        return target;
+    }
+
+    public override AstNode VisitPrimary_expr(SolidLangParser.Primary_exprContext context)
+    {
+        if (context.literal() != null)
+        {
+            return Visit(context.literal());
+        }
+        if (context.ID() != null)
+        {
+            var name = context.ID().GetText();
+            return new IdentifierExpressionNode(name) { Location = GetLocation(context) };
+        }
+        if (context.LPAREN() != null && context.expr() != null)
+        {
+            return Visit(context.expr());
+        }
+        if (context.tuple_literal() != null)
+        {
+            return Visit(context.tuple_literal());
+        }
+        if (context.struct_literal() != null)
+        {
+            return Visit(context.struct_literal());
+        }
+        if (context.array_literal() != null)
+        {
+            return Visit(context.array_literal());
+        }
+        if (context.meta_expr() != null)
+        {
+            // @id(args) - meta expression
+            return Visit(context.meta_expr());
+        }
+
+        return new IntegerLiteralNode(0, null) { Location = GetLocation(context) };
     }
 
     // Literals

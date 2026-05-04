@@ -17,6 +17,24 @@ public record EmptyStatementNode() : StatementNode
 }
 
 /// <summary>
+/// Represents a local variable declaration statement.
+/// </summary>
+public record VarDeclStatementNode(
+    IReadOnlyList<Declarations.AnnotationNode>? Annotations,
+    string Name,
+    Types.TypeNode? Type,
+    Expressions.ExpressionNode? Initializer
+) : StatementNode
+{
+    public override string ToString()
+    {
+        var type = Type != null ? $": {Type}" : "";
+        var init = Initializer != null ? $" = {Initializer}" : "";
+        return $"var {Name}{type}{init};";
+    }
+}
+
+/// <summary>
 /// Represents a block statement { stmts }.
 /// </summary>
 public record BlockStatementNode(IReadOnlyList<StatementNode> Statements) : StatementNode
@@ -164,7 +182,7 @@ public record SwitchStatementNode(ExpressionNode Expression, IReadOnlyList<Switc
 /// <summary>
 /// Represents a switch arm.
 /// </summary>
-public record SwitchArmNode(PatternNode? Pattern, StatementNode Statement)
+public record SwitchArmNode(PatternNode? Pattern, StatementNode Statement) : AstNode
 {
     public override string ToString()
     {

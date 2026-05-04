@@ -280,7 +280,7 @@ public record FuncDeclarationNode(
 /// <summary>
 /// Represents a function parameter.
 /// </summary>
-public record FuncParameterNode(IReadOnlyList<AnnotationNode>? Annotations, string Name, TypeNode Type)
+public record FuncParameterNode(IReadOnlyList<AnnotationNode>? Annotations, string Name, TypeNode Type) : AstNode
 {
     public override string ToString()
     {

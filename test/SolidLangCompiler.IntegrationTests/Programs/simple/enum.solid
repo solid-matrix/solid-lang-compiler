@@ -1,0 +1,11 @@
+namespace app;
+
+enum Color: u8 {
+    Red = 0,
+    Green = 1,
+    Blue = 2,
+}
+
+func main(): i32 {
+    return 0;
+}

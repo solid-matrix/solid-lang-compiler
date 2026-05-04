@@ -50,18 +50,18 @@ internal class Program
 
         // Semantic analysis
         using var analyzer = new SemanticAnalyzer();
-        var semanticTree = analyzer.Analyze(source, sourcePath);
+        var program = analyzer.Analyze(source, sourcePath);
 
-        if (!semanticTree.IsSuccessful)
+        if (!program.IsSuccessful)
         {
-            foreach (var error in semanticTree.Errors)
+            foreach (var error in program.Errors)
             {
                 Console.Error.WriteLine(error);
             }
             return 1;
         }
 
-        foreach (var warning in semanticTree.Warnings)
+        foreach (var warning in program.Warnings)
         {
             Console.WriteLine(warning);
         }
@@ -71,12 +71,12 @@ internal class Program
 
         if (emitIr)
         {
-            codeGen.GenerateIr(semanticTree, outputPath + ".ll", CodeGenerator.DefaultTriple);
+            codeGen.GenerateIr(program, outputPath + ".ll", CodeGenerator.DefaultTriple);
             Console.WriteLine($"Generated: {outputPath}.ll");
         }
         else
         {
-            codeGen.GenerateObjective(semanticTree, outputPath + ".o", CodeGenerator.DefaultTriple);
+            codeGen.GenerateObjective(program, outputPath + ".o", CodeGenerator.DefaultTriple);
             Console.WriteLine($"Generated: {outputPath}.o");
         }
 

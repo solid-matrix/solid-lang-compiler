@@ -1,0 +1,9 @@
+namespace app;
+
+func foo(): i32 {
+    return 0;
+}
+
+func foo(): i32 {
+    return 1;
+}
