@@ -10,6 +10,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Antlr4.Runtime.Standard" Version="4.13.1"/>
         <PackageReference Include="libLLVM" Version="21.1.8"/>
         <PackageReference Include="LLVMSharp" Version="20.1.2"/>
     </ItemGroup>
