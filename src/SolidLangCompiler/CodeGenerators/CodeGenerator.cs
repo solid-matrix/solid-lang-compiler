@@ -19,6 +19,9 @@ public sealed class CodeGenerator : IDisposable
     private readonly Stack<LLVMBasicBlockRef> _breakTargets = new();
     private readonly Stack<LLVMBasicBlockRef> _continueTargets = new();
 
+    // Stack of deferred expressions for defer statement
+    private readonly Stack<SemaDefer> _defers = new();
+
     public static string DefaultTriple => LLVMTargetRef.DefaultTriple;
 
     public CodeGenerator()
@@ -119,6 +122,7 @@ public sealed class CodeGenerator : IDisposable
             return;
 
         _locals.Clear();
+        _defers.Clear();  // Clear defer stack for new function
 
         var entry = funcValue.AppendBasicBlock("entry");
         _builder.PositionAtEnd(entry);
@@ -137,6 +141,13 @@ public sealed class CodeGenerator : IDisposable
         var currentBlock = _builder.InsertBlock;
         if (currentBlock.Terminator == null)
         {
+            // Execute deferred statements before implicit return
+            while (_defers.Count > 0)
+            {
+                var defer = _defers.Pop();
+                GenerateStatement(defer.DeferredStatement);
+            }
+
             if (func.ReturnType != null)
                 _builder.BuildRet(LLVMValueRef.CreateConstInt(ConvertType(func.ReturnType), 0, false));
             else
@@ -196,11 +207,21 @@ public sealed class CodeGenerator : IDisposable
             case SemaBlock block:
                 GenerateBlock(block);
                 break;
+            case SemaDefer defer:
+                _defers.Push(defer);
+                break;
         }
     }
 
     private void GenerateReturn(SemaReturn ret)
     {
+        // Execute deferred statements in LIFO order before return
+        while (_defers.Count > 0)
+        {
+            var defer = _defers.Pop();
+            GenerateStatement(defer.DeferredStatement);
+        }
+
         if (ret.Value != null)
         {
             var value = GenerateExpression(ret.Value);
@@ -712,8 +733,117 @@ public sealed class CodeGenerator : IDisposable
             SemaUnaryOp.BitwiseNot => _builder.BuildNot(operand, "not"),
             SemaUnaryOp.Dereference when unary.Type is SemaPointerType ptrType =>
                 _builder.BuildLoad2(ConvertType(ptrType.TargetType), operand, "deref"),
+            SemaUnaryOp.Dereference when unary.Type is SemaRefType refType =>
+                _builder.BuildLoad2(ConvertType(refType.TargetType), operand, "deref"),
+            SemaUnaryOp.Ref or SemaUnaryOp.MutRef => GenerateRef(unary),
             _ => operand
         };
+    }
+
+    private LLVMValueRef GenerateRef(SemaUnaryExpr unary)
+    {
+        // Get pointer to the operand
+        switch (unary.Operand)
+        {
+            case SemaLocalRef localRef:
+                if (_locals.TryGetValue(localRef.Index, out var alloca))
+                    return alloca;
+                break;
+            case SemaParamRef paramRef:
+                if (_locals.TryGetValue(paramRef.Index, out var paramAlloca))
+                    return paramAlloca;
+                break;
+            case SemaGlobalRef globalRef:
+                if (_globals.TryGetValue(globalRef.Name, out var globalValue))
+                    return globalValue;
+                break;
+            case SemaFieldAccessExpr fieldAccess:
+                // Generate address of field
+                return GenerateFieldAddress(fieldAccess);
+            case SemaIndexExpr indexExpr:
+                // Generate address of array element
+                return GenerateIndexAddress(indexExpr);
+        }
+
+        // Fallback: allocate temporary and return pointer
+        var operandValue = GenerateExpression(unary.Operand);
+        var tmpAlloca = _builder.BuildAlloca(operandValue.TypeOf, "tmp.ref");
+        _builder.BuildStore(operandValue, tmpAlloca);
+        return tmpAlloca;
+    }
+
+    private LLVMValueRef GenerateFieldAddress(SemaFieldAccessExpr fieldAccess)
+    {
+        var targetType = fieldAccess.Target.Type;
+        var llvmTargetType = ConvertType(targetType);
+
+        // Get pointer to the target
+        LLVMValueRef targetPtr;
+        switch (fieldAccess.Target)
+        {
+            case SemaLocalRef localRef:
+                targetPtr = _locals[localRef.Index];
+                break;
+            case SemaParamRef paramRef:
+                targetPtr = _locals[paramRef.Index];
+                break;
+            case SemaGlobalRef globalRef:
+                targetPtr = _globals[globalRef.Name];
+                break;
+            default:
+                var targetValue = GenerateExpression(fieldAccess.Target);
+                var alloca = _builder.BuildAlloca(llvmTargetType, "tmp.struct");
+                _builder.BuildStore(targetValue, alloca);
+                targetPtr = alloca;
+                break;
+        }
+
+        // Use GEP to get pointer to the field
+        var indices = new[] {
+            LLVMValueRef.CreateConstInt(_ctx.Int64Type, 0, false),
+            LLVMValueRef.CreateConstInt(_ctx.Int64Type, (ulong)fieldAccess.FieldIndex, false)
+        };
+        return _builder.BuildInBoundsGEP2(llvmTargetType, targetPtr, indices, "field.ptr");
+    }
+
+    private LLVMValueRef GenerateIndexAddress(SemaIndexExpr indexExpr)
+    {
+        var targetType = indexExpr.Target.Type;
+        if (targetType is not SemaArrayType arrayType)
+            return LLVMValueRef.CreateConstInt(_ctx.Int32Type, 0, false);
+
+        var llvmArrayType = ConvertType(targetType);
+
+        // Get pointer to the target array
+        LLVMValueRef targetPtr;
+        switch (indexExpr.Target)
+        {
+            case SemaLocalRef localRef:
+                targetPtr = _locals[localRef.Index];
+                break;
+            case SemaParamRef paramRef:
+                targetPtr = _locals[paramRef.Index];
+                break;
+            case SemaGlobalRef globalRef:
+                targetPtr = _globals[globalRef.Name];
+                break;
+            default:
+                var targetValue = GenerateExpression(indexExpr.Target);
+                var alloca = _builder.BuildAlloca(llvmArrayType, "tmp.arr");
+                _builder.BuildStore(targetValue, alloca);
+                targetPtr = alloca;
+                break;
+        }
+
+        // Generate the index value
+        var indexValue = GenerateExpression(indexExpr.Index);
+
+        // Use GEP to get pointer to the element
+        var indices = new[] {
+            LLVMValueRef.CreateConstInt(_ctx.Int64Type, 0, false),
+            indexValue
+        };
+        return _builder.BuildInBoundsGEP2(llvmArrayType, targetPtr, indices, "elem.ptr");
     }
 
     private LLVMValueRef GenerateCall(SemaCallExpr call)
@@ -790,6 +920,13 @@ public sealed class CodeGenerator : IDisposable
         // 2. Use GEP to access the field
 
         var targetType = fieldAccess.Target.Type;
+
+        // Handle auto-dereference for references
+        if (targetType is SemaRefType refType)
+        {
+            targetType = refType.TargetType;
+        }
+
         var llvmTargetType = ConvertType(targetType);
 
         // Get pointer to the target
@@ -798,9 +935,21 @@ public sealed class CodeGenerator : IDisposable
         {
             case SemaLocalRef localRef:
                 targetPtr = _locals[localRef.Index];
+                // If the local is a reference, load it first
+                if (fieldAccess.Target.Type is SemaRefType)
+                {
+                    var refPtrType = LLVMTypeRef.CreatePointer(llvmTargetType, 0);
+                    targetPtr = _builder.BuildLoad2(refPtrType, targetPtr, "ref.load");
+                }
                 break;
             case SemaParamRef paramRef:
                 targetPtr = _locals[paramRef.Index];
+                // If the param is a reference, load it first
+                if (fieldAccess.Target.Type is SemaRefType)
+                {
+                    var refPtrType = LLVMTypeRef.CreatePointer(llvmTargetType, 0);
+                    targetPtr = _builder.BuildLoad2(refPtrType, targetPtr, "ref.load");
+                }
                 break;
             default:
                 // For complex expressions, we need to allocate and store the result
@@ -830,6 +979,13 @@ public sealed class CodeGenerator : IDisposable
         // 2. Use GEP to access the element at the given index
 
         var targetType = indexExpr.Target.Type;
+
+        // Handle auto-dereference for references
+        if (targetType is SemaRefType refType)
+        {
+            targetType = refType.TargetType;
+        }
+
         if (targetType is not SemaArrayType arrayType)
             return LLVMValueRef.CreateConstInt(_ctx.Int32Type, 0, false);
 
@@ -841,9 +997,21 @@ public sealed class CodeGenerator : IDisposable
         {
             case SemaLocalRef localRef:
                 targetPtr = _locals[localRef.Index];
+                // If the local is a reference, load it first
+                if (indexExpr.Target.Type is SemaRefType)
+                {
+                    var refPtrType = LLVMTypeRef.CreatePointer(llvmArrayType, 0);
+                    targetPtr = _builder.BuildLoad2(refPtrType, targetPtr, "ref.load");
+                }
                 break;
             case SemaParamRef paramRef:
                 targetPtr = _locals[paramRef.Index];
+                // If the param is a reference, load it first
+                if (indexExpr.Target.Type is SemaRefType)
+                {
+                    var refPtrType = LLVMTypeRef.CreatePointer(llvmArrayType, 0);
+                    targetPtr = _builder.BuildLoad2(refPtrType, targetPtr, "ref.load");
+                }
                 break;
             default:
                 // For complex expressions, allocate and store the result
@@ -919,13 +1087,13 @@ public sealed class CodeGenerator : IDisposable
             SemaFloatType floatType => floatType.Kind == SemaFloatKind.F32 ? _ctx.FloatType : _ctx.DoubleType,
             SemaBoolType => _ctx.Int1Type,
             SemaVoidType => _ctx.VoidType,
-            SemaPointerType => _ctx.Int8Type, // Simplified: use i8* for all pointers
-            SemaRefType => _ctx.Int8Type,
+            SemaPointerType ptrType => LLVMTypeRef.CreatePointer(ConvertType(ptrType.TargetType), 0),
+            SemaRefType refType => LLVMTypeRef.CreatePointer(ConvertType(refType.TargetType), 0),
             SemaArrayType arrType => LLVMTypeRef.CreateArray(ConvertType(arrType.ElementType), (uint)arrType.Size),
-            SemaFuncType funcType => LLVMTypeRef.CreateFunction(
+            SemaFuncType funcType => LLVMTypeRef.CreatePointer(LLVMTypeRef.CreateFunction(
                 funcType.ReturnType != null ? ConvertType(funcType.ReturnType) : _ctx.VoidType,
                 funcType.ParameterTypes.Select(ConvertType).ToArray()
-            ),
+            ), 0),
             SemaStructType structType => LLVMTypeRef.CreateStruct(
                 structType.Fields.Select(f => ConvertType(f.Type)).ToArray(),
                 false

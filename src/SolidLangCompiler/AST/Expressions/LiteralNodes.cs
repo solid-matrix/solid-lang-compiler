@@ -64,15 +64,15 @@ public record NullLiteralNode() : LiteralExpressionNode
 }
 
 /// <summary>
-/// Represents an array literal [T]{elems} or [T]{size}.
+/// Represents an array literal [size]type{elems}.
 /// </summary>
-public record ArrayLiteralNode(TypeNode? ElementType, IReadOnlyList<ExpressionNode>? Elements) : LiteralExpressionNode
+public record ArrayLiteralNode(ArrayTypeNode? ArrayType, IReadOnlyList<ExpressionNode>? Elements) : LiteralExpressionNode
 {
     public override string ToString()
     {
-        var typeStr = ElementType?.ToString() ?? "";
+        var typeStr = ArrayType?.ToString() ?? "";
         var elemsStr = Elements != null ? string.Join(", ", Elements) : "";
-        return $"[{typeStr}]{{{elemsStr}}}";
+        return $"{typeStr}{{{elemsStr}}}";
     }
 }
 

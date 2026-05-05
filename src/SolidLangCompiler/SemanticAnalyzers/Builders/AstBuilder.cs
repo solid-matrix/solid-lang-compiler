@@ -135,7 +135,7 @@ public class AstBuilder : SolidLangParserBaseVisitor<AstNode>
     public override AstNode VisitRef_type(SolidLangParser.Ref_typeContext context)
     {
         var targetType = (TypeNode)Visit(context.type());
-        var isMutable = context.NOT() != null;
+        var isMutable = context.CARETNOT() != null || context.NOT() != null;
         return new RefTypeNode(targetType, isMutable) { Location = GetLocation(context) };
     }
 
@@ -414,8 +414,30 @@ public class AstBuilder : SolidLangParserBaseVisitor<AstNode>
 
     public override AstNode VisitDefer_stmt(SolidLangParser.Defer_stmtContext context)
     {
-        var expr = (ExpressionNode)Visit(context.expr());
-        return new DeferStatementNode(expr) { Location = GetLocation(context) };
+        StatementNode deferredStmt;
+
+        if (context.empty_stmt() is { } emptyStmt)
+        {
+            deferredStmt = (StatementNode)Visit(emptyStmt);
+        }
+        else if (context.body_stmt() is { } bodyStmt)
+        {
+            deferredStmt = (StatementNode)Visit(bodyStmt);
+        }
+        else if (context.assign_stmt() is { } assignStmt)
+        {
+            deferredStmt = (StatementNode)Visit(assignStmt);
+        }
+        else if (context.expr_stmt() is { } exprStmt)
+        {
+            deferredStmt = (StatementNode)Visit(exprStmt);
+        }
+        else
+        {
+            throw new InvalidOperationException("Unknown defer statement type");
+        }
+
+        return new DeferStatementNode(deferredStmt) { Location = GetLocation(context) };
     }
 
     public override AstNode VisitIf_stmt(SolidLangParser.If_stmtContext context)
@@ -807,15 +829,17 @@ public class AstBuilder : SolidLangParserBaseVisitor<AstNode>
             var operand = (ExpressionNode)Visit(context.unary_expr());
             return new UnaryExpressionNode(UnaryOperator.Dereference, operand) { Location = GetLocation(context) };
         }
-        // Check for ^ (ref) or ^! (mut ref)
+        // Check for ^! (mut ref) - CARETNOT is a combined token
+        if (context.CARETNOT() != null)
+        {
+            var operand = (ExpressionNode)Visit(context.unary_expr());
+            return new UnaryExpressionNode(UnaryOperator.MutRef, operand) { Location = GetLocation(context) };
+        }
+        // Check for ^ (ref)
         if (context.CARET() != null)
         {
             var operand = (ExpressionNode)Visit(context.unary_expr());
-            // The lexer handles ^! as two separate tokens: CARET and NOT
-            // We need to check if NOT follows CARET in the unary expression
-            // For simplicity, just check if NOT exists in the context
-            var op = context.NOT() != null ? UnaryOperator.MutRef : UnaryOperator.Ref;
-            return new UnaryExpressionNode(op, operand) { Location = GetLocation(context) };
+            return new UnaryExpressionNode(UnaryOperator.Ref, operand) { Location = GetLocation(context) };
         }
 
         return Visit(context.postfix_expr());
@@ -973,11 +997,11 @@ public class AstBuilder : SolidLangParserBaseVisitor<AstNode>
 
     public override AstNode VisitArray_literal(SolidLangParser.Array_literalContext context)
     {
-        var type = context.type() != null ? (TypeNode)Visit(context.type()) : null;
-        var elements = context.expr() != null
+        var arrayType = context.array_type() != null ? (ArrayTypeNode)Visit(context.array_type()) : null;
+        var elements = context.expr() != null && context.expr().Length > 0
             ? context.expr().Select(e => (ExpressionNode)Visit(e)).ToList()
             : null;
-        return new ArrayLiteralNode(type, elements) { Location = GetLocation(context) };
+        return new ArrayLiteralNode(arrayType, elements) { Location = GetLocation(context) };
     }
 
     public override AstNode VisitStruct_literal(SolidLangParser.Struct_literalContext context)

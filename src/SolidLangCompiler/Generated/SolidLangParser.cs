@@ -43,13 +43,13 @@ public partial class SolidLangParser : Parser {
 		CDECL=23, STDCALL=24, U8=25, U16=26, U32=27, U64=28, USIZE=29, I8=30, 
 		I16=31, I32=32, I64=33, ISIZE=34, F32=35, F64=36, BOOL=37, PLUS=38, MINUS=39, 
 		NOT=40, TILDE=41, STAR=42, SLASH=43, MOD=44, EQEQ=45, NOTEQ=46, LT=47, 
-		GT=48, LE=49, GE=50, OROR=51, ANDAND=52, AND=53, OR=54, CARET=55, SHL=56, 
-		SHR=57, EQ=58, PLUSEQ=59, MINUSEQ=60, STAREQ=61, SLASHEQ=62, PERCENTEQ=63, 
-		ANDEQ=64, OREQ=65, CARETEQ=66, SHLEQ=67, SHREQ=68, SCOPE=69, COLON=70, 
-		QUESTION=71, COMMA=72, DOT=73, SEMI=74, EQARROW=75, MINUSRARROW=76, AT=77, 
-		LBRACE=78, RBRACE=79, LBRACKET=80, RBRACKET=81, LPAREN=82, RPAREN=83, 
-		INTEGER_LITERAL=84, FLOAT_LITERAL=85, STRING_LITERAL=86, CHAR_LITERAL=87, 
-		BOOL_LITERAL=88, ID=89, WHITESPACE=90, DOCUMENTS=91, COMMENTS=92;
+		GT=48, LE=49, GE=50, OROR=51, ANDAND=52, AND=53, OR=54, CARET=55, CARETNOT=56, 
+		SHL=57, SHR=58, EQ=59, PLUSEQ=60, MINUSEQ=61, STAREQ=62, SLASHEQ=63, PERCENTEQ=64, 
+		ANDEQ=65, OREQ=66, CARETEQ=67, SHLEQ=68, SHREQ=69, SCOPE=70, COLON=71, 
+		QUESTION=72, COMMA=73, DOT=74, SEMI=75, EQARROW=76, MINUSRARROW=77, AT=78, 
+		LBRACE=79, RBRACE=80, LBRACKET=81, RBRACKET=82, LPAREN=83, RPAREN=84, 
+		INTEGER_LITERAL=85, FLOAT_LITERAL=86, STRING_LITERAL=87, CHAR_LITERAL=88, 
+		BOOL_LITERAL=89, ID=90, WHITESPACE=91, DOCUMENTS=92, COMMENTS=93;
 	public const int
 		RULE_program = 0, RULE_namespace_prefix = 1, RULE_namespace_path = 2, 
 		RULE_call_convention = 3, RULE_generic_params = 4, RULE_generic_param = 5, 
@@ -111,9 +111,10 @@ public partial class SolidLangParser : Parser {
 		"'u64'", "'usize'", "'i8'", "'i16'", "'i32'", "'i64'", "'isize'", "'f32'", 
 		"'f64'", "'bool'", "'+'", "'-'", "'!'", "'~'", "'*'", "'/'", "'%'", "'=='", 
 		"'!='", "'<'", "'>'", "'<='", "'>='", "'||'", "'&&'", "'&'", "'|'", "'^'", 
-		"'<<'", "'>>'", "'='", "'+='", "'-='", "'*='", "'/='", "'%='", "'&='", 
-		"'|='", "'^='", "'<<='", "'>>='", "'::'", "':'", "'?'", "','", "'.'", 
-		"';'", "'=>'", "'->'", "'@'", "'{'", "'}'", "'['", "']'", "'('", "')'"
+		"'^!'", "'<<'", "'>>'", "'='", "'+='", "'-='", "'*='", "'/='", "'%='", 
+		"'&='", "'|='", "'^='", "'<<='", "'>>='", "'::'", "':'", "'?'", "','", 
+		"'.'", "';'", "'=>'", "'->'", "'@'", "'{'", "'}'", "'['", "']'", "'('", 
+		"')'"
 	};
 	private static readonly string[] _SymbolicNames = {
 		null, "NAMESPACE", "USING", "FUNC", "INTERFACE", "STRUCT", "ENUM", "UNION", 
@@ -122,12 +123,12 @@ public partial class SolidLangParser : Parser {
 		"U8", "U16", "U32", "U64", "USIZE", "I8", "I16", "I32", "I64", "ISIZE", 
 		"F32", "F64", "BOOL", "PLUS", "MINUS", "NOT", "TILDE", "STAR", "SLASH", 
 		"MOD", "EQEQ", "NOTEQ", "LT", "GT", "LE", "GE", "OROR", "ANDAND", "AND", 
-		"OR", "CARET", "SHL", "SHR", "EQ", "PLUSEQ", "MINUSEQ", "STAREQ", "SLASHEQ", 
-		"PERCENTEQ", "ANDEQ", "OREQ", "CARETEQ", "SHLEQ", "SHREQ", "SCOPE", "COLON", 
-		"QUESTION", "COMMA", "DOT", "SEMI", "EQARROW", "MINUSRARROW", "AT", "LBRACE", 
-		"RBRACE", "LBRACKET", "RBRACKET", "LPAREN", "RPAREN", "INTEGER_LITERAL", 
-		"FLOAT_LITERAL", "STRING_LITERAL", "CHAR_LITERAL", "BOOL_LITERAL", "ID", 
-		"WHITESPACE", "DOCUMENTS", "COMMENTS"
+		"OR", "CARET", "CARETNOT", "SHL", "SHR", "EQ", "PLUSEQ", "MINUSEQ", "STAREQ", 
+		"SLASHEQ", "PERCENTEQ", "ANDEQ", "OREQ", "CARETEQ", "SHLEQ", "SHREQ", 
+		"SCOPE", "COLON", "QUESTION", "COMMA", "DOT", "SEMI", "EQARROW", "MINUSRARROW", 
+		"AT", "LBRACE", "RBRACE", "LBRACKET", "RBRACKET", "LPAREN", "RPAREN", 
+		"INTEGER_LITERAL", "FLOAT_LITERAL", "STRING_LITERAL", "CHAR_LITERAL", 
+		"BOOL_LITERAL", "ID", "WHITESPACE", "DOCUMENTS", "COMMENTS"
 	};
 	public static readonly IVocabulary DefaultVocabulary = new Vocabulary(_LiteralNames, _SymbolicNames);
 
@@ -225,6 +226,16 @@ public partial class SolidLangParser : Parser {
 		{
 		}
 		public override int RuleIndex { get { return RULE_program; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterProgram(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitProgram(this);
+		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
@@ -345,6 +356,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_namespace_prefix; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterNamespace_prefix(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitNamespace_prefix(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitNamespace_prefix(this);
@@ -390,6 +411,16 @@ public partial class SolidLangParser : Parser {
 		{
 		}
 		public override int RuleIndex { get { return RULE_namespace_path; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterNamespace_path(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitNamespace_path(this);
+		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
@@ -448,6 +479,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_call_convention; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterCall_convention(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitCall_convention(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitCall_convention(this);
@@ -503,6 +544,16 @@ public partial class SolidLangParser : Parser {
 		{
 		}
 		public override int RuleIndex { get { return RULE_generic_params; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterGeneric_params(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitGeneric_params(this);
+		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
@@ -562,6 +613,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_generic_param; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterGeneric_param(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitGeneric_param(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitGeneric_param(this);
@@ -603,6 +664,16 @@ public partial class SolidLangParser : Parser {
 		{
 		}
 		public override int RuleIndex { get { return RULE_where_clauses; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterWhere_clauses(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitWhere_clauses(this);
+		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
@@ -659,6 +730,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_where_clause; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterWhere_clause(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitWhere_clause(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitWhere_clause(this);
@@ -706,6 +787,16 @@ public partial class SolidLangParser : Parser {
 		{
 		}
 		public override int RuleIndex { get { return RULE_ct_annotates; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterCt_annotates(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitCt_annotates(this);
+		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
@@ -763,6 +854,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_ct_annotate; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterCt_annotate(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitCt_annotate(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitCt_annotate(this);
@@ -792,7 +893,7 @@ public partial class SolidLangParser : Parser {
 				State = 270;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
-				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 45044517459460104L) != 0) || ((((_la - 77)) & ~0x3f) == 0 && ((1L << (_la - 77)) & 8105L) != 0)) {
+				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 117102111497388040L) != 0) || ((((_la - 78)) & ~0x3f) == 0 && ((1L << (_la - 78)) & 8105L) != 0)) {
 					{
 					State = 269;
 					ct_annotate_args();
@@ -833,6 +934,16 @@ public partial class SolidLangParser : Parser {
 		{
 		}
 		public override int RuleIndex { get { return RULE_ct_annotate_args; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterCt_annotate_args(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitCt_annotate_args(this);
+		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
@@ -893,6 +1004,16 @@ public partial class SolidLangParser : Parser {
 		{
 		}
 		public override int RuleIndex { get { return RULE_ct_annotate_arg; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterCt_annotate_arg(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitCt_annotate_arg(this);
+		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
@@ -964,6 +1085,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_const_decl; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterConst_decl(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitConst_decl(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitConst_decl(this);
@@ -1027,6 +1158,16 @@ public partial class SolidLangParser : Parser {
 		{
 		}
 		public override int RuleIndex { get { return RULE_var_decl; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterVar_decl(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitVar_decl(this);
+		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
@@ -1109,6 +1250,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_static_decl; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterStatic_decl(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitStatic_decl(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitStatic_decl(this);
@@ -1175,6 +1326,16 @@ public partial class SolidLangParser : Parser {
 		{
 		}
 		public override int RuleIndex { get { return RULE_struct_decl; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterStruct_decl(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitStruct_decl(this);
+		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
@@ -1277,6 +1438,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_struct_fields; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterStruct_fields(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitStruct_fields(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitStruct_fields(this);
@@ -1351,6 +1522,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_struct_field; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterStruct_field(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitStruct_field(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitStruct_field(this);
@@ -1406,6 +1587,16 @@ public partial class SolidLangParser : Parser {
 		{
 		}
 		public override int RuleIndex { get { return RULE_enum_decl; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterEnum_decl(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitEnum_decl(this);
+		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
@@ -1484,6 +1675,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_enum_fields; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterEnum_fields(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitEnum_fields(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitEnum_fields(this);
@@ -1558,6 +1759,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_enum_field; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterEnum_field(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitEnum_field(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitEnum_field(this);
@@ -1625,6 +1836,16 @@ public partial class SolidLangParser : Parser {
 		{
 		}
 		public override int RuleIndex { get { return RULE_union_decl; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterUnion_decl(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitUnion_decl(this);
+		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
@@ -1727,6 +1948,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_union_fields; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterUnion_fields(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitUnion_fields(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitUnion_fields(this);
@@ -1801,6 +2032,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_union_field; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterUnion_field(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitUnion_field(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitUnion_field(this);
@@ -1863,6 +2104,16 @@ public partial class SolidLangParser : Parser {
 		{
 		}
 		public override int RuleIndex { get { return RULE_variant_decl; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterVariant_decl(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitVariant_decl(this);
+		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
@@ -1977,6 +2228,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_variant_fields; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterVariant_fields(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitVariant_fields(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitVariant_fields(this);
@@ -2051,6 +2312,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_variant_field; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterVariant_field(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitVariant_field(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitVariant_field(this);
@@ -2117,6 +2388,16 @@ public partial class SolidLangParser : Parser {
 		{
 		}
 		public override int RuleIndex { get { return RULE_interface_decl; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterInterface_decl(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitInterface_decl(this);
+		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
@@ -2203,6 +2484,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_interface_fields; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterInterface_fields(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitInterface_fields(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitInterface_fields(this);
@@ -2255,18 +2546,28 @@ public partial class SolidLangParser : Parser {
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(SolidLangParser.ID, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode LPAREN() { return GetToken(SolidLangParser.LPAREN, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode RPAREN() { return GetToken(SolidLangParser.RPAREN, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public Func_parametersContext func_parameters() {
+			return GetRuleContext<Func_parametersContext>(0);
+		}
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode COLON() { return GetToken(SolidLangParser.COLON, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public TypeContext type() {
 			return GetRuleContext<TypeContext>(0);
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public Func_parametersContext func_parameters() {
-			return GetRuleContext<Func_parametersContext>(0);
 		}
 		public Interface_fieldContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
 		}
 		public override int RuleIndex { get { return RULE_interface_field; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterInterface_field(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitInterface_field(this);
+		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
@@ -2303,10 +2604,18 @@ public partial class SolidLangParser : Parser {
 
 			State = 482;
 			Match(RPAREN);
-			State = 483;
-			Match(COLON);
-			State = 484;
-			type();
+			State = 485;
+			ErrorHandler.Sync(this);
+			_la = TokenStream.LA(1);
+			if (_la==COLON) {
+				{
+				State = 483;
+				Match(COLON);
+				State = 484;
+				type();
+				}
+			}
+
 			}
 		}
 		catch (RecognitionException re) {
@@ -2340,6 +2649,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_func_decl; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterFunc_decl(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitFunc_decl(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitFunc_decl(this);
@@ -2355,32 +2674,32 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 486;
+			State = 487;
 			ct_annotates();
-			State = 488;
+			State = 489;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			if (_la==ID) {
 				{
-				State = 487;
+				State = 488;
 				namespace_prefix();
 				}
 			}
 
-			State = 490;
+			State = 491;
 			func_header();
-			State = 493;
+			State = 494;
 			ErrorHandler.Sync(this);
 			switch (TokenStream.LA(1)) {
 			case LBRACE:
 				{
-				State = 491;
+				State = 492;
 				body_stmt();
 				}
 				break;
 			case SEMI:
 				{
-				State = 492;
+				State = 493;
 				Match(SEMI);
 				}
 				break;
@@ -2427,6 +2746,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_func_header; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterFunc_header(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitFunc_header(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitFunc_header(this);
@@ -2442,62 +2771,62 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 495;
-			Match(FUNC);
 			State = 496;
+			Match(FUNC);
+			State = 497;
 			Match(ID);
-			State = 498;
+			State = 499;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			if (_la==LT) {
 				{
-				State = 497;
+				State = 498;
 				generic_params();
 				}
 			}
 
-			State = 500;
+			State = 501;
 			Match(LPAREN);
-			State = 502;
+			State = 503;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			if (_la==AT || _la==ID) {
 				{
-				State = 501;
+				State = 502;
 				func_parameters();
 				}
 			}
 
-			State = 504;
+			State = 505;
 			Match(RPAREN);
-			State = 506;
+			State = 507;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			if (_la==CDECL || _la==STDCALL) {
 				{
-				State = 505;
+				State = 506;
 				call_convention();
 				}
 			}
 
-			State = 510;
+			State = 511;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			if (_la==COLON) {
 				{
-				State = 508;
-				Match(COLON);
 				State = 509;
+				Match(COLON);
+				State = 510;
 				type();
 				}
 			}
 
-			State = 513;
+			State = 514;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			if (_la==WHERE) {
 				{
-				State = 512;
+				State = 513;
 				where_clauses();
 				}
 			}
@@ -2532,6 +2861,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_func_parameters; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterFunc_parameters(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitFunc_parameters(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitFunc_parameters(this);
@@ -2547,21 +2886,21 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 515;
+			State = 516;
 			func_parameter();
-			State = 520;
+			State = 521;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while (_la==COMMA) {
 				{
 				{
-				State = 516;
-				Match(COMMA);
 				State = 517;
+				Match(COMMA);
+				State = 518;
 				func_parameter();
 				}
 				}
-				State = 522;
+				State = 523;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
@@ -2593,6 +2932,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_func_parameter; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterFunc_parameter(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitFunc_parameter(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitFunc_parameter(this);
@@ -2607,13 +2956,13 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 523;
-			ct_annotates();
 			State = 524;
-			Match(ID);
+			ct_annotates();
 			State = 525;
-			Match(COLON);
+			Match(ID);
 			State = 526;
+			Match(COLON);
+			State = 527;
 			type();
 			}
 		}
@@ -2640,6 +2989,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_namespace_decl; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterNamespace_decl(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitNamespace_decl(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitNamespace_decl(this);
@@ -2654,11 +3013,11 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 528;
-			Match(NAMESPACE);
 			State = 529;
-			namespace_path();
+			Match(NAMESPACE);
 			State = 530;
+			namespace_path();
+			State = 531;
 			Match(SEMI);
 			}
 		}
@@ -2685,6 +3044,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_using_decl; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterUsing_decl(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitUsing_decl(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitUsing_decl(this);
@@ -2699,11 +3068,11 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 532;
-			Match(USING);
 			State = 533;
-			namespace_path();
+			Match(USING);
 			State = 534;
+			namespace_path();
+			State = 535;
 			Match(SEMI);
 			}
 		}
@@ -2767,6 +3136,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_stmt; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterStmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitStmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitStmt(this);
@@ -2779,104 +3158,104 @@ public partial class SolidLangParser : Parser {
 		StmtContext _localctx = new StmtContext(Context, State);
 		EnterRule(_localctx, 72, RULE_stmt);
 		try {
-			State = 550;
+			State = 551;
 			ErrorHandler.Sync(this);
-			switch ( Interpreter.AdaptivePredict(TokenStream,51,Context) ) {
+			switch ( Interpreter.AdaptivePredict(TokenStream,52,Context) ) {
 			case 1:
 				EnterOuterAlt(_localctx, 1);
 				{
-				State = 536;
+				State = 537;
 				empty_stmt();
 				}
 				break;
 			case 2:
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 537;
+				State = 538;
 				body_stmt();
 				}
 				break;
 			case 3:
 				EnterOuterAlt(_localctx, 3);
 				{
-				State = 538;
+				State = 539;
 				assign_stmt();
 				}
 				break;
 			case 4:
 				EnterOuterAlt(_localctx, 4);
 				{
-				State = 539;
+				State = 540;
 				expr_stmt();
 				}
 				break;
 			case 5:
 				EnterOuterAlt(_localctx, 5);
 				{
-				State = 540;
+				State = 541;
 				defer_stmt();
 				}
 				break;
 			case 6:
 				EnterOuterAlt(_localctx, 6);
 				{
-				State = 541;
+				State = 542;
 				if_stmt();
 				}
 				break;
 			case 7:
 				EnterOuterAlt(_localctx, 7);
 				{
-				State = 542;
+				State = 543;
 				for_stmt();
 				}
 				break;
 			case 8:
 				EnterOuterAlt(_localctx, 8);
 				{
-				State = 543;
+				State = 544;
 				switch_stmt();
 				}
 				break;
 			case 9:
 				EnterOuterAlt(_localctx, 9);
 				{
-				State = 544;
+				State = 545;
 				break_stmt();
 				}
 				break;
 			case 10:
 				EnterOuterAlt(_localctx, 10);
 				{
-				State = 545;
+				State = 546;
 				continue_stmt();
 				}
 				break;
 			case 11:
 				EnterOuterAlt(_localctx, 11);
 				{
-				State = 546;
+				State = 547;
 				return_stmt();
 				}
 				break;
 			case 12:
 				EnterOuterAlt(_localctx, 12);
 				{
-				State = 547;
+				State = 548;
 				var_decl();
 				}
 				break;
 			case 13:
 				EnterOuterAlt(_localctx, 13);
 				{
-				State = 548;
+				State = 549;
 				const_decl();
 				}
 				break;
 			case 14:
 				EnterOuterAlt(_localctx, 14);
 				{
-				State = 549;
+				State = 550;
 				static_decl();
 				}
 				break;
@@ -2901,6 +3280,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_empty_stmt; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterEmpty_stmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitEmpty_stmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitEmpty_stmt(this);
@@ -2915,7 +3304,7 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 552;
+			State = 553;
 			Match(SEMI);
 			}
 		}
@@ -2945,6 +3334,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_body_stmt; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterBody_stmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitBody_stmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitBody_stmt(this);
@@ -2960,23 +3359,23 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 554;
+			State = 555;
 			Match(LBRACE);
-			State = 558;
+			State = 559;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 45044242617163264L) != 0) || ((((_la - 74)) & ~0x3f) == 0 && ((1L << (_la - 74)) & 64857L) != 0)) {
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 117101836655091200L) != 0) || ((((_la - 75)) & ~0x3f) == 0 && ((1L << (_la - 75)) & 64857L) != 0)) {
 				{
 				{
-				State = 555;
+				State = 556;
 				stmt();
 				}
 				}
-				State = 560;
+				State = 561;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
-			State = 561;
+			State = 562;
 			Match(RBRACE);
 			}
 		}
@@ -3016,6 +3415,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_assign_stmt; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterAssign_stmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitAssign_stmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitAssign_stmt(this);
@@ -3031,20 +3440,20 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 563;
-			expr();
 			State = 564;
+			expr();
+			State = 565;
 			_la = TokenStream.LA(1);
-			if ( !(((((_la - 58)) & ~0x3f) == 0 && ((1L << (_la - 58)) & 2047L) != 0)) ) {
+			if ( !(((((_la - 59)) & ~0x3f) == 0 && ((1L << (_la - 59)) & 2047L) != 0)) ) {
 			ErrorHandler.RecoverInline(this);
 			}
 			else {
 				ErrorHandler.ReportMatch(this);
 			    Consume();
 			}
-			State = 565;
-			expr();
 			State = 566;
+			expr();
+			State = 567;
 			Match(SEMI);
 			}
 		}
@@ -3070,6 +3479,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_expr_stmt; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterExpr_stmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitExpr_stmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitExpr_stmt(this);
@@ -3084,9 +3503,9 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 568;
-			expr();
 			State = 569;
+			expr();
+			State = 570;
 			Match(SEMI);
 			}
 		}
@@ -3103,15 +3522,33 @@ public partial class SolidLangParser : Parser {
 
 	public partial class Defer_stmtContext : ParserRuleContext {
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode DEFER() { return GetToken(SolidLangParser.DEFER, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ExprContext expr() {
-			return GetRuleContext<ExprContext>(0);
+		[System.Diagnostics.DebuggerNonUserCode] public Empty_stmtContext empty_stmt() {
+			return GetRuleContext<Empty_stmtContext>(0);
 		}
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode SEMI() { return GetToken(SolidLangParser.SEMI, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public Body_stmtContext body_stmt() {
+			return GetRuleContext<Body_stmtContext>(0);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public Assign_stmtContext assign_stmt() {
+			return GetRuleContext<Assign_stmtContext>(0);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public Expr_stmtContext expr_stmt() {
+			return GetRuleContext<Expr_stmtContext>(0);
+		}
 		public Defer_stmtContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
 		}
 		public override int RuleIndex { get { return RULE_defer_stmt; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterDefer_stmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitDefer_stmt(this);
+		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
@@ -3127,12 +3564,36 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 571;
-			Match(DEFER);
 			State = 572;
-			expr();
-			State = 573;
-			Match(SEMI);
+			Match(DEFER);
+			State = 577;
+			ErrorHandler.Sync(this);
+			switch ( Interpreter.AdaptivePredict(TokenStream,54,Context) ) {
+			case 1:
+				{
+				State = 573;
+				empty_stmt();
+				}
+				break;
+			case 2:
+				{
+				State = 574;
+				body_stmt();
+				}
+				break;
+			case 3:
+				{
+				State = 575;
+				assign_stmt();
+				}
+				break;
+			case 4:
+				{
+				State = 576;
+				expr_stmt();
+				}
+				break;
+			}
 			}
 		}
 		catch (RecognitionException re) {
@@ -3167,6 +3628,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_if_stmt; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterIf_stmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitIf_stmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitIf_stmt(this);
@@ -3181,31 +3652,31 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 575;
+			State = 579;
 			Match(IF);
-			State = 576;
+			State = 580;
 			expr();
-			State = 577;
+			State = 581;
 			body_stmt();
-			State = 583;
+			State = 587;
 			ErrorHandler.Sync(this);
-			switch ( Interpreter.AdaptivePredict(TokenStream,54,Context) ) {
+			switch ( Interpreter.AdaptivePredict(TokenStream,56,Context) ) {
 			case 1:
 				{
-				State = 578;
+				State = 582;
 				Match(ELSE);
-				State = 581;
+				State = 585;
 				ErrorHandler.Sync(this);
 				switch (TokenStream.LA(1)) {
 				case LBRACE:
 					{
-					State = 579;
+					State = 583;
 					body_stmt();
 					}
 					break;
 				case IF:
 					{
-					State = 580;
+					State = 584;
 					if_stmt();
 					}
 					break;
@@ -3248,6 +3719,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_for_stmt; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterFor_stmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitFor_stmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitFor_stmt(this);
@@ -3262,32 +3743,32 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 585;
+			State = 589;
 			Match(FOR);
-			State = 590;
+			State = 594;
 			ErrorHandler.Sync(this);
-			switch ( Interpreter.AdaptivePredict(TokenStream,55,Context) ) {
+			switch ( Interpreter.AdaptivePredict(TokenStream,57,Context) ) {
 			case 1:
 				{
-				State = 586;
+				State = 590;
 				for_infinite();
 				}
 				break;
 			case 2:
 				{
-				State = 587;
+				State = 591;
 				for_cond();
 				}
 				break;
 			case 3:
 				{
-				State = 588;
+				State = 592;
 				for_cstyle();
 				}
 				break;
 			case 4:
 				{
-				State = 589;
+				State = 593;
 				@foreach();
 				}
 				break;
@@ -3315,6 +3796,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_for_infinite; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterFor_infinite(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitFor_infinite(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitFor_infinite(this);
@@ -3329,7 +3820,7 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 592;
+			State = 596;
 			body_stmt();
 			}
 		}
@@ -3357,6 +3848,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_for_cond; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterFor_cond(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitFor_cond(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitFor_cond(this);
@@ -3371,9 +3872,9 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 594;
+			State = 598;
 			expr();
-			State = 595;
+			State = 599;
 			body_stmt();
 			}
 		}
@@ -3411,6 +3912,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_for_cstyle; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterFor_cstyle(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitFor_cstyle(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitFor_cstyle(this);
@@ -3426,25 +3937,13 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 598;
-			ErrorHandler.Sync(this);
-			_la = TokenStream.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 45044242615108096L) != 0) || ((((_la - 77)) & ~0x3f) == 0 && ((1L << (_la - 77)) & 8105L) != 0)) {
-				{
-				State = 597;
-				for_init();
-				}
-			}
-
-			State = 600;
-			Match(SEMI);
 			State = 602;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 45044242615107584L) != 0) || ((((_la - 77)) & ~0x3f) == 0 && ((1L << (_la - 77)) & 8105L) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 117101836653036032L) != 0) || ((((_la - 78)) & ~0x3f) == 0 && ((1L << (_la - 78)) & 8105L) != 0)) {
 				{
 				State = 601;
-				expr();
+				for_init();
 				}
 			}
 
@@ -3453,7 +3952,7 @@ public partial class SolidLangParser : Parser {
 			State = 606;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 45044242615107584L) != 0) || ((((_la - 77)) & ~0x3f) == 0 && ((1L << (_la - 77)) & 8105L) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 117101836653035520L) != 0) || ((((_la - 78)) & ~0x3f) == 0 && ((1L << (_la - 78)) & 8105L) != 0)) {
 				{
 				State = 605;
 				expr();
@@ -3461,6 +3960,18 @@ public partial class SolidLangParser : Parser {
 			}
 
 			State = 608;
+			Match(SEMI);
+			State = 610;
+			ErrorHandler.Sync(this);
+			_la = TokenStream.LA(1);
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 117101836653035520L) != 0) || ((((_la - 78)) & ~0x3f) == 0 && ((1L << (_la - 78)) & 8105L) != 0)) {
+				{
+				State = 609;
+				expr();
+				}
+			}
+
+			State = 612;
 			body_stmt();
 			}
 		}
@@ -3488,6 +3999,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_for_init; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterFor_init(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitFor_init(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitFor_init(this);
@@ -3500,20 +4021,20 @@ public partial class SolidLangParser : Parser {
 		For_initContext _localctx = new For_initContext(Context, State);
 		EnterRule(_localctx, 94, RULE_for_init);
 		try {
-			State = 612;
+			State = 616;
 			ErrorHandler.Sync(this);
-			switch ( Interpreter.AdaptivePredict(TokenStream,59,Context) ) {
+			switch ( Interpreter.AdaptivePredict(TokenStream,61,Context) ) {
 			case 1:
 				EnterOuterAlt(_localctx, 1);
 				{
-				State = 610;
+				State = 614;
 				var_decl();
 				}
 				break;
 			case 2:
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 611;
+				State = 615;
 				assign_stmt();
 				}
 				break;
@@ -3546,6 +4067,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_foreach; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterForeach(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitForeach(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitForeach(this);
@@ -3560,15 +4091,15 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 614;
-			Match(VAR);
-			State = 615;
-			Match(ID);
-			State = 616;
-			Match(IN);
-			State = 617;
-			expr();
 			State = 618;
+			Match(VAR);
+			State = 619;
+			Match(ID);
+			State = 620;
+			Match(IN);
+			State = 621;
+			expr();
+			State = 622;
 			body_stmt();
 			}
 		}
@@ -3602,6 +4133,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_switch_stmt; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterSwitch_stmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitSwitch_stmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitSwitch_stmt(this);
@@ -3617,27 +4158,27 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 620;
+			State = 624;
 			Match(SWITCH);
-			State = 621;
+			State = 625;
 			expr();
-			State = 622;
-			Match(LBRACE);
 			State = 626;
+			Match(LBRACE);
+			State = 630;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
-			while (_la==ELSE || _la==NULL || ((((_la - 80)) & ~0x3f) == 0 && ((1L << (_la - 80)) & 1009L) != 0)) {
+			while (_la==ELSE || _la==NULL || ((((_la - 81)) & ~0x3f) == 0 && ((1L << (_la - 81)) & 1009L) != 0)) {
 				{
 				{
-				State = 623;
+				State = 627;
 				switch_arm();
 				}
 				}
-				State = 628;
+				State = 632;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
-			State = 629;
+			State = 633;
 			Match(RBRACE);
 			}
 		}
@@ -3667,6 +4208,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_switch_arm; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterSwitch_arm(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitSwitch_arm(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitSwitch_arm(this);
@@ -3681,7 +4232,7 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 633;
+			State = 637;
 			ErrorHandler.Sync(this);
 			switch (TokenStream.LA(1)) {
 			case NULL:
@@ -3693,22 +4244,22 @@ public partial class SolidLangParser : Parser {
 			case BOOL_LITERAL:
 			case ID:
 				{
-				State = 631;
+				State = 635;
 				pattern();
 				}
 				break;
 			case ELSE:
 				{
-				State = 632;
+				State = 636;
 				Match(ELSE);
 				}
 				break;
 			default:
 				throw new NoViableAltException(this);
 			}
-			State = 635;
+			State = 639;
 			Match(EQARROW);
-			State = 636;
+			State = 640;
 			stmt();
 			}
 		}
@@ -3743,6 +4294,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_pattern; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterPattern(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitPattern(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitPattern(this);
@@ -3756,29 +4317,18 @@ public partial class SolidLangParser : Parser {
 		EnterRule(_localctx, 102, RULE_pattern);
 		int _la;
 		try {
-			State = 653;
+			State = 657;
 			ErrorHandler.Sync(this);
-			switch ( Interpreter.AdaptivePredict(TokenStream,63,Context) ) {
+			switch ( Interpreter.AdaptivePredict(TokenStream,65,Context) ) {
 			case 1:
 				EnterOuterAlt(_localctx, 1);
 				{
-				State = 638;
+				State = 642;
 				literal();
 				}
 				break;
 			case 2:
 				EnterOuterAlt(_localctx, 2);
-				{
-				State = 639;
-				named_type();
-				State = 640;
-				Match(SCOPE);
-				State = 641;
-				Match(ID);
-				}
-				break;
-			case 3:
-				EnterOuterAlt(_localctx, 3);
 				{
 				State = 643;
 				named_type();
@@ -3786,26 +4336,37 @@ public partial class SolidLangParser : Parser {
 				Match(SCOPE);
 				State = 645;
 				Match(ID);
-				State = 646;
-				Match(LPAREN);
+				}
+				break;
+			case 3:
+				EnterOuterAlt(_localctx, 3);
+				{
+				State = 647;
+				named_type();
 				State = 648;
+				Match(SCOPE);
+				State = 649;
+				Match(ID);
+				State = 650;
+				Match(LPAREN);
+				State = 652;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
-				if (_la==NULL || ((((_la - 80)) & ~0x3f) == 0 && ((1L << (_la - 80)) & 1009L) != 0)) {
+				if (_la==NULL || ((((_la - 81)) & ~0x3f) == 0 && ((1L << (_la - 81)) & 1009L) != 0)) {
 					{
-					State = 647;
+					State = 651;
 					pattern_binding();
 					}
 				}
 
-				State = 650;
+				State = 654;
 				Match(RPAREN);
 				}
 				break;
 			case 4:
 				EnterOuterAlt(_localctx, 4);
 				{
-				State = 652;
+				State = 656;
 				Match(ID);
 				}
 				break;
@@ -3839,6 +4400,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_pattern_binding; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterPattern_binding(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitPattern_binding(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitPattern_binding(this);
@@ -3854,21 +4425,21 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 655;
+			State = 659;
 			pattern();
-			State = 660;
+			State = 664;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while (_la==COMMA) {
 				{
 				{
-				State = 656;
+				State = 660;
 				Match(COMMA);
-				State = 657;
+				State = 661;
 				pattern();
 				}
 				}
-				State = 662;
+				State = 666;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
@@ -3894,6 +4465,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_break_stmt; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterBreak_stmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitBreak_stmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitBreak_stmt(this);
@@ -3908,9 +4489,9 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 663;
+			State = 667;
 			Match(BREAK);
-			State = 664;
+			State = 668;
 			Match(SEMI);
 			}
 		}
@@ -3934,6 +4515,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_continue_stmt; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterContinue_stmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitContinue_stmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitContinue_stmt(this);
@@ -3948,9 +4539,9 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 666;
+			State = 670;
 			Match(CONTINUE);
-			State = 667;
+			State = 671;
 			Match(SEMI);
 			}
 		}
@@ -3977,6 +4568,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_return_stmt; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterReturn_stmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitReturn_stmt(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitReturn_stmt(this);
@@ -3992,19 +4593,19 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 669;
+			State = 673;
 			Match(RETURN);
-			State = 671;
+			State = 675;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 45044242615107584L) != 0) || ((((_la - 77)) & ~0x3f) == 0 && ((1L << (_la - 77)) & 8105L) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 117101836653035520L) != 0) || ((((_la - 78)) & ~0x3f) == 0 && ((1L << (_la - 78)) & 8105L) != 0)) {
 				{
-				State = 670;
+				State = 674;
 				expr();
 				}
 			}
 
-			State = 673;
+			State = 677;
 			Match(SEMI);
 			}
 		}
@@ -4029,6 +4630,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_expr; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterExpr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitExpr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitExpr(this);
@@ -4043,7 +4654,7 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 675;
+			State = 679;
 			conditional_expr();
 			}
 		}
@@ -4076,6 +4687,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_conditional_expr; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterConditional_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitConditional_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitConditional_expr(this);
@@ -4091,20 +4712,20 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 677;
+			State = 681;
 			or_expr();
-			State = 683;
+			State = 687;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			if (_la==QUESTION) {
 				{
-				State = 678;
+				State = 682;
 				Match(QUESTION);
-				State = 679;
+				State = 683;
 				expr();
-				State = 680;
+				State = 684;
 				Match(COLON);
-				State = 681;
+				State = 685;
 				conditional_expr();
 				}
 			}
@@ -4139,6 +4760,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_or_expr; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterOr_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitOr_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitOr_expr(this);
@@ -4154,21 +4785,21 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 685;
+			State = 689;
 			and_expr();
-			State = 690;
+			State = 694;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while (_la==OROR) {
 				{
 				{
-				State = 686;
+				State = 690;
 				Match(OROR);
-				State = 687;
+				State = 691;
 				and_expr();
 				}
 				}
-				State = 692;
+				State = 696;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
@@ -4202,6 +4833,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_and_expr; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterAnd_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitAnd_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitAnd_expr(this);
@@ -4217,21 +4858,21 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 693;
+			State = 697;
 			bit_or_expr();
-			State = 698;
+			State = 702;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while (_la==ANDAND) {
 				{
 				{
-				State = 694;
+				State = 698;
 				Match(ANDAND);
-				State = 695;
+				State = 699;
 				bit_or_expr();
 				}
 				}
-				State = 700;
+				State = 704;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
@@ -4265,6 +4906,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_bit_or_expr; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterBit_or_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitBit_or_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitBit_or_expr(this);
@@ -4280,21 +4931,21 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 701;
+			State = 705;
 			bit_xor_expr();
-			State = 706;
+			State = 710;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while (_la==OR) {
 				{
 				{
-				State = 702;
+				State = 706;
 				Match(OR);
-				State = 703;
+				State = 707;
 				bit_xor_expr();
 				}
 				}
-				State = 708;
+				State = 712;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
@@ -4328,6 +4979,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_bit_xor_expr; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterBit_xor_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitBit_xor_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitBit_xor_expr(this);
@@ -4343,21 +5004,21 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 709;
+			State = 713;
 			bit_and_expr();
-			State = 714;
+			State = 718;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while (_la==CARET) {
 				{
 				{
-				State = 710;
+				State = 714;
 				Match(CARET);
-				State = 711;
+				State = 715;
 				bit_and_expr();
 				}
 				}
-				State = 716;
+				State = 720;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
@@ -4391,6 +5052,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_bit_and_expr; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterBit_and_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitBit_and_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitBit_and_expr(this);
@@ -4406,21 +5077,21 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 717;
+			State = 721;
 			eq_expr();
-			State = 722;
+			State = 726;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while (_la==AND) {
 				{
 				{
-				State = 718;
+				State = 722;
 				Match(AND);
-				State = 719;
+				State = 723;
 				eq_expr();
 				}
 				}
-				State = 724;
+				State = 728;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
@@ -4458,6 +5129,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_eq_expr; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterEq_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitEq_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitEq_expr(this);
@@ -4473,15 +5154,15 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 725;
+			State = 729;
 			cmp_expr();
-			State = 730;
+			State = 734;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while (_la==EQEQ || _la==NOTEQ) {
 				{
 				{
-				State = 726;
+				State = 730;
 				_la = TokenStream.LA(1);
 				if ( !(_la==EQEQ || _la==NOTEQ) ) {
 				ErrorHandler.RecoverInline(this);
@@ -4490,11 +5171,11 @@ public partial class SolidLangParser : Parser {
 					ErrorHandler.ReportMatch(this);
 				    Consume();
 				}
-				State = 727;
+				State = 731;
 				cmp_expr();
 				}
 				}
-				State = 732;
+				State = 736;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
@@ -4540,6 +5221,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_cmp_expr; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterCmp_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitCmp_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitCmp_expr(this);
@@ -4555,15 +5246,15 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 733;
+			State = 737;
 			shift_expr();
-			State = 738;
+			State = 742;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 2111062325329920L) != 0)) {
 				{
 				{
-				State = 734;
+				State = 738;
 				_la = TokenStream.LA(1);
 				if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 2111062325329920L) != 0)) ) {
 				ErrorHandler.RecoverInline(this);
@@ -4572,11 +5263,11 @@ public partial class SolidLangParser : Parser {
 					ErrorHandler.ReportMatch(this);
 				    Consume();
 				}
-				State = 735;
+				State = 739;
 				shift_expr();
 				}
 				}
-				State = 740;
+				State = 744;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
@@ -4614,6 +5305,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_shift_expr; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterShift_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitShift_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitShift_expr(this);
@@ -4629,15 +5330,15 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 741;
+			State = 745;
 			add_expr();
-			State = 746;
+			State = 750;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while (_la==SHL || _la==SHR) {
 				{
 				{
-				State = 742;
+				State = 746;
 				_la = TokenStream.LA(1);
 				if ( !(_la==SHL || _la==SHR) ) {
 				ErrorHandler.RecoverInline(this);
@@ -4646,11 +5347,11 @@ public partial class SolidLangParser : Parser {
 					ErrorHandler.ReportMatch(this);
 				    Consume();
 				}
-				State = 743;
+				State = 747;
 				add_expr();
 				}
 				}
-				State = 748;
+				State = 752;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
@@ -4688,6 +5389,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_add_expr; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterAdd_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitAdd_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitAdd_expr(this);
@@ -4703,15 +5414,15 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 749;
+			State = 753;
 			mul_expr();
-			State = 754;
+			State = 758;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while (_la==PLUS || _la==MINUS) {
 				{
 				{
-				State = 750;
+				State = 754;
 				_la = TokenStream.LA(1);
 				if ( !(_la==PLUS || _la==MINUS) ) {
 				ErrorHandler.RecoverInline(this);
@@ -4720,11 +5431,11 @@ public partial class SolidLangParser : Parser {
 					ErrorHandler.ReportMatch(this);
 				    Consume();
 				}
-				State = 751;
+				State = 755;
 				mul_expr();
 				}
 				}
-				State = 756;
+				State = 760;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
@@ -4766,6 +5477,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_mul_expr; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterMul_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitMul_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitMul_expr(this);
@@ -4781,15 +5502,15 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 757;
+			State = 761;
 			unary_expr();
-			State = 762;
+			State = 766;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 30786325577728L) != 0)) {
 				{
 				{
-				State = 758;
+				State = 762;
 				_la = TokenStream.LA(1);
 				if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 30786325577728L) != 0)) ) {
 				ErrorHandler.RecoverInline(this);
@@ -4798,11 +5519,11 @@ public partial class SolidLangParser : Parser {
 					ErrorHandler.ReportMatch(this);
 				    Consume();
 				}
-				State = 759;
+				State = 763;
 				unary_expr();
 				}
 				}
-				State = 764;
+				State = 768;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
@@ -4820,15 +5541,16 @@ public partial class SolidLangParser : Parser {
 	}
 
 	public partial class Unary_exprContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode MINUS() { return GetToken(SolidLangParser.MINUS, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode CARETNOT() { return GetToken(SolidLangParser.CARETNOT, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public Unary_exprContext unary_expr() {
 			return GetRuleContext<Unary_exprContext>(0);
 		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode CARET() { return GetToken(SolidLangParser.CARET, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode MINUS() { return GetToken(SolidLangParser.MINUS, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode NOT() { return GetToken(SolidLangParser.NOT, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode TILDE() { return GetToken(SolidLangParser.TILDE, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode AND() { return GetToken(SolidLangParser.AND, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode STAR() { return GetToken(SolidLangParser.STAR, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode CARET() { return GetToken(SolidLangParser.CARET, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public Postfix_exprContext postfix_expr() {
 			return GetRuleContext<Postfix_exprContext>(0);
 		}
@@ -4837,6 +5559,16 @@ public partial class SolidLangParser : Parser {
 		{
 		}
 		public override int RuleIndex { get { return RULE_unary_expr; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterUnary_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitUnary_expr(this);
+		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
@@ -4850,81 +5582,90 @@ public partial class SolidLangParser : Parser {
 		Unary_exprContext _localctx = new Unary_exprContext(Context, State);
 		EnterRule(_localctx, 136, RULE_unary_expr);
 		try {
-			State = 781;
+			State = 784;
 			ErrorHandler.Sync(this);
-			switch ( Interpreter.AdaptivePredict(TokenStream,77,Context) ) {
-			case 1:
+			switch (TokenStream.LA(1)) {
+			case CARETNOT:
 				EnterOuterAlt(_localctx, 1);
 				{
-				State = 765;
-				Match(MINUS);
-				State = 766;
-				unary_expr();
-				}
-				break;
-			case 2:
-				EnterOuterAlt(_localctx, 2);
-				{
-				State = 767;
-				Match(NOT);
-				State = 768;
-				unary_expr();
-				}
-				break;
-			case 3:
-				EnterOuterAlt(_localctx, 3);
-				{
 				State = 769;
-				Match(TILDE);
+				Match(CARETNOT);
 				State = 770;
 				unary_expr();
 				}
 				break;
-			case 4:
-				EnterOuterAlt(_localctx, 4);
+			case CARET:
+				EnterOuterAlt(_localctx, 2);
 				{
 				State = 771;
-				Match(AND);
+				Match(CARET);
 				State = 772;
 				unary_expr();
 				}
 				break;
-			case 5:
-				EnterOuterAlt(_localctx, 5);
+			case MINUS:
+				EnterOuterAlt(_localctx, 3);
 				{
 				State = 773;
-				Match(STAR);
+				Match(MINUS);
 				State = 774;
 				unary_expr();
 				}
 				break;
-			case 6:
-				EnterOuterAlt(_localctx, 6);
+			case NOT:
+				EnterOuterAlt(_localctx, 4);
 				{
 				State = 775;
-				Match(CARET);
+				Match(NOT);
 				State = 776;
 				unary_expr();
 				}
 				break;
-			case 7:
-				EnterOuterAlt(_localctx, 7);
+			case TILDE:
+				EnterOuterAlt(_localctx, 5);
 				{
 				State = 777;
-				Match(CARET);
+				Match(TILDE);
 				State = 778;
-				Match(NOT);
-				State = 779;
 				unary_expr();
 				}
 				break;
-			case 8:
+			case AND:
+				EnterOuterAlt(_localctx, 6);
+				{
+				State = 779;
+				Match(AND);
+				State = 780;
+				unary_expr();
+				}
+				break;
+			case STAR:
+				EnterOuterAlt(_localctx, 7);
+				{
+				State = 781;
+				Match(STAR);
+				State = 782;
+				unary_expr();
+				}
+				break;
+			case NULL:
+			case AT:
+			case LBRACKET:
+			case LPAREN:
+			case INTEGER_LITERAL:
+			case FLOAT_LITERAL:
+			case STRING_LITERAL:
+			case CHAR_LITERAL:
+			case BOOL_LITERAL:
+			case ID:
 				EnterOuterAlt(_localctx, 8);
 				{
-				State = 780;
+				State = 783;
 				postfix_expr();
 				}
 				break;
+			default:
+				throw new NoViableAltException(this);
 			}
 		}
 		catch (RecognitionException re) {
@@ -4954,6 +5695,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_postfix_expr; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterPostfix_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitPostfix_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitPostfix_expr(this);
@@ -4969,19 +5720,19 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 783;
+			State = 786;
 			primary_expr();
-			State = 787;
+			State = 790;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
-			while (((((_la - 69)) & ~0x3f) == 0 && ((1L << (_la - 69)) & 10385L) != 0)) {
+			while (((((_la - 70)) & ~0x3f) == 0 && ((1L << (_la - 70)) & 10385L) != 0)) {
 				{
 				{
-				State = 784;
+				State = 787;
 				postfix_suffix();
 				}
 				}
-				State = 789;
+				State = 792;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
@@ -5019,6 +5770,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_postfix_suffix; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterPostfix_suffix(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitPostfix_suffix(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitPostfix_suffix(this);
@@ -5032,82 +5793,82 @@ public partial class SolidLangParser : Parser {
 		EnterRule(_localctx, 140, RULE_postfix_suffix);
 		int _la;
 		try {
-			State = 812;
+			State = 815;
 			ErrorHandler.Sync(this);
 			switch (TokenStream.LA(1)) {
 			case DOT:
 				EnterOuterAlt(_localctx, 1);
 				{
-				State = 790;
+				State = 793;
 				Match(DOT);
-				State = 791;
+				State = 794;
 				Match(ID);
 				}
 				break;
 			case MINUSRARROW:
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 792;
+				State = 795;
 				Match(MINUSRARROW);
-				State = 793;
+				State = 796;
 				Match(ID);
 				}
 				break;
 			case LBRACKET:
 				EnterOuterAlt(_localctx, 3);
 				{
-				State = 794;
+				State = 797;
 				Match(LBRACKET);
-				State = 795;
+				State = 798;
 				expr();
-				State = 796;
+				State = 799;
 				Match(RBRACKET);
 				}
 				break;
 			case LPAREN:
 				EnterOuterAlt(_localctx, 4);
 				{
-				State = 798;
+				State = 801;
 				Match(LPAREN);
-				State = 800;
+				State = 803;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
-				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 45044242615107584L) != 0) || ((((_la - 77)) & ~0x3f) == 0 && ((1L << (_la - 77)) & 8105L) != 0)) {
+				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 117101836653035520L) != 0) || ((((_la - 78)) & ~0x3f) == 0 && ((1L << (_la - 78)) & 8105L) != 0)) {
 					{
-					State = 799;
+					State = 802;
 					call_args();
 					}
 				}
 
-				State = 802;
+				State = 805;
 				Match(RPAREN);
 				}
 				break;
 			case SCOPE:
 				EnterOuterAlt(_localctx, 5);
 				{
-				State = 803;
+				State = 806;
 				Match(SCOPE);
-				State = 804;
+				State = 807;
 				Match(ID);
-				State = 810;
+				State = 813;
 				ErrorHandler.Sync(this);
-				switch ( Interpreter.AdaptivePredict(TokenStream,81,Context) ) {
+				switch ( Interpreter.AdaptivePredict(TokenStream,83,Context) ) {
 				case 1:
 					{
-					State = 805;
+					State = 808;
 					Match(LPAREN);
-					State = 807;
+					State = 810;
 					ErrorHandler.Sync(this);
 					_la = TokenStream.LA(1);
-					if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 45044242615107584L) != 0) || ((((_la - 77)) & ~0x3f) == 0 && ((1L << (_la - 77)) & 8105L) != 0)) {
+					if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 117101836653035520L) != 0) || ((((_la - 78)) & ~0x3f) == 0 && ((1L << (_la - 78)) & 8105L) != 0)) {
 						{
-						State = 806;
+						State = 809;
 						call_args();
 						}
 					}
 
-					State = 809;
+					State = 812;
 					Match(RPAREN);
 					}
 					break;
@@ -5157,6 +5918,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_primary_expr; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterPrimary_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitPrimary_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitPrimary_expr(this);
@@ -5169,59 +5940,59 @@ public partial class SolidLangParser : Parser {
 		Primary_exprContext _localctx = new Primary_exprContext(Context, State);
 		EnterRule(_localctx, 142, RULE_primary_expr);
 		try {
-			State = 824;
+			State = 827;
 			ErrorHandler.Sync(this);
-			switch ( Interpreter.AdaptivePredict(TokenStream,83,Context) ) {
+			switch ( Interpreter.AdaptivePredict(TokenStream,85,Context) ) {
 			case 1:
 				EnterOuterAlt(_localctx, 1);
 				{
-				State = 814;
+				State = 817;
 				literal();
 				}
 				break;
 			case 2:
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 815;
+				State = 818;
 				Match(ID);
 				}
 				break;
 			case 3:
 				EnterOuterAlt(_localctx, 3);
 				{
-				State = 816;
+				State = 819;
 				Match(LPAREN);
-				State = 817;
+				State = 820;
 				expr();
-				State = 818;
+				State = 821;
 				Match(RPAREN);
 				}
 				break;
 			case 4:
 				EnterOuterAlt(_localctx, 4);
 				{
-				State = 820;
+				State = 823;
 				tuple_literal();
 				}
 				break;
 			case 5:
 				EnterOuterAlt(_localctx, 5);
 				{
-				State = 821;
+				State = 824;
 				meta_expr();
 				}
 				break;
 			case 6:
 				EnterOuterAlt(_localctx, 6);
 				{
-				State = 822;
+				State = 825;
 				struct_literal();
 				}
 				break;
 			case 7:
 				EnterOuterAlt(_localctx, 7);
 				{
-				State = 823;
+				State = 826;
 				array_literal();
 				}
 				break;
@@ -5255,6 +6026,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_call_args; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterCall_args(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitCall_args(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitCall_args(this);
@@ -5271,32 +6052,32 @@ public partial class SolidLangParser : Parser {
 			int _alt;
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 826;
+			State = 829;
 			call_arg();
-			State = 831;
+			State = 834;
 			ErrorHandler.Sync(this);
-			_alt = Interpreter.AdaptivePredict(TokenStream,84,Context);
+			_alt = Interpreter.AdaptivePredict(TokenStream,86,Context);
 			while ( _alt!=2 && _alt!=global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					{
 					{
-					State = 827;
+					State = 830;
 					Match(COMMA);
-					State = 828;
+					State = 831;
 					call_arg();
 					}
 					} 
 				}
-				State = 833;
+				State = 836;
 				ErrorHandler.Sync(this);
-				_alt = Interpreter.AdaptivePredict(TokenStream,84,Context);
+				_alt = Interpreter.AdaptivePredict(TokenStream,86,Context);
 			}
-			State = 835;
+			State = 838;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			if (_la==COMMA) {
 				{
-				State = 834;
+				State = 837;
 				Match(COMMA);
 				}
 			}
@@ -5326,6 +6107,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_call_arg; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterCall_arg(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitCall_arg(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitCall_arg(this);
@@ -5338,24 +6129,24 @@ public partial class SolidLangParser : Parser {
 		Call_argContext _localctx = new Call_argContext(Context, State);
 		EnterRule(_localctx, 146, RULE_call_arg);
 		try {
-			State = 841;
+			State = 844;
 			ErrorHandler.Sync(this);
-			switch ( Interpreter.AdaptivePredict(TokenStream,86,Context) ) {
+			switch ( Interpreter.AdaptivePredict(TokenStream,88,Context) ) {
 			case 1:
 				EnterOuterAlt(_localctx, 1);
 				{
-				State = 837;
+				State = 840;
 				expr();
 				}
 				break;
 			case 2:
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 838;
+				State = 841;
 				Match(ID);
-				State = 839;
+				State = 842;
 				Match(EQ);
-				State = 840;
+				State = 843;
 				expr();
 				}
 				break;
@@ -5386,6 +6177,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_meta_expr; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterMeta_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitMeta_expr(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitMeta_expr(this);
@@ -5401,23 +6202,23 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 843;
+			State = 846;
 			Match(AT);
-			State = 844;
-			Match(ID);
-			State = 845;
-			Match(LPAREN);
 			State = 847;
+			Match(ID);
+			State = 848;
+			Match(LPAREN);
+			State = 850;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 45044517459460104L) != 0) || ((((_la - 77)) & ~0x3f) == 0 && ((1L << (_la - 77)) & 8105L) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 117102111497388040L) != 0) || ((((_la - 78)) & ~0x3f) == 0 && ((1L << (_la - 78)) & 8105L) != 0)) {
 				{
-				State = 846;
+				State = 849;
 				ct_annotate_args();
 				}
 			}
 
-			State = 849;
+			State = 852;
 			Match(RPAREN);
 			}
 		}
@@ -5460,6 +6261,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_type; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterType(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitType(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitType(this);
@@ -5472,7 +6283,7 @@ public partial class SolidLangParser : Parser {
 		TypeContext _localctx = new TypeContext(Context, State);
 		EnterRule(_localctx, 150, RULE_type);
 		try {
-			State = 858;
+			State = 861;
 			ErrorHandler.Sync(this);
 			switch (TokenStream.LA(1)) {
 			case U8:
@@ -5490,49 +6301,50 @@ public partial class SolidLangParser : Parser {
 			case BOOL:
 				EnterOuterAlt(_localctx, 1);
 				{
-				State = 851;
+				State = 854;
 				primitive_type();
 				}
 				break;
 			case LBRACKET:
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 852;
+				State = 855;
 				array_type();
 				}
 				break;
 			case LPAREN:
 				EnterOuterAlt(_localctx, 3);
 				{
-				State = 853;
+				State = 856;
 				tuple_type();
 				}
 				break;
 			case CARET:
+			case CARETNOT:
 				EnterOuterAlt(_localctx, 4);
 				{
-				State = 854;
+				State = 857;
 				ref_type();
 				}
 				break;
 			case STAR:
 				EnterOuterAlt(_localctx, 5);
 				{
-				State = 855;
+				State = 858;
 				pointer_type();
 				}
 				break;
 			case FUNC:
 				EnterOuterAlt(_localctx, 6);
 				{
-				State = 856;
+				State = 859;
 				func_type();
 				}
 				break;
 			case ID:
 				EnterOuterAlt(_localctx, 7);
 				{
-				State = 857;
+				State = 860;
 				named_type();
 				}
 				break;
@@ -5567,6 +6379,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_primitive_type; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterPrimitive_type(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitPrimitive_type(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitPrimitive_type(this);
@@ -5579,7 +6401,7 @@ public partial class SolidLangParser : Parser {
 		Primitive_typeContext _localctx = new Primitive_typeContext(Context, State);
 		EnterRule(_localctx, 152, RULE_primitive_type);
 		try {
-			State = 863;
+			State = 866;
 			ErrorHandler.Sync(this);
 			switch (TokenStream.LA(1)) {
 			case U8:
@@ -5594,7 +6416,7 @@ public partial class SolidLangParser : Parser {
 			case ISIZE:
 				EnterOuterAlt(_localctx, 1);
 				{
-				State = 860;
+				State = 863;
 				integer_type();
 				}
 				break;
@@ -5602,14 +6424,14 @@ public partial class SolidLangParser : Parser {
 			case F64:
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 861;
+				State = 864;
 				float_type();
 				}
 				break;
 			case BOOL:
 				EnterOuterAlt(_localctx, 3);
 				{
-				State = 862;
+				State = 865;
 				bool_type();
 				}
 				break;
@@ -5645,6 +6467,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_integer_type; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterInteger_type(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitInteger_type(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitInteger_type(this);
@@ -5660,7 +6492,7 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 865;
+			State = 868;
 			_la = TokenStream.LA(1);
 			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 34326183936L) != 0)) ) {
 			ErrorHandler.RecoverInline(this);
@@ -5691,6 +6523,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_float_type; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterFloat_type(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitFloat_type(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitFloat_type(this);
@@ -5706,7 +6548,7 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 867;
+			State = 870;
 			_la = TokenStream.LA(1);
 			if ( !(_la==F32 || _la==F64) ) {
 			ErrorHandler.RecoverInline(this);
@@ -5736,6 +6578,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_bool_type; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterBool_type(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitBool_type(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitBool_type(this);
@@ -5750,7 +6602,7 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 869;
+			State = 872;
 			Match(BOOL);
 			}
 		}
@@ -5780,6 +6632,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_array_type; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterArray_type(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitArray_type(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitArray_type(this);
@@ -5794,13 +6656,13 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 871;
-			Match(LBRACKET);
-			State = 872;
-			expr();
-			State = 873;
-			Match(RBRACKET);
 			State = 874;
+			Match(LBRACKET);
+			State = 875;
+			expr();
+			State = 876;
+			Match(RBRACKET);
+			State = 877;
 			type();
 			}
 		}
@@ -5834,6 +6696,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_tuple_type; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterTuple_type(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitTuple_type(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitTuple_type(this);
@@ -5849,27 +6721,27 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 876;
+			State = 879;
 			Match(LPAREN);
-			State = 877;
-			type();
 			State = 880;
+			type();
+			State = 883;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			do {
 				{
 				{
-				State = 878;
+				State = 881;
 				Match(COMMA);
-				State = 879;
+				State = 882;
 				type();
 				}
 				}
-				State = 882;
+				State = 885;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			} while ( _la==COMMA );
-			State = 884;
+			State = 887;
 			Match(RPAREN);
 			}
 		}
@@ -5885,16 +6757,27 @@ public partial class SolidLangParser : Parser {
 	}
 
 	public partial class Ref_typeContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode CARET() { return GetToken(SolidLangParser.CARET, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public TypeContext type() {
 			return GetRuleContext<TypeContext>(0);
 		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode CARETNOT() { return GetToken(SolidLangParser.CARETNOT, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode CARET() { return GetToken(SolidLangParser.CARET, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode NOT() { return GetToken(SolidLangParser.NOT, 0); }
 		public Ref_typeContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
 		}
 		public override int RuleIndex { get { return RULE_ref_type; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterRef_type(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitRef_type(this);
+		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
@@ -5911,19 +6794,35 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 886;
-			Match(CARET);
-			State = 888;
+			State = 894;
 			ErrorHandler.Sync(this);
-			_la = TokenStream.LA(1);
-			if (_la==NOT) {
+			switch (TokenStream.LA(1)) {
+			case CARETNOT:
 				{
-				State = 887;
-				Match(NOT);
+				State = 889;
+				Match(CARETNOT);
 				}
-			}
+				break;
+			case CARET:
+				{
+				State = 890;
+				Match(CARET);
+				State = 892;
+				ErrorHandler.Sync(this);
+				_la = TokenStream.LA(1);
+				if (_la==NOT) {
+					{
+					State = 891;
+					Match(NOT);
+					}
+				}
 
-			State = 890;
+				}
+				break;
+			default:
+				throw new NoViableAltException(this);
+			}
+			State = 896;
 			type();
 			}
 		}
@@ -5949,6 +6848,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_pointer_type; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterPointer_type(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitPointer_type(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitPointer_type(this);
@@ -5963,9 +6872,9 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 892;
+			State = 898;
 			Match(STAR);
-			State = 893;
+			State = 899;
 			type();
 			}
 		}
@@ -6004,6 +6913,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_func_type; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterFunc_type(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitFunc_type(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitFunc_type(this);
@@ -6019,51 +6938,51 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 895;
+			State = 901;
 			Match(FUNC);
-			State = 896;
+			State = 902;
 			Match(LPAREN);
-			State = 905;
+			State = 911;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 36033469909827592L) != 0) || ((((_la - 80)) & ~0x3f) == 0 && ((1L << (_la - 80)) & 517L) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 108091063947755528L) != 0) || ((((_la - 81)) & ~0x3f) == 0 && ((1L << (_la - 81)) & 517L) != 0)) {
 				{
-				State = 897;
+				State = 903;
 				type();
-				State = 902;
+				State = 908;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 				while (_la==COMMA) {
 					{
 					{
-					State = 898;
+					State = 904;
 					Match(COMMA);
-					State = 899;
+					State = 905;
 					type();
 					}
 					}
-					State = 904;
+					State = 910;
 					ErrorHandler.Sync(this);
 					_la = TokenStream.LA(1);
 				}
 				}
 			}
 
-			State = 907;
+			State = 913;
 			Match(RPAREN);
-			State = 909;
+			State = 915;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			if (_la==CDECL || _la==STDCALL) {
 				{
-				State = 908;
+				State = 914;
 				call_convention();
 				}
 			}
 
-			State = 911;
+			State = 917;
 			Match(COLON);
-			State = 912;
+			State = 918;
 			type();
 			}
 		}
@@ -6101,6 +7020,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_named_type; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterNamed_type(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitNamed_type(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitNamed_type(this);
@@ -6116,44 +7045,44 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 915;
+			State = 921;
 			ErrorHandler.Sync(this);
-			switch ( Interpreter.AdaptivePredict(TokenStream,95,Context) ) {
+			switch ( Interpreter.AdaptivePredict(TokenStream,98,Context) ) {
 			case 1:
 				{
-				State = 914;
+				State = 920;
 				namespace_prefix();
 				}
 				break;
 			}
-			State = 917;
+			State = 923;
 			Match(ID);
-			State = 929;
+			State = 935;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			if (_la==LT) {
 				{
-				State = 918;
-				Match(LT);
-				State = 919;
-				type();
 				State = 924;
+				Match(LT);
+				State = 925;
+				type();
+				State = 930;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 				while (_la==COMMA) {
 					{
 					{
-					State = 920;
+					State = 926;
 					Match(COMMA);
-					State = 921;
+					State = 927;
 					type();
 					}
 					}
-					State = 926;
+					State = 932;
 					ErrorHandler.Sync(this);
 					_la = TokenStream.LA(1);
 				}
-				State = 927;
+				State = 933;
 				Match(GT);
 				}
 			}
@@ -6211,6 +7140,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_literal; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterLiteral(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitLiteral(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitLiteral(this);
@@ -6223,83 +7162,83 @@ public partial class SolidLangParser : Parser {
 		LiteralContext _localctx = new LiteralContext(Context, State);
 		EnterRule(_localctx, 172, RULE_literal);
 		try {
-			State = 942;
+			State = 948;
 			ErrorHandler.Sync(this);
-			switch ( Interpreter.AdaptivePredict(TokenStream,98,Context) ) {
+			switch ( Interpreter.AdaptivePredict(TokenStream,101,Context) ) {
 			case 1:
 				EnterOuterAlt(_localctx, 1);
 				{
-				State = 931;
+				State = 937;
 				integer_literal();
 				}
 				break;
 			case 2:
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 932;
+				State = 938;
 				float_literal();
 				}
 				break;
 			case 3:
 				EnterOuterAlt(_localctx, 3);
 				{
-				State = 933;
+				State = 939;
 				string_literal();
 				}
 				break;
 			case 4:
 				EnterOuterAlt(_localctx, 4);
 				{
-				State = 934;
+				State = 940;
 				char_literal();
 				}
 				break;
 			case 5:
 				EnterOuterAlt(_localctx, 5);
 				{
-				State = 935;
+				State = 941;
 				bool_literal();
 				}
 				break;
 			case 6:
 				EnterOuterAlt(_localctx, 6);
 				{
-				State = 936;
+				State = 942;
 				null_literal();
 				}
 				break;
 			case 7:
 				EnterOuterAlt(_localctx, 7);
 				{
-				State = 937;
+				State = 943;
 				array_literal();
 				}
 				break;
 			case 8:
 				EnterOuterAlt(_localctx, 8);
 				{
-				State = 938;
+				State = 944;
 				struct_literal();
 				}
 				break;
 			case 9:
 				EnterOuterAlt(_localctx, 9);
 				{
-				State = 939;
+				State = 945;
 				union_literal();
 				}
 				break;
 			case 10:
 				EnterOuterAlt(_localctx, 10);
 				{
-				State = 940;
+				State = 946;
 				enum_literal();
 				}
 				break;
 			case 11:
 				EnterOuterAlt(_localctx, 11);
 				{
-				State = 941;
+				State = 947;
 				variant_literal();
 				}
 				break;
@@ -6324,6 +7263,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_integer_literal; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterInteger_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitInteger_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitInteger_literal(this);
@@ -6338,7 +7287,7 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 944;
+			State = 950;
 			Match(INTEGER_LITERAL);
 			}
 		}
@@ -6361,6 +7310,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_float_literal; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterFloat_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitFloat_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitFloat_literal(this);
@@ -6375,7 +7334,7 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 946;
+			State = 952;
 			Match(FLOAT_LITERAL);
 			}
 		}
@@ -6398,6 +7357,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_string_literal; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterString_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitString_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitString_literal(this);
@@ -6412,7 +7381,7 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 948;
+			State = 954;
 			Match(STRING_LITERAL);
 			}
 		}
@@ -6435,6 +7404,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_char_literal; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterChar_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitChar_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitChar_literal(this);
@@ -6449,7 +7428,7 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 950;
+			State = 956;
 			Match(CHAR_LITERAL);
 			}
 		}
@@ -6472,6 +7451,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_bool_literal; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterBool_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitBool_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitBool_literal(this);
@@ -6486,7 +7475,7 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 952;
+			State = 958;
 			Match(BOOL_LITERAL);
 			}
 		}
@@ -6509,6 +7498,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_null_literal; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterNull_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitNull_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitNull_literal(this);
@@ -6523,7 +7522,7 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 954;
+			State = 960;
 			Match(NULL);
 			}
 		}
@@ -6539,14 +7538,11 @@ public partial class SolidLangParser : Parser {
 	}
 
 	public partial class Array_literalContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode LBRACKET() { return GetToken(SolidLangParser.LBRACKET, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] RBRACE() { return GetTokens(SolidLangParser.RBRACE); }
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode RBRACE(int i) {
-			return GetToken(SolidLangParser.RBRACE, i);
+		[System.Diagnostics.DebuggerNonUserCode] public Array_typeContext array_type() {
+			return GetRuleContext<Array_typeContext>(0);
 		}
-		[System.Diagnostics.DebuggerNonUserCode] public TypeContext type() {
-			return GetRuleContext<TypeContext>(0);
-		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode LBRACE() { return GetToken(SolidLangParser.LBRACE, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode RBRACE() { return GetToken(SolidLangParser.RBRACE, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ExprContext[] expr() {
 			return GetRuleContexts<ExprContext>();
 		}
@@ -6562,6 +7558,16 @@ public partial class SolidLangParser : Parser {
 		{
 		}
 		public override int RuleIndex { get { return RULE_array_literal; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterArray_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitArray_literal(this);
+		}
 		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
@@ -6579,51 +7585,41 @@ public partial class SolidLangParser : Parser {
 			int _alt;
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 956;
-			Match(LBRACKET);
-			State = 958;
+			State = 962;
+			array_type();
+			State = 963;
+			Match(LBRACE);
+			State = 975;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 36033469909827592L) != 0) || ((((_la - 80)) & ~0x3f) == 0 && ((1L << (_la - 80)) & 517L) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 117101836653035520L) != 0) || ((((_la - 78)) & ~0x3f) == 0 && ((1L << (_la - 78)) & 8105L) != 0)) {
 				{
-				State = 957;
-				type();
-				}
-			}
-
-			State = 960;
-			Match(RBRACE);
-			State = 972;
-			ErrorHandler.Sync(this);
-			_la = TokenStream.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 45044242615107584L) != 0) || ((((_la - 77)) & ~0x3f) == 0 && ((1L << (_la - 77)) & 8105L) != 0)) {
-				{
-				State = 961;
+				State = 964;
 				expr();
-				State = 966;
+				State = 969;
 				ErrorHandler.Sync(this);
-				_alt = Interpreter.AdaptivePredict(TokenStream,100,Context);
+				_alt = Interpreter.AdaptivePredict(TokenStream,102,Context);
 				while ( _alt!=2 && _alt!=global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER ) {
 					if ( _alt==1 ) {
 						{
 						{
-						State = 962;
+						State = 965;
 						Match(COMMA);
-						State = 963;
+						State = 966;
 						expr();
 						}
 						} 
 					}
-					State = 968;
+					State = 971;
 					ErrorHandler.Sync(this);
-					_alt = Interpreter.AdaptivePredict(TokenStream,100,Context);
+					_alt = Interpreter.AdaptivePredict(TokenStream,102,Context);
 				}
-				State = 970;
+				State = 973;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 				if (_la==COMMA) {
 					{
-					State = 969;
+					State = 972;
 					Match(COMMA);
 					}
 				}
@@ -6631,7 +7627,7 @@ public partial class SolidLangParser : Parser {
 				}
 			}
 
-			State = 974;
+			State = 977;
 			Match(RBRACE);
 			}
 		}
@@ -6668,6 +7664,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_struct_literal; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterStruct_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitStruct_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitStruct_literal(this);
@@ -6684,41 +7690,41 @@ public partial class SolidLangParser : Parser {
 			int _alt;
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 976;
+			State = 979;
 			named_type();
-			State = 977;
+			State = 980;
 			Match(LBRACE);
-			State = 989;
+			State = 992;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			if (_la==ID) {
 				{
-				State = 978;
+				State = 981;
 				struct_literal_field();
-				State = 983;
+				State = 986;
 				ErrorHandler.Sync(this);
-				_alt = Interpreter.AdaptivePredict(TokenStream,103,Context);
+				_alt = Interpreter.AdaptivePredict(TokenStream,105,Context);
 				while ( _alt!=2 && _alt!=global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER ) {
 					if ( _alt==1 ) {
 						{
 						{
-						State = 979;
+						State = 982;
 						Match(COMMA);
-						State = 980;
+						State = 983;
 						struct_literal_field();
 						}
 						} 
 					}
-					State = 985;
+					State = 988;
 					ErrorHandler.Sync(this);
-					_alt = Interpreter.AdaptivePredict(TokenStream,103,Context);
+					_alt = Interpreter.AdaptivePredict(TokenStream,105,Context);
 				}
-				State = 987;
+				State = 990;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 				if (_la==COMMA) {
 					{
-					State = 986;
+					State = 989;
 					Match(COMMA);
 					}
 				}
@@ -6726,7 +7732,7 @@ public partial class SolidLangParser : Parser {
 				}
 			}
 
-			State = 991;
+			State = 994;
 			Match(RBRACE);
 			}
 		}
@@ -6753,6 +7759,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_struct_literal_field; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterStruct_literal_field(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitStruct_literal_field(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitStruct_literal_field(this);
@@ -6767,11 +7783,11 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 993;
+			State = 996;
 			Match(ID);
-			State = 994;
+			State = 997;
 			Match(EQ);
-			State = 995;
+			State = 998;
 			expr();
 			}
 		}
@@ -6803,6 +7819,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_union_literal; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterUnion_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitUnion_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitUnion_literal(this);
@@ -6817,17 +7843,17 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 997;
-			named_type();
-			State = 998;
-			Match(SCOPE);
-			State = 999;
-			Match(ID);
 			State = 1000;
-			Match(LPAREN);
+			named_type();
 			State = 1001;
-			expr();
+			Match(SCOPE);
 			State = 1002;
+			Match(ID);
+			State = 1003;
+			Match(LPAREN);
+			State = 1004;
+			expr();
+			State = 1005;
 			Match(RPAREN);
 			}
 		}
@@ -6854,6 +7880,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_enum_literal; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterEnum_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitEnum_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitEnum_literal(this);
@@ -6868,11 +7904,11 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 1004;
+			State = 1007;
 			named_type();
-			State = 1005;
+			State = 1008;
 			Match(SCOPE);
-			State = 1006;
+			State = 1009;
 			Match(ID);
 			}
 		}
@@ -6904,6 +7940,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_variant_literal; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterVariant_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitVariant_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitVariant_literal(this);
@@ -6919,25 +7965,25 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 1008;
-			named_type();
-			State = 1009;
-			Match(SCOPE);
-			State = 1010;
-			Match(ID);
 			State = 1011;
-			Match(LPAREN);
+			named_type();
+			State = 1012;
+			Match(SCOPE);
 			State = 1013;
+			Match(ID);
+			State = 1014;
+			Match(LPAREN);
+			State = 1016;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 45044242615107584L) != 0) || ((((_la - 77)) & ~0x3f) == 0 && ((1L << (_la - 77)) & 8105L) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 117101836653035520L) != 0) || ((((_la - 78)) & ~0x3f) == 0 && ((1L << (_la - 78)) & 8105L) != 0)) {
 				{
-				State = 1012;
+				State = 1015;
 				expr();
 				}
 			}
 
-			State = 1015;
+			State = 1018;
 			Match(RPAREN);
 			}
 		}
@@ -6971,6 +8017,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_tuple_literal; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterTuple_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitTuple_literal(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitTuple_literal(this);
@@ -6986,27 +8042,27 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 1017;
+			State = 1020;
 			Match(LPAREN);
-			State = 1018;
-			tuple_literal_elem();
 			State = 1021;
+			tuple_literal_elem();
+			State = 1024;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
 			do {
 				{
 				{
-				State = 1019;
+				State = 1022;
 				Match(COMMA);
-				State = 1020;
+				State = 1023;
 				tuple_literal_elem();
 				}
 				}
-				State = 1023;
+				State = 1026;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			} while ( _la==COMMA );
-			State = 1025;
+			State = 1028;
 			Match(RPAREN);
 			}
 		}
@@ -7035,6 +8091,16 @@ public partial class SolidLangParser : Parser {
 		}
 		public override int RuleIndex { get { return RULE_tuple_literal_elem; } }
 		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.EnterTuple_literal_elem(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			ISolidLangParserListener typedListener = listener as ISolidLangParserListener;
+			if (typedListener != null) typedListener.ExitTuple_literal_elem(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			ISolidLangParserVisitor<TResult> typedVisitor = visitor as ISolidLangParserVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitTuple_literal_elem(this);
@@ -7049,11 +8115,11 @@ public partial class SolidLangParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 1027;
+			State = 1030;
 			expr();
-			State = 1028;
+			State = 1031;
 			Match(COLON);
-			State = 1029;
+			State = 1032;
 			type();
 			}
 		}
@@ -7069,7 +8135,7 @@ public partial class SolidLangParser : Parser {
 	}
 
 	private static int[] _serializedATN = {
-		4,1,92,1032,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,
+		4,1,93,1035,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,
 		7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,2,14,7,14,
 		2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,2,20,7,20,2,21,7,21,
 		2,22,7,22,2,23,7,23,2,24,7,24,2,25,7,25,2,26,7,26,2,27,7,27,2,28,7,28,
@@ -7105,319 +8171,322 @@ public partial class SolidLangParser : Parser {
 		25,12,25,443,9,25,1,25,3,25,446,8,25,1,26,1,26,1,26,1,26,3,26,452,8,26,
 		1,27,1,27,1,27,1,27,3,27,458,8,27,1,27,3,27,461,8,27,1,27,1,27,3,27,465,
 		8,27,1,27,1,27,1,28,1,28,1,28,4,28,472,8,28,11,28,12,28,473,1,29,1,29,
-		1,29,1,29,1,29,3,29,481,8,29,1,29,1,29,1,29,1,29,1,30,1,30,3,30,489,8,
-		30,1,30,1,30,1,30,3,30,494,8,30,1,31,1,31,1,31,3,31,499,8,31,1,31,1,31,
-		3,31,503,8,31,1,31,1,31,3,31,507,8,31,1,31,1,31,3,31,511,8,31,1,31,3,31,
-		514,8,31,1,32,1,32,1,32,5,32,519,8,32,10,32,12,32,522,9,32,1,33,1,33,1,
-		33,1,33,1,33,1,34,1,34,1,34,1,34,1,35,1,35,1,35,1,35,1,36,1,36,1,36,1,
-		36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,3,36,551,8,36,1,37,
-		1,37,1,38,1,38,5,38,557,8,38,10,38,12,38,560,9,38,1,38,1,38,1,39,1,39,
-		1,39,1,39,1,39,1,40,1,40,1,40,1,41,1,41,1,41,1,41,1,42,1,42,1,42,1,42,
-		1,42,1,42,3,42,582,8,42,3,42,584,8,42,1,43,1,43,1,43,1,43,1,43,3,43,591,
-		8,43,1,44,1,44,1,45,1,45,1,45,1,46,3,46,599,8,46,1,46,1,46,3,46,603,8,
-		46,1,46,1,46,3,46,607,8,46,1,46,1,46,1,47,1,47,3,47,613,8,47,1,48,1,48,
-		1,48,1,48,1,48,1,48,1,49,1,49,1,49,1,49,5,49,625,8,49,10,49,12,49,628,
-		9,49,1,49,1,49,1,50,1,50,3,50,634,8,50,1,50,1,50,1,50,1,51,1,51,1,51,1,
-		51,1,51,1,51,1,51,1,51,1,51,1,51,3,51,649,8,51,1,51,1,51,1,51,3,51,654,
-		8,51,1,52,1,52,1,52,5,52,659,8,52,10,52,12,52,662,9,52,1,53,1,53,1,53,
-		1,54,1,54,1,54,1,55,1,55,3,55,672,8,55,1,55,1,55,1,56,1,56,1,57,1,57,1,
-		57,1,57,1,57,1,57,3,57,684,8,57,1,58,1,58,1,58,5,58,689,8,58,10,58,12,
-		58,692,9,58,1,59,1,59,1,59,5,59,697,8,59,10,59,12,59,700,9,59,1,60,1,60,
-		1,60,5,60,705,8,60,10,60,12,60,708,9,60,1,61,1,61,1,61,5,61,713,8,61,10,
-		61,12,61,716,9,61,1,62,1,62,1,62,5,62,721,8,62,10,62,12,62,724,9,62,1,
-		63,1,63,1,63,5,63,729,8,63,10,63,12,63,732,9,63,1,64,1,64,1,64,5,64,737,
-		8,64,10,64,12,64,740,9,64,1,65,1,65,1,65,5,65,745,8,65,10,65,12,65,748,
-		9,65,1,66,1,66,1,66,5,66,753,8,66,10,66,12,66,756,9,66,1,67,1,67,1,67,
-		5,67,761,8,67,10,67,12,67,764,9,67,1,68,1,68,1,68,1,68,1,68,1,68,1,68,
-		1,68,1,68,1,68,1,68,1,68,1,68,1,68,1,68,1,68,3,68,782,8,68,1,69,1,69,5,
-		69,786,8,69,10,69,12,69,789,9,69,1,70,1,70,1,70,1,70,1,70,1,70,1,70,1,
-		70,1,70,1,70,3,70,801,8,70,1,70,1,70,1,70,1,70,1,70,3,70,808,8,70,1,70,
-		3,70,811,8,70,3,70,813,8,70,1,71,1,71,1,71,1,71,1,71,1,71,1,71,1,71,1,
-		71,1,71,3,71,825,8,71,1,72,1,72,1,72,5,72,830,8,72,10,72,12,72,833,9,72,
-		1,72,3,72,836,8,72,1,73,1,73,1,73,1,73,3,73,842,8,73,1,74,1,74,1,74,1,
-		74,3,74,848,8,74,1,74,1,74,1,75,1,75,1,75,1,75,1,75,1,75,1,75,3,75,859,
-		8,75,1,76,1,76,1,76,3,76,864,8,76,1,77,1,77,1,78,1,78,1,79,1,79,1,80,1,
-		80,1,80,1,80,1,80,1,81,1,81,1,81,1,81,4,81,881,8,81,11,81,12,81,882,1,
-		81,1,81,1,82,1,82,3,82,889,8,82,1,82,1,82,1,83,1,83,1,83,1,84,1,84,1,84,
-		1,84,1,84,5,84,901,8,84,10,84,12,84,904,9,84,3,84,906,8,84,1,84,1,84,3,
-		84,910,8,84,1,84,1,84,1,84,1,85,3,85,916,8,85,1,85,1,85,1,85,1,85,1,85,
-		5,85,923,8,85,10,85,12,85,926,9,85,1,85,1,85,3,85,930,8,85,1,86,1,86,1,
-		86,1,86,1,86,1,86,1,86,1,86,1,86,1,86,1,86,3,86,943,8,86,1,87,1,87,1,88,
-		1,88,1,89,1,89,1,90,1,90,1,91,1,91,1,92,1,92,1,93,1,93,3,93,959,8,93,1,
-		93,1,93,1,93,1,93,5,93,965,8,93,10,93,12,93,968,9,93,1,93,3,93,971,8,93,
-		3,93,973,8,93,1,93,1,93,1,94,1,94,1,94,1,94,1,94,5,94,982,8,94,10,94,12,
-		94,985,9,94,1,94,3,94,988,8,94,3,94,990,8,94,1,94,1,94,1,95,1,95,1,95,
-		1,95,1,96,1,96,1,96,1,96,1,96,1,96,1,96,1,97,1,97,1,97,1,97,1,98,1,98,
-		1,98,1,98,1,98,3,98,1014,8,98,1,98,1,98,1,99,1,99,1,99,1,99,4,99,1022,
-		8,99,11,99,12,99,1023,1,99,1,99,1,100,1,100,1,100,1,100,1,100,0,0,101,
-		0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,
-		50,52,54,56,58,60,62,64,66,68,70,72,74,76,78,80,82,84,86,88,90,92,94,96,
-		98,100,102,104,106,108,110,112,114,116,118,120,122,124,126,128,130,132,
-		134,136,138,140,142,144,146,148,150,152,154,156,158,160,162,164,166,168,
-		170,172,174,176,178,180,182,184,186,188,190,192,194,196,198,200,0,9,1,
-		0,23,24,1,0,58,68,1,0,45,46,1,0,47,50,1,0,56,57,1,0,38,39,1,0,42,44,1,
-		0,25,34,1,0,35,36,1090,0,202,1,0,0,0,2,224,1,0,0,0,4,227,1,0,0,0,6,235,
-		1,0,0,0,8,237,1,0,0,0,10,248,1,0,0,0,12,251,1,0,0,0,14,255,1,0,0,0,16,
-		263,1,0,0,0,18,266,1,0,0,0,20,275,1,0,0,0,22,286,1,0,0,0,24,288,1,0,0,
-		0,26,297,1,0,0,0,28,310,1,0,0,0,30,319,1,0,0,0,32,336,1,0,0,0,34,347,1,
-		0,0,0,36,352,1,0,0,0,38,365,1,0,0,0,40,376,1,0,0,0,42,382,1,0,0,0,44,399,
-		1,0,0,0,46,410,1,0,0,0,48,415,1,0,0,0,50,436,1,0,0,0,52,447,1,0,0,0,54,
-		453,1,0,0,0,56,471,1,0,0,0,58,475,1,0,0,0,60,486,1,0,0,0,62,495,1,0,0,
-		0,64,515,1,0,0,0,66,523,1,0,0,0,68,528,1,0,0,0,70,532,1,0,0,0,72,550,1,
-		0,0,0,74,552,1,0,0,0,76,554,1,0,0,0,78,563,1,0,0,0,80,568,1,0,0,0,82,571,
-		1,0,0,0,84,575,1,0,0,0,86,585,1,0,0,0,88,592,1,0,0,0,90,594,1,0,0,0,92,
-		598,1,0,0,0,94,612,1,0,0,0,96,614,1,0,0,0,98,620,1,0,0,0,100,633,1,0,0,
-		0,102,653,1,0,0,0,104,655,1,0,0,0,106,663,1,0,0,0,108,666,1,0,0,0,110,
-		669,1,0,0,0,112,675,1,0,0,0,114,677,1,0,0,0,116,685,1,0,0,0,118,693,1,
-		0,0,0,120,701,1,0,0,0,122,709,1,0,0,0,124,717,1,0,0,0,126,725,1,0,0,0,
-		128,733,1,0,0,0,130,741,1,0,0,0,132,749,1,0,0,0,134,757,1,0,0,0,136,781,
-		1,0,0,0,138,783,1,0,0,0,140,812,1,0,0,0,142,824,1,0,0,0,144,826,1,0,0,
-		0,146,841,1,0,0,0,148,843,1,0,0,0,150,858,1,0,0,0,152,863,1,0,0,0,154,
-		865,1,0,0,0,156,867,1,0,0,0,158,869,1,0,0,0,160,871,1,0,0,0,162,876,1,
-		0,0,0,164,886,1,0,0,0,166,892,1,0,0,0,168,895,1,0,0,0,170,915,1,0,0,0,
-		172,942,1,0,0,0,174,944,1,0,0,0,176,946,1,0,0,0,178,948,1,0,0,0,180,950,
-		1,0,0,0,182,952,1,0,0,0,184,954,1,0,0,0,186,956,1,0,0,0,188,976,1,0,0,
-		0,190,993,1,0,0,0,192,997,1,0,0,0,194,1004,1,0,0,0,196,1008,1,0,0,0,198,
-		1017,1,0,0,0,200,1027,1,0,0,0,202,206,3,68,34,0,203,205,3,70,35,0,204,
-		203,1,0,0,0,205,208,1,0,0,0,206,204,1,0,0,0,206,207,1,0,0,0,207,219,1,
-		0,0,0,208,206,1,0,0,0,209,218,3,24,12,0,210,218,3,28,14,0,211,218,3,30,
-		15,0,212,218,3,42,21,0,213,218,3,36,18,0,214,218,3,48,24,0,215,218,3,54,
-		27,0,216,218,3,60,30,0,217,209,1,0,0,0,217,210,1,0,0,0,217,211,1,0,0,0,
-		217,212,1,0,0,0,217,213,1,0,0,0,217,214,1,0,0,0,217,215,1,0,0,0,217,216,
-		1,0,0,0,218,221,1,0,0,0,219,217,1,0,0,0,219,220,1,0,0,0,220,222,1,0,0,
-		0,221,219,1,0,0,0,222,223,5,0,0,1,223,1,1,0,0,0,224,225,3,4,2,0,225,226,
-		5,69,0,0,226,3,1,0,0,0,227,232,5,89,0,0,228,229,5,69,0,0,229,231,5,89,
-		0,0,230,228,1,0,0,0,231,234,1,0,0,0,232,230,1,0,0,0,232,233,1,0,0,0,233,
-		5,1,0,0,0,234,232,1,0,0,0,235,236,7,0,0,0,236,7,1,0,0,0,237,238,5,47,0,
-		0,238,243,3,10,5,0,239,240,5,72,0,0,240,242,3,10,5,0,241,239,1,0,0,0,242,
-		245,1,0,0,0,243,241,1,0,0,0,243,244,1,0,0,0,244,246,1,0,0,0,245,243,1,
-		0,0,0,246,247,5,48,0,0,247,9,1,0,0,0,248,249,5,89,0,0,249,11,1,0,0,0,250,
-		252,3,14,7,0,251,250,1,0,0,0,252,253,1,0,0,0,253,251,1,0,0,0,253,254,1,
-		0,0,0,254,13,1,0,0,0,255,256,5,21,0,0,256,257,5,89,0,0,257,258,5,70,0,
-		0,258,259,3,150,75,0,259,15,1,0,0,0,260,262,3,18,9,0,261,260,1,0,0,0,262,
-		265,1,0,0,0,263,261,1,0,0,0,263,264,1,0,0,0,264,17,1,0,0,0,265,263,1,0,
-		0,0,266,267,5,77,0,0,267,273,5,89,0,0,268,270,5,82,0,0,269,271,3,20,10,
-		0,270,269,1,0,0,0,270,271,1,0,0,0,271,272,1,0,0,0,272,274,5,83,0,0,273,
-		268,1,0,0,0,273,274,1,0,0,0,274,19,1,0,0,0,275,280,3,22,11,0,276,277,5,
-		72,0,0,277,279,3,22,11,0,278,276,1,0,0,0,279,282,1,0,0,0,280,278,1,0,0,
-		0,280,281,1,0,0,0,281,21,1,0,0,0,282,280,1,0,0,0,283,287,3,150,75,0,284,
-		287,3,112,56,0,285,287,5,89,0,0,286,283,1,0,0,0,286,284,1,0,0,0,286,285,
-		1,0,0,0,287,23,1,0,0,0,288,289,3,16,8,0,289,290,5,10,0,0,290,291,5,89,
-		0,0,291,292,5,70,0,0,292,293,3,150,75,0,293,294,5,58,0,0,294,295,3,112,
-		56,0,295,296,5,74,0,0,296,25,1,0,0,0,297,298,3,16,8,0,298,299,5,9,0,0,
-		299,302,5,89,0,0,300,301,5,70,0,0,301,303,3,150,75,0,302,300,1,0,0,0,302,
-		303,1,0,0,0,303,306,1,0,0,0,304,305,5,58,0,0,305,307,3,112,56,0,306,304,
-		1,0,0,0,306,307,1,0,0,0,307,308,1,0,0,0,308,309,5,74,0,0,309,27,1,0,0,
-		0,310,311,3,16,8,0,311,312,5,11,0,0,312,313,5,89,0,0,313,314,5,70,0,0,
-		314,315,3,150,75,0,315,316,5,58,0,0,316,317,3,112,56,0,317,318,5,74,0,
-		0,318,29,1,0,0,0,319,320,3,16,8,0,320,321,5,5,0,0,321,323,5,89,0,0,322,
-		324,3,8,4,0,323,322,1,0,0,0,323,324,1,0,0,0,324,326,1,0,0,0,325,327,3,
-		12,6,0,326,325,1,0,0,0,326,327,1,0,0,0,327,334,1,0,0,0,328,330,5,78,0,
-		0,329,331,3,32,16,0,330,329,1,0,0,0,330,331,1,0,0,0,331,332,1,0,0,0,332,
-		335,5,79,0,0,333,335,5,74,0,0,334,328,1,0,0,0,334,333,1,0,0,0,335,31,1,
-		0,0,0,336,341,3,34,17,0,337,338,5,72,0,0,338,340,3,34,17,0,339,337,1,0,
-		0,0,340,343,1,0,0,0,341,339,1,0,0,0,341,342,1,0,0,0,342,345,1,0,0,0,343,
-		341,1,0,0,0,344,346,5,72,0,0,345,344,1,0,0,0,345,346,1,0,0,0,346,33,1,
-		0,0,0,347,348,3,16,8,0,348,349,5,89,0,0,349,350,5,70,0,0,350,351,3,150,
-		75,0,351,35,1,0,0,0,352,353,3,16,8,0,353,354,5,6,0,0,354,357,5,89,0,0,
-		355,356,5,70,0,0,356,358,3,150,75,0,357,355,1,0,0,0,357,358,1,0,0,0,358,
-		359,1,0,0,0,359,361,5,78,0,0,360,362,3,38,19,0,361,360,1,0,0,0,361,362,
-		1,0,0,0,362,363,1,0,0,0,363,364,5,79,0,0,364,37,1,0,0,0,365,370,3,40,20,
-		0,366,367,5,72,0,0,367,369,3,40,20,0,368,366,1,0,0,0,369,372,1,0,0,0,370,
-		368,1,0,0,0,370,371,1,0,0,0,371,374,1,0,0,0,372,370,1,0,0,0,373,375,5,
-		72,0,0,374,373,1,0,0,0,374,375,1,0,0,0,375,39,1,0,0,0,376,377,3,16,8,0,
-		377,380,5,89,0,0,378,379,5,58,0,0,379,381,3,112,56,0,380,378,1,0,0,0,380,
-		381,1,0,0,0,381,41,1,0,0,0,382,383,3,16,8,0,383,384,5,7,0,0,384,386,5,
-		89,0,0,385,387,3,8,4,0,386,385,1,0,0,0,386,387,1,0,0,0,387,389,1,0,0,0,
-		388,390,3,12,6,0,389,388,1,0,0,0,389,390,1,0,0,0,390,397,1,0,0,0,391,393,
-		5,78,0,0,392,394,3,44,22,0,393,392,1,0,0,0,393,394,1,0,0,0,394,395,1,0,
-		0,0,395,398,5,79,0,0,396,398,5,74,0,0,397,391,1,0,0,0,397,396,1,0,0,0,
-		398,43,1,0,0,0,399,404,3,46,23,0,400,401,5,72,0,0,401,403,3,46,23,0,402,
-		400,1,0,0,0,403,406,1,0,0,0,404,402,1,0,0,0,404,405,1,0,0,0,405,408,1,
-		0,0,0,406,404,1,0,0,0,407,409,5,72,0,0,408,407,1,0,0,0,408,409,1,0,0,0,
-		409,45,1,0,0,0,410,411,3,16,8,0,411,412,5,89,0,0,412,413,5,70,0,0,413,
-		414,3,150,75,0,414,47,1,0,0,0,415,416,3,16,8,0,416,417,5,8,0,0,417,419,
-		5,89,0,0,418,420,3,8,4,0,419,418,1,0,0,0,419,420,1,0,0,0,420,423,1,0,0,
-		0,421,422,5,70,0,0,422,424,3,150,75,0,423,421,1,0,0,0,423,424,1,0,0,0,
-		424,426,1,0,0,0,425,427,3,12,6,0,426,425,1,0,0,0,426,427,1,0,0,0,427,434,
-		1,0,0,0,428,430,5,78,0,0,429,431,3,50,25,0,430,429,1,0,0,0,430,431,1,0,
-		0,0,431,432,1,0,0,0,432,435,5,79,0,0,433,435,5,74,0,0,434,428,1,0,0,0,
-		434,433,1,0,0,0,435,49,1,0,0,0,436,441,3,52,26,0,437,438,5,72,0,0,438,
-		440,3,52,26,0,439,437,1,0,0,0,440,443,1,0,0,0,441,439,1,0,0,0,441,442,
-		1,0,0,0,442,445,1,0,0,0,443,441,1,0,0,0,444,446,5,72,0,0,445,444,1,0,0,
-		0,445,446,1,0,0,0,446,51,1,0,0,0,447,448,3,16,8,0,448,451,5,89,0,0,449,
-		450,5,70,0,0,450,452,3,150,75,0,451,449,1,0,0,0,451,452,1,0,0,0,452,53,
-		1,0,0,0,453,454,3,16,8,0,454,455,5,4,0,0,455,457,5,89,0,0,456,458,3,8,
-		4,0,457,456,1,0,0,0,457,458,1,0,0,0,458,460,1,0,0,0,459,461,3,12,6,0,460,
-		459,1,0,0,0,460,461,1,0,0,0,461,462,1,0,0,0,462,464,5,78,0,0,463,465,3,
-		56,28,0,464,463,1,0,0,0,464,465,1,0,0,0,465,466,1,0,0,0,466,467,5,79,0,
-		0,467,55,1,0,0,0,468,469,3,58,29,0,469,470,5,74,0,0,470,472,1,0,0,0,471,
-		468,1,0,0,0,472,473,1,0,0,0,473,471,1,0,0,0,473,474,1,0,0,0,474,57,1,0,
-		0,0,475,476,3,16,8,0,476,477,5,3,0,0,477,478,5,89,0,0,478,480,5,82,0,0,
-		479,481,3,64,32,0,480,479,1,0,0,0,480,481,1,0,0,0,481,482,1,0,0,0,482,
-		483,5,83,0,0,483,484,5,70,0,0,484,485,3,150,75,0,485,59,1,0,0,0,486,488,
-		3,16,8,0,487,489,3,2,1,0,488,487,1,0,0,0,488,489,1,0,0,0,489,490,1,0,0,
-		0,490,493,3,62,31,0,491,494,3,76,38,0,492,494,5,74,0,0,493,491,1,0,0,0,
-		493,492,1,0,0,0,494,61,1,0,0,0,495,496,5,3,0,0,496,498,5,89,0,0,497,499,
-		3,8,4,0,498,497,1,0,0,0,498,499,1,0,0,0,499,500,1,0,0,0,500,502,5,82,0,
-		0,501,503,3,64,32,0,502,501,1,0,0,0,502,503,1,0,0,0,503,504,1,0,0,0,504,
-		506,5,83,0,0,505,507,3,6,3,0,506,505,1,0,0,0,506,507,1,0,0,0,507,510,1,
-		0,0,0,508,509,5,70,0,0,509,511,3,150,75,0,510,508,1,0,0,0,510,511,1,0,
-		0,0,511,513,1,0,0,0,512,514,3,12,6,0,513,512,1,0,0,0,513,514,1,0,0,0,514,
-		63,1,0,0,0,515,520,3,66,33,0,516,517,5,72,0,0,517,519,3,66,33,0,518,516,
-		1,0,0,0,519,522,1,0,0,0,520,518,1,0,0,0,520,521,1,0,0,0,521,65,1,0,0,0,
-		522,520,1,0,0,0,523,524,3,16,8,0,524,525,5,89,0,0,525,526,5,70,0,0,526,
-		527,3,150,75,0,527,67,1,0,0,0,528,529,5,1,0,0,529,530,3,4,2,0,530,531,
-		5,74,0,0,531,69,1,0,0,0,532,533,5,2,0,0,533,534,3,4,2,0,534,535,5,74,0,
-		0,535,71,1,0,0,0,536,551,3,74,37,0,537,551,3,76,38,0,538,551,3,78,39,0,
-		539,551,3,80,40,0,540,551,3,82,41,0,541,551,3,84,42,0,542,551,3,86,43,
-		0,543,551,3,98,49,0,544,551,3,106,53,0,545,551,3,108,54,0,546,551,3,110,
-		55,0,547,551,3,26,13,0,548,551,3,24,12,0,549,551,3,28,14,0,550,536,1,0,
-		0,0,550,537,1,0,0,0,550,538,1,0,0,0,550,539,1,0,0,0,550,540,1,0,0,0,550,
-		541,1,0,0,0,550,542,1,0,0,0,550,543,1,0,0,0,550,544,1,0,0,0,550,545,1,
-		0,0,0,550,546,1,0,0,0,550,547,1,0,0,0,550,548,1,0,0,0,550,549,1,0,0,0,
-		551,73,1,0,0,0,552,553,5,74,0,0,553,75,1,0,0,0,554,558,5,78,0,0,555,557,
-		3,72,36,0,556,555,1,0,0,0,557,560,1,0,0,0,558,556,1,0,0,0,558,559,1,0,
-		0,0,559,561,1,0,0,0,560,558,1,0,0,0,561,562,5,79,0,0,562,77,1,0,0,0,563,
-		564,3,112,56,0,564,565,7,1,0,0,565,566,3,112,56,0,566,567,5,74,0,0,567,
-		79,1,0,0,0,568,569,3,112,56,0,569,570,5,74,0,0,570,81,1,0,0,0,571,572,
-		5,20,0,0,572,573,3,112,56,0,573,574,5,74,0,0,574,83,1,0,0,0,575,576,5,
-		12,0,0,576,577,3,112,56,0,577,583,3,76,38,0,578,581,5,13,0,0,579,582,3,
-		76,38,0,580,582,3,84,42,0,581,579,1,0,0,0,581,580,1,0,0,0,582,584,1,0,
-		0,0,583,578,1,0,0,0,583,584,1,0,0,0,584,85,1,0,0,0,585,590,5,14,0,0,586,
-		591,3,88,44,0,587,591,3,90,45,0,588,591,3,92,46,0,589,591,3,96,48,0,590,
-		586,1,0,0,0,590,587,1,0,0,0,590,588,1,0,0,0,590,589,1,0,0,0,591,87,1,0,
-		0,0,592,593,3,76,38,0,593,89,1,0,0,0,594,595,3,112,56,0,595,596,3,76,38,
-		0,596,91,1,0,0,0,597,599,3,94,47,0,598,597,1,0,0,0,598,599,1,0,0,0,599,
-		600,1,0,0,0,600,602,5,74,0,0,601,603,3,112,56,0,602,601,1,0,0,0,602,603,
-		1,0,0,0,603,604,1,0,0,0,604,606,5,74,0,0,605,607,3,112,56,0,606,605,1,
-		0,0,0,606,607,1,0,0,0,607,608,1,0,0,0,608,609,3,76,38,0,609,93,1,0,0,0,
-		610,613,3,26,13,0,611,613,3,78,39,0,612,610,1,0,0,0,612,611,1,0,0,0,613,
-		95,1,0,0,0,614,615,5,9,0,0,615,616,5,89,0,0,616,617,5,15,0,0,617,618,3,
-		112,56,0,618,619,3,76,38,0,619,97,1,0,0,0,620,621,5,16,0,0,621,622,3,112,
-		56,0,622,626,5,78,0,0,623,625,3,100,50,0,624,623,1,0,0,0,625,628,1,0,0,
-		0,626,624,1,0,0,0,626,627,1,0,0,0,627,629,1,0,0,0,628,626,1,0,0,0,629,
-		630,5,79,0,0,630,99,1,0,0,0,631,634,3,102,51,0,632,634,5,13,0,0,633,631,
-		1,0,0,0,633,632,1,0,0,0,634,635,1,0,0,0,635,636,5,75,0,0,636,637,3,72,
-		36,0,637,101,1,0,0,0,638,654,3,172,86,0,639,640,3,170,85,0,640,641,5,69,
-		0,0,641,642,5,89,0,0,642,654,1,0,0,0,643,644,3,170,85,0,644,645,5,69,0,
-		0,645,646,5,89,0,0,646,648,5,82,0,0,647,649,3,104,52,0,648,647,1,0,0,0,
-		648,649,1,0,0,0,649,650,1,0,0,0,650,651,5,83,0,0,651,654,1,0,0,0,652,654,
-		5,89,0,0,653,638,1,0,0,0,653,639,1,0,0,0,653,643,1,0,0,0,653,652,1,0,0,
-		0,654,103,1,0,0,0,655,660,3,102,51,0,656,657,5,72,0,0,657,659,3,102,51,
-		0,658,656,1,0,0,0,659,662,1,0,0,0,660,658,1,0,0,0,660,661,1,0,0,0,661,
-		105,1,0,0,0,662,660,1,0,0,0,663,664,5,17,0,0,664,665,5,74,0,0,665,107,
-		1,0,0,0,666,667,5,18,0,0,667,668,5,74,0,0,668,109,1,0,0,0,669,671,5,19,
-		0,0,670,672,3,112,56,0,671,670,1,0,0,0,671,672,1,0,0,0,672,673,1,0,0,0,
-		673,674,5,74,0,0,674,111,1,0,0,0,675,676,3,114,57,0,676,113,1,0,0,0,677,
-		683,3,116,58,0,678,679,5,71,0,0,679,680,3,112,56,0,680,681,5,70,0,0,681,
-		682,3,114,57,0,682,684,1,0,0,0,683,678,1,0,0,0,683,684,1,0,0,0,684,115,
-		1,0,0,0,685,690,3,118,59,0,686,687,5,51,0,0,687,689,3,118,59,0,688,686,
-		1,0,0,0,689,692,1,0,0,0,690,688,1,0,0,0,690,691,1,0,0,0,691,117,1,0,0,
-		0,692,690,1,0,0,0,693,698,3,120,60,0,694,695,5,52,0,0,695,697,3,120,60,
-		0,696,694,1,0,0,0,697,700,1,0,0,0,698,696,1,0,0,0,698,699,1,0,0,0,699,
-		119,1,0,0,0,700,698,1,0,0,0,701,706,3,122,61,0,702,703,5,54,0,0,703,705,
-		3,122,61,0,704,702,1,0,0,0,705,708,1,0,0,0,706,704,1,0,0,0,706,707,1,0,
-		0,0,707,121,1,0,0,0,708,706,1,0,0,0,709,714,3,124,62,0,710,711,5,55,0,
-		0,711,713,3,124,62,0,712,710,1,0,0,0,713,716,1,0,0,0,714,712,1,0,0,0,714,
-		715,1,0,0,0,715,123,1,0,0,0,716,714,1,0,0,0,717,722,3,126,63,0,718,719,
-		5,53,0,0,719,721,3,126,63,0,720,718,1,0,0,0,721,724,1,0,0,0,722,720,1,
-		0,0,0,722,723,1,0,0,0,723,125,1,0,0,0,724,722,1,0,0,0,725,730,3,128,64,
-		0,726,727,7,2,0,0,727,729,3,128,64,0,728,726,1,0,0,0,729,732,1,0,0,0,730,
-		728,1,0,0,0,730,731,1,0,0,0,731,127,1,0,0,0,732,730,1,0,0,0,733,738,3,
-		130,65,0,734,735,7,3,0,0,735,737,3,130,65,0,736,734,1,0,0,0,737,740,1,
-		0,0,0,738,736,1,0,0,0,738,739,1,0,0,0,739,129,1,0,0,0,740,738,1,0,0,0,
-		741,746,3,132,66,0,742,743,7,4,0,0,743,745,3,132,66,0,744,742,1,0,0,0,
-		745,748,1,0,0,0,746,744,1,0,0,0,746,747,1,0,0,0,747,131,1,0,0,0,748,746,
-		1,0,0,0,749,754,3,134,67,0,750,751,7,5,0,0,751,753,3,134,67,0,752,750,
-		1,0,0,0,753,756,1,0,0,0,754,752,1,0,0,0,754,755,1,0,0,0,755,133,1,0,0,
-		0,756,754,1,0,0,0,757,762,3,136,68,0,758,759,7,6,0,0,759,761,3,136,68,
-		0,760,758,1,0,0,0,761,764,1,0,0,0,762,760,1,0,0,0,762,763,1,0,0,0,763,
-		135,1,0,0,0,764,762,1,0,0,0,765,766,5,39,0,0,766,782,3,136,68,0,767,768,
-		5,40,0,0,768,782,3,136,68,0,769,770,5,41,0,0,770,782,3,136,68,0,771,772,
-		5,53,0,0,772,782,3,136,68,0,773,774,5,42,0,0,774,782,3,136,68,0,775,776,
-		5,55,0,0,776,782,3,136,68,0,777,778,5,55,0,0,778,779,5,40,0,0,779,782,
-		3,136,68,0,780,782,3,138,69,0,781,765,1,0,0,0,781,767,1,0,0,0,781,769,
-		1,0,0,0,781,771,1,0,0,0,781,773,1,0,0,0,781,775,1,0,0,0,781,777,1,0,0,
-		0,781,780,1,0,0,0,782,137,1,0,0,0,783,787,3,142,71,0,784,786,3,140,70,
-		0,785,784,1,0,0,0,786,789,1,0,0,0,787,785,1,0,0,0,787,788,1,0,0,0,788,
-		139,1,0,0,0,789,787,1,0,0,0,790,791,5,73,0,0,791,813,5,89,0,0,792,793,
-		5,76,0,0,793,813,5,89,0,0,794,795,5,80,0,0,795,796,3,112,56,0,796,797,
-		5,81,0,0,797,813,1,0,0,0,798,800,5,82,0,0,799,801,3,144,72,0,800,799,1,
-		0,0,0,800,801,1,0,0,0,801,802,1,0,0,0,802,813,5,83,0,0,803,804,5,69,0,
-		0,804,810,5,89,0,0,805,807,5,82,0,0,806,808,3,144,72,0,807,806,1,0,0,0,
-		807,808,1,0,0,0,808,809,1,0,0,0,809,811,5,83,0,0,810,805,1,0,0,0,810,811,
-		1,0,0,0,811,813,1,0,0,0,812,790,1,0,0,0,812,792,1,0,0,0,812,794,1,0,0,
-		0,812,798,1,0,0,0,812,803,1,0,0,0,813,141,1,0,0,0,814,825,3,172,86,0,815,
-		825,5,89,0,0,816,817,5,82,0,0,817,818,3,112,56,0,818,819,5,83,0,0,819,
-		825,1,0,0,0,820,825,3,198,99,0,821,825,3,148,74,0,822,825,3,188,94,0,823,
-		825,3,186,93,0,824,814,1,0,0,0,824,815,1,0,0,0,824,816,1,0,0,0,824,820,
-		1,0,0,0,824,821,1,0,0,0,824,822,1,0,0,0,824,823,1,0,0,0,825,143,1,0,0,
-		0,826,831,3,146,73,0,827,828,5,72,0,0,828,830,3,146,73,0,829,827,1,0,0,
-		0,830,833,1,0,0,0,831,829,1,0,0,0,831,832,1,0,0,0,832,835,1,0,0,0,833,
-		831,1,0,0,0,834,836,5,72,0,0,835,834,1,0,0,0,835,836,1,0,0,0,836,145,1,
-		0,0,0,837,842,3,112,56,0,838,839,5,89,0,0,839,840,5,58,0,0,840,842,3,112,
-		56,0,841,837,1,0,0,0,841,838,1,0,0,0,842,147,1,0,0,0,843,844,5,77,0,0,
-		844,845,5,89,0,0,845,847,5,82,0,0,846,848,3,20,10,0,847,846,1,0,0,0,847,
-		848,1,0,0,0,848,849,1,0,0,0,849,850,5,83,0,0,850,149,1,0,0,0,851,859,3,
-		152,76,0,852,859,3,160,80,0,853,859,3,162,81,0,854,859,3,164,82,0,855,
-		859,3,166,83,0,856,859,3,168,84,0,857,859,3,170,85,0,858,851,1,0,0,0,858,
-		852,1,0,0,0,858,853,1,0,0,0,858,854,1,0,0,0,858,855,1,0,0,0,858,856,1,
-		0,0,0,858,857,1,0,0,0,859,151,1,0,0,0,860,864,3,154,77,0,861,864,3,156,
-		78,0,862,864,3,158,79,0,863,860,1,0,0,0,863,861,1,0,0,0,863,862,1,0,0,
-		0,864,153,1,0,0,0,865,866,7,7,0,0,866,155,1,0,0,0,867,868,7,8,0,0,868,
-		157,1,0,0,0,869,870,5,37,0,0,870,159,1,0,0,0,871,872,5,80,0,0,872,873,
-		3,112,56,0,873,874,5,81,0,0,874,875,3,150,75,0,875,161,1,0,0,0,876,877,
-		5,82,0,0,877,880,3,150,75,0,878,879,5,72,0,0,879,881,3,150,75,0,880,878,
-		1,0,0,0,881,882,1,0,0,0,882,880,1,0,0,0,882,883,1,0,0,0,883,884,1,0,0,
-		0,884,885,5,83,0,0,885,163,1,0,0,0,886,888,5,55,0,0,887,889,5,40,0,0,888,
-		887,1,0,0,0,888,889,1,0,0,0,889,890,1,0,0,0,890,891,3,150,75,0,891,165,
-		1,0,0,0,892,893,5,42,0,0,893,894,3,150,75,0,894,167,1,0,0,0,895,896,5,
-		3,0,0,896,905,5,82,0,0,897,902,3,150,75,0,898,899,5,72,0,0,899,901,3,150,
-		75,0,900,898,1,0,0,0,901,904,1,0,0,0,902,900,1,0,0,0,902,903,1,0,0,0,903,
-		906,1,0,0,0,904,902,1,0,0,0,905,897,1,0,0,0,905,906,1,0,0,0,906,907,1,
-		0,0,0,907,909,5,83,0,0,908,910,3,6,3,0,909,908,1,0,0,0,909,910,1,0,0,0,
-		910,911,1,0,0,0,911,912,5,70,0,0,912,913,3,150,75,0,913,169,1,0,0,0,914,
-		916,3,2,1,0,915,914,1,0,0,0,915,916,1,0,0,0,916,917,1,0,0,0,917,929,5,
-		89,0,0,918,919,5,47,0,0,919,924,3,150,75,0,920,921,5,72,0,0,921,923,3,
-		150,75,0,922,920,1,0,0,0,923,926,1,0,0,0,924,922,1,0,0,0,924,925,1,0,0,
-		0,925,927,1,0,0,0,926,924,1,0,0,0,927,928,5,48,0,0,928,930,1,0,0,0,929,
-		918,1,0,0,0,929,930,1,0,0,0,930,171,1,0,0,0,931,943,3,174,87,0,932,943,
-		3,176,88,0,933,943,3,178,89,0,934,943,3,180,90,0,935,943,3,182,91,0,936,
-		943,3,184,92,0,937,943,3,186,93,0,938,943,3,188,94,0,939,943,3,192,96,
-		0,940,943,3,194,97,0,941,943,3,196,98,0,942,931,1,0,0,0,942,932,1,0,0,
-		0,942,933,1,0,0,0,942,934,1,0,0,0,942,935,1,0,0,0,942,936,1,0,0,0,942,
-		937,1,0,0,0,942,938,1,0,0,0,942,939,1,0,0,0,942,940,1,0,0,0,942,941,1,
-		0,0,0,943,173,1,0,0,0,944,945,5,84,0,0,945,175,1,0,0,0,946,947,5,85,0,
-		0,947,177,1,0,0,0,948,949,5,86,0,0,949,179,1,0,0,0,950,951,5,87,0,0,951,
-		181,1,0,0,0,952,953,5,88,0,0,953,183,1,0,0,0,954,955,5,22,0,0,955,185,
-		1,0,0,0,956,958,5,80,0,0,957,959,3,150,75,0,958,957,1,0,0,0,958,959,1,
-		0,0,0,959,960,1,0,0,0,960,972,5,79,0,0,961,966,3,112,56,0,962,963,5,72,
-		0,0,963,965,3,112,56,0,964,962,1,0,0,0,965,968,1,0,0,0,966,964,1,0,0,0,
-		966,967,1,0,0,0,967,970,1,0,0,0,968,966,1,0,0,0,969,971,5,72,0,0,970,969,
-		1,0,0,0,970,971,1,0,0,0,971,973,1,0,0,0,972,961,1,0,0,0,972,973,1,0,0,
-		0,973,974,1,0,0,0,974,975,5,79,0,0,975,187,1,0,0,0,976,977,3,170,85,0,
-		977,989,5,78,0,0,978,983,3,190,95,0,979,980,5,72,0,0,980,982,3,190,95,
-		0,981,979,1,0,0,0,982,985,1,0,0,0,983,981,1,0,0,0,983,984,1,0,0,0,984,
-		987,1,0,0,0,985,983,1,0,0,0,986,988,5,72,0,0,987,986,1,0,0,0,987,988,1,
-		0,0,0,988,990,1,0,0,0,989,978,1,0,0,0,989,990,1,0,0,0,990,991,1,0,0,0,
-		991,992,5,79,0,0,992,189,1,0,0,0,993,994,5,89,0,0,994,995,5,58,0,0,995,
-		996,3,112,56,0,996,191,1,0,0,0,997,998,3,170,85,0,998,999,5,69,0,0,999,
-		1000,5,89,0,0,1000,1001,5,82,0,0,1001,1002,3,112,56,0,1002,1003,5,83,0,
-		0,1003,193,1,0,0,0,1004,1005,3,170,85,0,1005,1006,5,69,0,0,1006,1007,5,
-		89,0,0,1007,195,1,0,0,0,1008,1009,3,170,85,0,1009,1010,5,69,0,0,1010,1011,
-		5,89,0,0,1011,1013,5,82,0,0,1012,1014,3,112,56,0,1013,1012,1,0,0,0,1013,
-		1014,1,0,0,0,1014,1015,1,0,0,0,1015,1016,5,83,0,0,1016,197,1,0,0,0,1017,
-		1018,5,82,0,0,1018,1021,3,200,100,0,1019,1020,5,72,0,0,1020,1022,3,200,
-		100,0,1021,1019,1,0,0,0,1022,1023,1,0,0,0,1023,1021,1,0,0,0,1023,1024,
-		1,0,0,0,1024,1025,1,0,0,0,1025,1026,5,83,0,0,1026,199,1,0,0,0,1027,1028,
-		3,112,56,0,1028,1029,5,70,0,0,1029,1030,3,150,75,0,1030,201,1,0,0,0,108,
+		1,29,1,29,1,29,3,29,481,8,29,1,29,1,29,1,29,3,29,486,8,29,1,30,1,30,3,
+		30,490,8,30,1,30,1,30,1,30,3,30,495,8,30,1,31,1,31,1,31,3,31,500,8,31,
+		1,31,1,31,3,31,504,8,31,1,31,1,31,3,31,508,8,31,1,31,1,31,3,31,512,8,31,
+		1,31,3,31,515,8,31,1,32,1,32,1,32,5,32,520,8,32,10,32,12,32,523,9,32,1,
+		33,1,33,1,33,1,33,1,33,1,34,1,34,1,34,1,34,1,35,1,35,1,35,1,35,1,36,1,
+		36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,1,36,3,36,552,
+		8,36,1,37,1,37,1,38,1,38,5,38,558,8,38,10,38,12,38,561,9,38,1,38,1,38,
+		1,39,1,39,1,39,1,39,1,39,1,40,1,40,1,40,1,41,1,41,1,41,1,41,1,41,3,41,
+		578,8,41,1,42,1,42,1,42,1,42,1,42,1,42,3,42,586,8,42,3,42,588,8,42,1,43,
+		1,43,1,43,1,43,1,43,3,43,595,8,43,1,44,1,44,1,45,1,45,1,45,1,46,3,46,603,
+		8,46,1,46,1,46,3,46,607,8,46,1,46,1,46,3,46,611,8,46,1,46,1,46,1,47,1,
+		47,3,47,617,8,47,1,48,1,48,1,48,1,48,1,48,1,48,1,49,1,49,1,49,1,49,5,49,
+		629,8,49,10,49,12,49,632,9,49,1,49,1,49,1,50,1,50,3,50,638,8,50,1,50,1,
+		50,1,50,1,51,1,51,1,51,1,51,1,51,1,51,1,51,1,51,1,51,1,51,3,51,653,8,51,
+		1,51,1,51,1,51,3,51,658,8,51,1,52,1,52,1,52,5,52,663,8,52,10,52,12,52,
+		666,9,52,1,53,1,53,1,53,1,54,1,54,1,54,1,55,1,55,3,55,676,8,55,1,55,1,
+		55,1,56,1,56,1,57,1,57,1,57,1,57,1,57,1,57,3,57,688,8,57,1,58,1,58,1,58,
+		5,58,693,8,58,10,58,12,58,696,9,58,1,59,1,59,1,59,5,59,701,8,59,10,59,
+		12,59,704,9,59,1,60,1,60,1,60,5,60,709,8,60,10,60,12,60,712,9,60,1,61,
+		1,61,1,61,5,61,717,8,61,10,61,12,61,720,9,61,1,62,1,62,1,62,5,62,725,8,
+		62,10,62,12,62,728,9,62,1,63,1,63,1,63,5,63,733,8,63,10,63,12,63,736,9,
+		63,1,64,1,64,1,64,5,64,741,8,64,10,64,12,64,744,9,64,1,65,1,65,1,65,5,
+		65,749,8,65,10,65,12,65,752,9,65,1,66,1,66,1,66,5,66,757,8,66,10,66,12,
+		66,760,9,66,1,67,1,67,1,67,5,67,765,8,67,10,67,12,67,768,9,67,1,68,1,68,
+		1,68,1,68,1,68,1,68,1,68,1,68,1,68,1,68,1,68,1,68,1,68,1,68,1,68,3,68,
+		785,8,68,1,69,1,69,5,69,789,8,69,10,69,12,69,792,9,69,1,70,1,70,1,70,1,
+		70,1,70,1,70,1,70,1,70,1,70,1,70,3,70,804,8,70,1,70,1,70,1,70,1,70,1,70,
+		3,70,811,8,70,1,70,3,70,814,8,70,3,70,816,8,70,1,71,1,71,1,71,1,71,1,71,
+		1,71,1,71,1,71,1,71,1,71,3,71,828,8,71,1,72,1,72,1,72,5,72,833,8,72,10,
+		72,12,72,836,9,72,1,72,3,72,839,8,72,1,73,1,73,1,73,1,73,3,73,845,8,73,
+		1,74,1,74,1,74,1,74,3,74,851,8,74,1,74,1,74,1,75,1,75,1,75,1,75,1,75,1,
+		75,1,75,3,75,862,8,75,1,76,1,76,1,76,3,76,867,8,76,1,77,1,77,1,78,1,78,
+		1,79,1,79,1,80,1,80,1,80,1,80,1,80,1,81,1,81,1,81,1,81,4,81,884,8,81,11,
+		81,12,81,885,1,81,1,81,1,82,1,82,1,82,3,82,893,8,82,3,82,895,8,82,1,82,
+		1,82,1,83,1,83,1,83,1,84,1,84,1,84,1,84,1,84,5,84,907,8,84,10,84,12,84,
+		910,9,84,3,84,912,8,84,1,84,1,84,3,84,916,8,84,1,84,1,84,1,84,1,85,3,85,
+		922,8,85,1,85,1,85,1,85,1,85,1,85,5,85,929,8,85,10,85,12,85,932,9,85,1,
+		85,1,85,3,85,936,8,85,1,86,1,86,1,86,1,86,1,86,1,86,1,86,1,86,1,86,1,86,
+		1,86,3,86,949,8,86,1,87,1,87,1,88,1,88,1,89,1,89,1,90,1,90,1,91,1,91,1,
+		92,1,92,1,93,1,93,1,93,1,93,1,93,5,93,968,8,93,10,93,12,93,971,9,93,1,
+		93,3,93,974,8,93,3,93,976,8,93,1,93,1,93,1,94,1,94,1,94,1,94,1,94,5,94,
+		985,8,94,10,94,12,94,988,9,94,1,94,3,94,991,8,94,3,94,993,8,94,1,94,1,
+		94,1,95,1,95,1,95,1,95,1,96,1,96,1,96,1,96,1,96,1,96,1,96,1,97,1,97,1,
+		97,1,97,1,98,1,98,1,98,1,98,1,98,3,98,1017,8,98,1,98,1,98,1,99,1,99,1,
+		99,1,99,4,99,1025,8,99,11,99,12,99,1026,1,99,1,99,1,100,1,100,1,100,1,
+		100,1,100,0,0,101,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,
+		38,40,42,44,46,48,50,52,54,56,58,60,62,64,66,68,70,72,74,76,78,80,82,84,
+		86,88,90,92,94,96,98,100,102,104,106,108,110,112,114,116,118,120,122,124,
+		126,128,130,132,134,136,138,140,142,144,146,148,150,152,154,156,158,160,
+		162,164,166,168,170,172,174,176,178,180,182,184,186,188,190,192,194,196,
+		198,200,0,9,1,0,23,24,1,0,59,69,1,0,45,46,1,0,47,50,1,0,57,58,1,0,38,39,
+		1,0,42,44,1,0,25,34,1,0,35,36,1097,0,202,1,0,0,0,2,224,1,0,0,0,4,227,1,
+		0,0,0,6,235,1,0,0,0,8,237,1,0,0,0,10,248,1,0,0,0,12,251,1,0,0,0,14,255,
+		1,0,0,0,16,263,1,0,0,0,18,266,1,0,0,0,20,275,1,0,0,0,22,286,1,0,0,0,24,
+		288,1,0,0,0,26,297,1,0,0,0,28,310,1,0,0,0,30,319,1,0,0,0,32,336,1,0,0,
+		0,34,347,1,0,0,0,36,352,1,0,0,0,38,365,1,0,0,0,40,376,1,0,0,0,42,382,1,
+		0,0,0,44,399,1,0,0,0,46,410,1,0,0,0,48,415,1,0,0,0,50,436,1,0,0,0,52,447,
+		1,0,0,0,54,453,1,0,0,0,56,471,1,0,0,0,58,475,1,0,0,0,60,487,1,0,0,0,62,
+		496,1,0,0,0,64,516,1,0,0,0,66,524,1,0,0,0,68,529,1,0,0,0,70,533,1,0,0,
+		0,72,551,1,0,0,0,74,553,1,0,0,0,76,555,1,0,0,0,78,564,1,0,0,0,80,569,1,
+		0,0,0,82,572,1,0,0,0,84,579,1,0,0,0,86,589,1,0,0,0,88,596,1,0,0,0,90,598,
+		1,0,0,0,92,602,1,0,0,0,94,616,1,0,0,0,96,618,1,0,0,0,98,624,1,0,0,0,100,
+		637,1,0,0,0,102,657,1,0,0,0,104,659,1,0,0,0,106,667,1,0,0,0,108,670,1,
+		0,0,0,110,673,1,0,0,0,112,679,1,0,0,0,114,681,1,0,0,0,116,689,1,0,0,0,
+		118,697,1,0,0,0,120,705,1,0,0,0,122,713,1,0,0,0,124,721,1,0,0,0,126,729,
+		1,0,0,0,128,737,1,0,0,0,130,745,1,0,0,0,132,753,1,0,0,0,134,761,1,0,0,
+		0,136,784,1,0,0,0,138,786,1,0,0,0,140,815,1,0,0,0,142,827,1,0,0,0,144,
+		829,1,0,0,0,146,844,1,0,0,0,148,846,1,0,0,0,150,861,1,0,0,0,152,866,1,
+		0,0,0,154,868,1,0,0,0,156,870,1,0,0,0,158,872,1,0,0,0,160,874,1,0,0,0,
+		162,879,1,0,0,0,164,894,1,0,0,0,166,898,1,0,0,0,168,901,1,0,0,0,170,921,
+		1,0,0,0,172,948,1,0,0,0,174,950,1,0,0,0,176,952,1,0,0,0,178,954,1,0,0,
+		0,180,956,1,0,0,0,182,958,1,0,0,0,184,960,1,0,0,0,186,962,1,0,0,0,188,
+		979,1,0,0,0,190,996,1,0,0,0,192,1000,1,0,0,0,194,1007,1,0,0,0,196,1011,
+		1,0,0,0,198,1020,1,0,0,0,200,1030,1,0,0,0,202,206,3,68,34,0,203,205,3,
+		70,35,0,204,203,1,0,0,0,205,208,1,0,0,0,206,204,1,0,0,0,206,207,1,0,0,
+		0,207,219,1,0,0,0,208,206,1,0,0,0,209,218,3,24,12,0,210,218,3,28,14,0,
+		211,218,3,30,15,0,212,218,3,42,21,0,213,218,3,36,18,0,214,218,3,48,24,
+		0,215,218,3,54,27,0,216,218,3,60,30,0,217,209,1,0,0,0,217,210,1,0,0,0,
+		217,211,1,0,0,0,217,212,1,0,0,0,217,213,1,0,0,0,217,214,1,0,0,0,217,215,
+		1,0,0,0,217,216,1,0,0,0,218,221,1,0,0,0,219,217,1,0,0,0,219,220,1,0,0,
+		0,220,222,1,0,0,0,221,219,1,0,0,0,222,223,5,0,0,1,223,1,1,0,0,0,224,225,
+		3,4,2,0,225,226,5,70,0,0,226,3,1,0,0,0,227,232,5,90,0,0,228,229,5,70,0,
+		0,229,231,5,90,0,0,230,228,1,0,0,0,231,234,1,0,0,0,232,230,1,0,0,0,232,
+		233,1,0,0,0,233,5,1,0,0,0,234,232,1,0,0,0,235,236,7,0,0,0,236,7,1,0,0,
+		0,237,238,5,47,0,0,238,243,3,10,5,0,239,240,5,73,0,0,240,242,3,10,5,0,
+		241,239,1,0,0,0,242,245,1,0,0,0,243,241,1,0,0,0,243,244,1,0,0,0,244,246,
+		1,0,0,0,245,243,1,0,0,0,246,247,5,48,0,0,247,9,1,0,0,0,248,249,5,90,0,
+		0,249,11,1,0,0,0,250,252,3,14,7,0,251,250,1,0,0,0,252,253,1,0,0,0,253,
+		251,1,0,0,0,253,254,1,0,0,0,254,13,1,0,0,0,255,256,5,21,0,0,256,257,5,
+		90,0,0,257,258,5,71,0,0,258,259,3,150,75,0,259,15,1,0,0,0,260,262,3,18,
+		9,0,261,260,1,0,0,0,262,265,1,0,0,0,263,261,1,0,0,0,263,264,1,0,0,0,264,
+		17,1,0,0,0,265,263,1,0,0,0,266,267,5,78,0,0,267,273,5,90,0,0,268,270,5,
+		83,0,0,269,271,3,20,10,0,270,269,1,0,0,0,270,271,1,0,0,0,271,272,1,0,0,
+		0,272,274,5,84,0,0,273,268,1,0,0,0,273,274,1,0,0,0,274,19,1,0,0,0,275,
+		280,3,22,11,0,276,277,5,73,0,0,277,279,3,22,11,0,278,276,1,0,0,0,279,282,
+		1,0,0,0,280,278,1,0,0,0,280,281,1,0,0,0,281,21,1,0,0,0,282,280,1,0,0,0,
+		283,287,3,150,75,0,284,287,3,112,56,0,285,287,5,90,0,0,286,283,1,0,0,0,
+		286,284,1,0,0,0,286,285,1,0,0,0,287,23,1,0,0,0,288,289,3,16,8,0,289,290,
+		5,10,0,0,290,291,5,90,0,0,291,292,5,71,0,0,292,293,3,150,75,0,293,294,
+		5,59,0,0,294,295,3,112,56,0,295,296,5,75,0,0,296,25,1,0,0,0,297,298,3,
+		16,8,0,298,299,5,9,0,0,299,302,5,90,0,0,300,301,5,71,0,0,301,303,3,150,
+		75,0,302,300,1,0,0,0,302,303,1,0,0,0,303,306,1,0,0,0,304,305,5,59,0,0,
+		305,307,3,112,56,0,306,304,1,0,0,0,306,307,1,0,0,0,307,308,1,0,0,0,308,
+		309,5,75,0,0,309,27,1,0,0,0,310,311,3,16,8,0,311,312,5,11,0,0,312,313,
+		5,90,0,0,313,314,5,71,0,0,314,315,3,150,75,0,315,316,5,59,0,0,316,317,
+		3,112,56,0,317,318,5,75,0,0,318,29,1,0,0,0,319,320,3,16,8,0,320,321,5,
+		5,0,0,321,323,5,90,0,0,322,324,3,8,4,0,323,322,1,0,0,0,323,324,1,0,0,0,
+		324,326,1,0,0,0,325,327,3,12,6,0,326,325,1,0,0,0,326,327,1,0,0,0,327,334,
+		1,0,0,0,328,330,5,79,0,0,329,331,3,32,16,0,330,329,1,0,0,0,330,331,1,0,
+		0,0,331,332,1,0,0,0,332,335,5,80,0,0,333,335,5,75,0,0,334,328,1,0,0,0,
+		334,333,1,0,0,0,335,31,1,0,0,0,336,341,3,34,17,0,337,338,5,73,0,0,338,
+		340,3,34,17,0,339,337,1,0,0,0,340,343,1,0,0,0,341,339,1,0,0,0,341,342,
+		1,0,0,0,342,345,1,0,0,0,343,341,1,0,0,0,344,346,5,73,0,0,345,344,1,0,0,
+		0,345,346,1,0,0,0,346,33,1,0,0,0,347,348,3,16,8,0,348,349,5,90,0,0,349,
+		350,5,71,0,0,350,351,3,150,75,0,351,35,1,0,0,0,352,353,3,16,8,0,353,354,
+		5,6,0,0,354,357,5,90,0,0,355,356,5,71,0,0,356,358,3,150,75,0,357,355,1,
+		0,0,0,357,358,1,0,0,0,358,359,1,0,0,0,359,361,5,79,0,0,360,362,3,38,19,
+		0,361,360,1,0,0,0,361,362,1,0,0,0,362,363,1,0,0,0,363,364,5,80,0,0,364,
+		37,1,0,0,0,365,370,3,40,20,0,366,367,5,73,0,0,367,369,3,40,20,0,368,366,
+		1,0,0,0,369,372,1,0,0,0,370,368,1,0,0,0,370,371,1,0,0,0,371,374,1,0,0,
+		0,372,370,1,0,0,0,373,375,5,73,0,0,374,373,1,0,0,0,374,375,1,0,0,0,375,
+		39,1,0,0,0,376,377,3,16,8,0,377,380,5,90,0,0,378,379,5,59,0,0,379,381,
+		3,112,56,0,380,378,1,0,0,0,380,381,1,0,0,0,381,41,1,0,0,0,382,383,3,16,
+		8,0,383,384,5,7,0,0,384,386,5,90,0,0,385,387,3,8,4,0,386,385,1,0,0,0,386,
+		387,1,0,0,0,387,389,1,0,0,0,388,390,3,12,6,0,389,388,1,0,0,0,389,390,1,
+		0,0,0,390,397,1,0,0,0,391,393,5,79,0,0,392,394,3,44,22,0,393,392,1,0,0,
+		0,393,394,1,0,0,0,394,395,1,0,0,0,395,398,5,80,0,0,396,398,5,75,0,0,397,
+		391,1,0,0,0,397,396,1,0,0,0,398,43,1,0,0,0,399,404,3,46,23,0,400,401,5,
+		73,0,0,401,403,3,46,23,0,402,400,1,0,0,0,403,406,1,0,0,0,404,402,1,0,0,
+		0,404,405,1,0,0,0,405,408,1,0,0,0,406,404,1,0,0,0,407,409,5,73,0,0,408,
+		407,1,0,0,0,408,409,1,0,0,0,409,45,1,0,0,0,410,411,3,16,8,0,411,412,5,
+		90,0,0,412,413,5,71,0,0,413,414,3,150,75,0,414,47,1,0,0,0,415,416,3,16,
+		8,0,416,417,5,8,0,0,417,419,5,90,0,0,418,420,3,8,4,0,419,418,1,0,0,0,419,
+		420,1,0,0,0,420,423,1,0,0,0,421,422,5,71,0,0,422,424,3,150,75,0,423,421,
+		1,0,0,0,423,424,1,0,0,0,424,426,1,0,0,0,425,427,3,12,6,0,426,425,1,0,0,
+		0,426,427,1,0,0,0,427,434,1,0,0,0,428,430,5,79,0,0,429,431,3,50,25,0,430,
+		429,1,0,0,0,430,431,1,0,0,0,431,432,1,0,0,0,432,435,5,80,0,0,433,435,5,
+		75,0,0,434,428,1,0,0,0,434,433,1,0,0,0,435,49,1,0,0,0,436,441,3,52,26,
+		0,437,438,5,73,0,0,438,440,3,52,26,0,439,437,1,0,0,0,440,443,1,0,0,0,441,
+		439,1,0,0,0,441,442,1,0,0,0,442,445,1,0,0,0,443,441,1,0,0,0,444,446,5,
+		73,0,0,445,444,1,0,0,0,445,446,1,0,0,0,446,51,1,0,0,0,447,448,3,16,8,0,
+		448,451,5,90,0,0,449,450,5,71,0,0,450,452,3,150,75,0,451,449,1,0,0,0,451,
+		452,1,0,0,0,452,53,1,0,0,0,453,454,3,16,8,0,454,455,5,4,0,0,455,457,5,
+		90,0,0,456,458,3,8,4,0,457,456,1,0,0,0,457,458,1,0,0,0,458,460,1,0,0,0,
+		459,461,3,12,6,0,460,459,1,0,0,0,460,461,1,0,0,0,461,462,1,0,0,0,462,464,
+		5,79,0,0,463,465,3,56,28,0,464,463,1,0,0,0,464,465,1,0,0,0,465,466,1,0,
+		0,0,466,467,5,80,0,0,467,55,1,0,0,0,468,469,3,58,29,0,469,470,5,75,0,0,
+		470,472,1,0,0,0,471,468,1,0,0,0,472,473,1,0,0,0,473,471,1,0,0,0,473,474,
+		1,0,0,0,474,57,1,0,0,0,475,476,3,16,8,0,476,477,5,3,0,0,477,478,5,90,0,
+		0,478,480,5,83,0,0,479,481,3,64,32,0,480,479,1,0,0,0,480,481,1,0,0,0,481,
+		482,1,0,0,0,482,485,5,84,0,0,483,484,5,71,0,0,484,486,3,150,75,0,485,483,
+		1,0,0,0,485,486,1,0,0,0,486,59,1,0,0,0,487,489,3,16,8,0,488,490,3,2,1,
+		0,489,488,1,0,0,0,489,490,1,0,0,0,490,491,1,0,0,0,491,494,3,62,31,0,492,
+		495,3,76,38,0,493,495,5,75,0,0,494,492,1,0,0,0,494,493,1,0,0,0,495,61,
+		1,0,0,0,496,497,5,3,0,0,497,499,5,90,0,0,498,500,3,8,4,0,499,498,1,0,0,
+		0,499,500,1,0,0,0,500,501,1,0,0,0,501,503,5,83,0,0,502,504,3,64,32,0,503,
+		502,1,0,0,0,503,504,1,0,0,0,504,505,1,0,0,0,505,507,5,84,0,0,506,508,3,
+		6,3,0,507,506,1,0,0,0,507,508,1,0,0,0,508,511,1,0,0,0,509,510,5,71,0,0,
+		510,512,3,150,75,0,511,509,1,0,0,0,511,512,1,0,0,0,512,514,1,0,0,0,513,
+		515,3,12,6,0,514,513,1,0,0,0,514,515,1,0,0,0,515,63,1,0,0,0,516,521,3,
+		66,33,0,517,518,5,73,0,0,518,520,3,66,33,0,519,517,1,0,0,0,520,523,1,0,
+		0,0,521,519,1,0,0,0,521,522,1,0,0,0,522,65,1,0,0,0,523,521,1,0,0,0,524,
+		525,3,16,8,0,525,526,5,90,0,0,526,527,5,71,0,0,527,528,3,150,75,0,528,
+		67,1,0,0,0,529,530,5,1,0,0,530,531,3,4,2,0,531,532,5,75,0,0,532,69,1,0,
+		0,0,533,534,5,2,0,0,534,535,3,4,2,0,535,536,5,75,0,0,536,71,1,0,0,0,537,
+		552,3,74,37,0,538,552,3,76,38,0,539,552,3,78,39,0,540,552,3,80,40,0,541,
+		552,3,82,41,0,542,552,3,84,42,0,543,552,3,86,43,0,544,552,3,98,49,0,545,
+		552,3,106,53,0,546,552,3,108,54,0,547,552,3,110,55,0,548,552,3,26,13,0,
+		549,552,3,24,12,0,550,552,3,28,14,0,551,537,1,0,0,0,551,538,1,0,0,0,551,
+		539,1,0,0,0,551,540,1,0,0,0,551,541,1,0,0,0,551,542,1,0,0,0,551,543,1,
+		0,0,0,551,544,1,0,0,0,551,545,1,0,0,0,551,546,1,0,0,0,551,547,1,0,0,0,
+		551,548,1,0,0,0,551,549,1,0,0,0,551,550,1,0,0,0,552,73,1,0,0,0,553,554,
+		5,75,0,0,554,75,1,0,0,0,555,559,5,79,0,0,556,558,3,72,36,0,557,556,1,0,
+		0,0,558,561,1,0,0,0,559,557,1,0,0,0,559,560,1,0,0,0,560,562,1,0,0,0,561,
+		559,1,0,0,0,562,563,5,80,0,0,563,77,1,0,0,0,564,565,3,112,56,0,565,566,
+		7,1,0,0,566,567,3,112,56,0,567,568,5,75,0,0,568,79,1,0,0,0,569,570,3,112,
+		56,0,570,571,5,75,0,0,571,81,1,0,0,0,572,577,5,20,0,0,573,578,3,74,37,
+		0,574,578,3,76,38,0,575,578,3,78,39,0,576,578,3,80,40,0,577,573,1,0,0,
+		0,577,574,1,0,0,0,577,575,1,0,0,0,577,576,1,0,0,0,578,83,1,0,0,0,579,580,
+		5,12,0,0,580,581,3,112,56,0,581,587,3,76,38,0,582,585,5,13,0,0,583,586,
+		3,76,38,0,584,586,3,84,42,0,585,583,1,0,0,0,585,584,1,0,0,0,586,588,1,
+		0,0,0,587,582,1,0,0,0,587,588,1,0,0,0,588,85,1,0,0,0,589,594,5,14,0,0,
+		590,595,3,88,44,0,591,595,3,90,45,0,592,595,3,92,46,0,593,595,3,96,48,
+		0,594,590,1,0,0,0,594,591,1,0,0,0,594,592,1,0,0,0,594,593,1,0,0,0,595,
+		87,1,0,0,0,596,597,3,76,38,0,597,89,1,0,0,0,598,599,3,112,56,0,599,600,
+		3,76,38,0,600,91,1,0,0,0,601,603,3,94,47,0,602,601,1,0,0,0,602,603,1,0,
+		0,0,603,604,1,0,0,0,604,606,5,75,0,0,605,607,3,112,56,0,606,605,1,0,0,
+		0,606,607,1,0,0,0,607,608,1,0,0,0,608,610,5,75,0,0,609,611,3,112,56,0,
+		610,609,1,0,0,0,610,611,1,0,0,0,611,612,1,0,0,0,612,613,3,76,38,0,613,
+		93,1,0,0,0,614,617,3,26,13,0,615,617,3,78,39,0,616,614,1,0,0,0,616,615,
+		1,0,0,0,617,95,1,0,0,0,618,619,5,9,0,0,619,620,5,90,0,0,620,621,5,15,0,
+		0,621,622,3,112,56,0,622,623,3,76,38,0,623,97,1,0,0,0,624,625,5,16,0,0,
+		625,626,3,112,56,0,626,630,5,79,0,0,627,629,3,100,50,0,628,627,1,0,0,0,
+		629,632,1,0,0,0,630,628,1,0,0,0,630,631,1,0,0,0,631,633,1,0,0,0,632,630,
+		1,0,0,0,633,634,5,80,0,0,634,99,1,0,0,0,635,638,3,102,51,0,636,638,5,13,
+		0,0,637,635,1,0,0,0,637,636,1,0,0,0,638,639,1,0,0,0,639,640,5,76,0,0,640,
+		641,3,72,36,0,641,101,1,0,0,0,642,658,3,172,86,0,643,644,3,170,85,0,644,
+		645,5,70,0,0,645,646,5,90,0,0,646,658,1,0,0,0,647,648,3,170,85,0,648,649,
+		5,70,0,0,649,650,5,90,0,0,650,652,5,83,0,0,651,653,3,104,52,0,652,651,
+		1,0,0,0,652,653,1,0,0,0,653,654,1,0,0,0,654,655,5,84,0,0,655,658,1,0,0,
+		0,656,658,5,90,0,0,657,642,1,0,0,0,657,643,1,0,0,0,657,647,1,0,0,0,657,
+		656,1,0,0,0,658,103,1,0,0,0,659,664,3,102,51,0,660,661,5,73,0,0,661,663,
+		3,102,51,0,662,660,1,0,0,0,663,666,1,0,0,0,664,662,1,0,0,0,664,665,1,0,
+		0,0,665,105,1,0,0,0,666,664,1,0,0,0,667,668,5,17,0,0,668,669,5,75,0,0,
+		669,107,1,0,0,0,670,671,5,18,0,0,671,672,5,75,0,0,672,109,1,0,0,0,673,
+		675,5,19,0,0,674,676,3,112,56,0,675,674,1,0,0,0,675,676,1,0,0,0,676,677,
+		1,0,0,0,677,678,5,75,0,0,678,111,1,0,0,0,679,680,3,114,57,0,680,113,1,
+		0,0,0,681,687,3,116,58,0,682,683,5,72,0,0,683,684,3,112,56,0,684,685,5,
+		71,0,0,685,686,3,114,57,0,686,688,1,0,0,0,687,682,1,0,0,0,687,688,1,0,
+		0,0,688,115,1,0,0,0,689,694,3,118,59,0,690,691,5,51,0,0,691,693,3,118,
+		59,0,692,690,1,0,0,0,693,696,1,0,0,0,694,692,1,0,0,0,694,695,1,0,0,0,695,
+		117,1,0,0,0,696,694,1,0,0,0,697,702,3,120,60,0,698,699,5,52,0,0,699,701,
+		3,120,60,0,700,698,1,0,0,0,701,704,1,0,0,0,702,700,1,0,0,0,702,703,1,0,
+		0,0,703,119,1,0,0,0,704,702,1,0,0,0,705,710,3,122,61,0,706,707,5,54,0,
+		0,707,709,3,122,61,0,708,706,1,0,0,0,709,712,1,0,0,0,710,708,1,0,0,0,710,
+		711,1,0,0,0,711,121,1,0,0,0,712,710,1,0,0,0,713,718,3,124,62,0,714,715,
+		5,55,0,0,715,717,3,124,62,0,716,714,1,0,0,0,717,720,1,0,0,0,718,716,1,
+		0,0,0,718,719,1,0,0,0,719,123,1,0,0,0,720,718,1,0,0,0,721,726,3,126,63,
+		0,722,723,5,53,0,0,723,725,3,126,63,0,724,722,1,0,0,0,725,728,1,0,0,0,
+		726,724,1,0,0,0,726,727,1,0,0,0,727,125,1,0,0,0,728,726,1,0,0,0,729,734,
+		3,128,64,0,730,731,7,2,0,0,731,733,3,128,64,0,732,730,1,0,0,0,733,736,
+		1,0,0,0,734,732,1,0,0,0,734,735,1,0,0,0,735,127,1,0,0,0,736,734,1,0,0,
+		0,737,742,3,130,65,0,738,739,7,3,0,0,739,741,3,130,65,0,740,738,1,0,0,
+		0,741,744,1,0,0,0,742,740,1,0,0,0,742,743,1,0,0,0,743,129,1,0,0,0,744,
+		742,1,0,0,0,745,750,3,132,66,0,746,747,7,4,0,0,747,749,3,132,66,0,748,
+		746,1,0,0,0,749,752,1,0,0,0,750,748,1,0,0,0,750,751,1,0,0,0,751,131,1,
+		0,0,0,752,750,1,0,0,0,753,758,3,134,67,0,754,755,7,5,0,0,755,757,3,134,
+		67,0,756,754,1,0,0,0,757,760,1,0,0,0,758,756,1,0,0,0,758,759,1,0,0,0,759,
+		133,1,0,0,0,760,758,1,0,0,0,761,766,3,136,68,0,762,763,7,6,0,0,763,765,
+		3,136,68,0,764,762,1,0,0,0,765,768,1,0,0,0,766,764,1,0,0,0,766,767,1,0,
+		0,0,767,135,1,0,0,0,768,766,1,0,0,0,769,770,5,56,0,0,770,785,3,136,68,
+		0,771,772,5,55,0,0,772,785,3,136,68,0,773,774,5,39,0,0,774,785,3,136,68,
+		0,775,776,5,40,0,0,776,785,3,136,68,0,777,778,5,41,0,0,778,785,3,136,68,
+		0,779,780,5,53,0,0,780,785,3,136,68,0,781,782,5,42,0,0,782,785,3,136,68,
+		0,783,785,3,138,69,0,784,769,1,0,0,0,784,771,1,0,0,0,784,773,1,0,0,0,784,
+		775,1,0,0,0,784,777,1,0,0,0,784,779,1,0,0,0,784,781,1,0,0,0,784,783,1,
+		0,0,0,785,137,1,0,0,0,786,790,3,142,71,0,787,789,3,140,70,0,788,787,1,
+		0,0,0,789,792,1,0,0,0,790,788,1,0,0,0,790,791,1,0,0,0,791,139,1,0,0,0,
+		792,790,1,0,0,0,793,794,5,74,0,0,794,816,5,90,0,0,795,796,5,77,0,0,796,
+		816,5,90,0,0,797,798,5,81,0,0,798,799,3,112,56,0,799,800,5,82,0,0,800,
+		816,1,0,0,0,801,803,5,83,0,0,802,804,3,144,72,0,803,802,1,0,0,0,803,804,
+		1,0,0,0,804,805,1,0,0,0,805,816,5,84,0,0,806,807,5,70,0,0,807,813,5,90,
+		0,0,808,810,5,83,0,0,809,811,3,144,72,0,810,809,1,0,0,0,810,811,1,0,0,
+		0,811,812,1,0,0,0,812,814,5,84,0,0,813,808,1,0,0,0,813,814,1,0,0,0,814,
+		816,1,0,0,0,815,793,1,0,0,0,815,795,1,0,0,0,815,797,1,0,0,0,815,801,1,
+		0,0,0,815,806,1,0,0,0,816,141,1,0,0,0,817,828,3,172,86,0,818,828,5,90,
+		0,0,819,820,5,83,0,0,820,821,3,112,56,0,821,822,5,84,0,0,822,828,1,0,0,
+		0,823,828,3,198,99,0,824,828,3,148,74,0,825,828,3,188,94,0,826,828,3,186,
+		93,0,827,817,1,0,0,0,827,818,1,0,0,0,827,819,1,0,0,0,827,823,1,0,0,0,827,
+		824,1,0,0,0,827,825,1,0,0,0,827,826,1,0,0,0,828,143,1,0,0,0,829,834,3,
+		146,73,0,830,831,5,73,0,0,831,833,3,146,73,0,832,830,1,0,0,0,833,836,1,
+		0,0,0,834,832,1,0,0,0,834,835,1,0,0,0,835,838,1,0,0,0,836,834,1,0,0,0,
+		837,839,5,73,0,0,838,837,1,0,0,0,838,839,1,0,0,0,839,145,1,0,0,0,840,845,
+		3,112,56,0,841,842,5,90,0,0,842,843,5,59,0,0,843,845,3,112,56,0,844,840,
+		1,0,0,0,844,841,1,0,0,0,845,147,1,0,0,0,846,847,5,78,0,0,847,848,5,90,
+		0,0,848,850,5,83,0,0,849,851,3,20,10,0,850,849,1,0,0,0,850,851,1,0,0,0,
+		851,852,1,0,0,0,852,853,5,84,0,0,853,149,1,0,0,0,854,862,3,152,76,0,855,
+		862,3,160,80,0,856,862,3,162,81,0,857,862,3,164,82,0,858,862,3,166,83,
+		0,859,862,3,168,84,0,860,862,3,170,85,0,861,854,1,0,0,0,861,855,1,0,0,
+		0,861,856,1,0,0,0,861,857,1,0,0,0,861,858,1,0,0,0,861,859,1,0,0,0,861,
+		860,1,0,0,0,862,151,1,0,0,0,863,867,3,154,77,0,864,867,3,156,78,0,865,
+		867,3,158,79,0,866,863,1,0,0,0,866,864,1,0,0,0,866,865,1,0,0,0,867,153,
+		1,0,0,0,868,869,7,7,0,0,869,155,1,0,0,0,870,871,7,8,0,0,871,157,1,0,0,
+		0,872,873,5,37,0,0,873,159,1,0,0,0,874,875,5,81,0,0,875,876,3,112,56,0,
+		876,877,5,82,0,0,877,878,3,150,75,0,878,161,1,0,0,0,879,880,5,83,0,0,880,
+		883,3,150,75,0,881,882,5,73,0,0,882,884,3,150,75,0,883,881,1,0,0,0,884,
+		885,1,0,0,0,885,883,1,0,0,0,885,886,1,0,0,0,886,887,1,0,0,0,887,888,5,
+		84,0,0,888,163,1,0,0,0,889,895,5,56,0,0,890,892,5,55,0,0,891,893,5,40,
+		0,0,892,891,1,0,0,0,892,893,1,0,0,0,893,895,1,0,0,0,894,889,1,0,0,0,894,
+		890,1,0,0,0,895,896,1,0,0,0,896,897,3,150,75,0,897,165,1,0,0,0,898,899,
+		5,42,0,0,899,900,3,150,75,0,900,167,1,0,0,0,901,902,5,3,0,0,902,911,5,
+		83,0,0,903,908,3,150,75,0,904,905,5,73,0,0,905,907,3,150,75,0,906,904,
+		1,0,0,0,907,910,1,0,0,0,908,906,1,0,0,0,908,909,1,0,0,0,909,912,1,0,0,
+		0,910,908,1,0,0,0,911,903,1,0,0,0,911,912,1,0,0,0,912,913,1,0,0,0,913,
+		915,5,84,0,0,914,916,3,6,3,0,915,914,1,0,0,0,915,916,1,0,0,0,916,917,1,
+		0,0,0,917,918,5,71,0,0,918,919,3,150,75,0,919,169,1,0,0,0,920,922,3,2,
+		1,0,921,920,1,0,0,0,921,922,1,0,0,0,922,923,1,0,0,0,923,935,5,90,0,0,924,
+		925,5,47,0,0,925,930,3,150,75,0,926,927,5,73,0,0,927,929,3,150,75,0,928,
+		926,1,0,0,0,929,932,1,0,0,0,930,928,1,0,0,0,930,931,1,0,0,0,931,933,1,
+		0,0,0,932,930,1,0,0,0,933,934,5,48,0,0,934,936,1,0,0,0,935,924,1,0,0,0,
+		935,936,1,0,0,0,936,171,1,0,0,0,937,949,3,174,87,0,938,949,3,176,88,0,
+		939,949,3,178,89,0,940,949,3,180,90,0,941,949,3,182,91,0,942,949,3,184,
+		92,0,943,949,3,186,93,0,944,949,3,188,94,0,945,949,3,192,96,0,946,949,
+		3,194,97,0,947,949,3,196,98,0,948,937,1,0,0,0,948,938,1,0,0,0,948,939,
+		1,0,0,0,948,940,1,0,0,0,948,941,1,0,0,0,948,942,1,0,0,0,948,943,1,0,0,
+		0,948,944,1,0,0,0,948,945,1,0,0,0,948,946,1,0,0,0,948,947,1,0,0,0,949,
+		173,1,0,0,0,950,951,5,85,0,0,951,175,1,0,0,0,952,953,5,86,0,0,953,177,
+		1,0,0,0,954,955,5,87,0,0,955,179,1,0,0,0,956,957,5,88,0,0,957,181,1,0,
+		0,0,958,959,5,89,0,0,959,183,1,0,0,0,960,961,5,22,0,0,961,185,1,0,0,0,
+		962,963,3,160,80,0,963,975,5,79,0,0,964,969,3,112,56,0,965,966,5,73,0,
+		0,966,968,3,112,56,0,967,965,1,0,0,0,968,971,1,0,0,0,969,967,1,0,0,0,969,
+		970,1,0,0,0,970,973,1,0,0,0,971,969,1,0,0,0,972,974,5,73,0,0,973,972,1,
+		0,0,0,973,974,1,0,0,0,974,976,1,0,0,0,975,964,1,0,0,0,975,976,1,0,0,0,
+		976,977,1,0,0,0,977,978,5,80,0,0,978,187,1,0,0,0,979,980,3,170,85,0,980,
+		992,5,79,0,0,981,986,3,190,95,0,982,983,5,73,0,0,983,985,3,190,95,0,984,
+		982,1,0,0,0,985,988,1,0,0,0,986,984,1,0,0,0,986,987,1,0,0,0,987,990,1,
+		0,0,0,988,986,1,0,0,0,989,991,5,73,0,0,990,989,1,0,0,0,990,991,1,0,0,0,
+		991,993,1,0,0,0,992,981,1,0,0,0,992,993,1,0,0,0,993,994,1,0,0,0,994,995,
+		5,80,0,0,995,189,1,0,0,0,996,997,5,90,0,0,997,998,5,59,0,0,998,999,3,112,
+		56,0,999,191,1,0,0,0,1000,1001,3,170,85,0,1001,1002,5,70,0,0,1002,1003,
+		5,90,0,0,1003,1004,5,83,0,0,1004,1005,3,112,56,0,1005,1006,5,84,0,0,1006,
+		193,1,0,0,0,1007,1008,3,170,85,0,1008,1009,5,70,0,0,1009,1010,5,90,0,0,
+		1010,195,1,0,0,0,1011,1012,3,170,85,0,1012,1013,5,70,0,0,1013,1014,5,90,
+		0,0,1014,1016,5,83,0,0,1015,1017,3,112,56,0,1016,1015,1,0,0,0,1016,1017,
+		1,0,0,0,1017,1018,1,0,0,0,1018,1019,5,84,0,0,1019,197,1,0,0,0,1020,1021,
+		5,83,0,0,1021,1024,3,200,100,0,1022,1023,5,73,0,0,1023,1025,3,200,100,
+		0,1024,1022,1,0,0,0,1025,1026,1,0,0,0,1026,1024,1,0,0,0,1026,1027,1,0,
+		0,0,1027,1028,1,0,0,0,1028,1029,5,84,0,0,1029,199,1,0,0,0,1030,1031,3,
+		112,56,0,1031,1032,5,71,0,0,1032,1033,3,150,75,0,1033,201,1,0,0,0,110,
 		206,217,219,232,243,253,263,270,273,280,286,302,306,323,326,330,334,341,
 		345,357,361,370,374,380,386,389,393,397,404,408,419,423,426,430,434,441,
-		445,451,457,460,464,473,480,488,493,498,502,506,510,513,520,550,558,581,
-		583,590,598,602,606,612,626,633,648,653,660,671,683,690,698,706,714,722,
-		730,738,746,754,762,781,787,800,807,810,812,824,831,835,841,847,858,863,
-		882,888,902,905,909,915,924,929,942,958,966,970,972,983,987,989,1013,1023
+		445,451,457,460,464,473,480,485,489,494,499,503,507,511,514,521,551,559,
+		577,585,587,594,602,606,610,616,630,637,652,657,664,675,687,694,702,710,
+		718,726,734,742,750,758,766,784,790,803,810,813,815,827,834,838,844,850,
+		861,866,885,892,894,908,911,915,921,930,935,948,969,973,975,986,990,992,
+		1016,1026
 	};
 
 	public static readonly ATN _ATN =

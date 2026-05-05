@@ -522,7 +522,7 @@ public class AstBuilderTests
         var source = """
             namespace app;
             func test(): i32 {
-                var arr = [i32}1, 2, 3};
+                var arr = [3]i32{1, 2, 3};
                 return 0;
             }
             """;
@@ -532,17 +532,17 @@ public class AstBuilderTests
         var varDecl = func.Body!.Statements[0].As<VarDeclStatementNode>();
         varDecl.Initializer.Should().BeOfType<ArrayLiteralNode>();
         var arrLit = varDecl.Initializer.As<ArrayLiteralNode>();
-        arrLit.ElementType.Should().NotBeNull();
+        arrLit.ArrayType.Should().NotBeNull();
         arrLit.Elements.Should().HaveCount(3);
     }
 
     [Fact]
-    public void AstBuilder_ShouldBuildArrayLiteralWithoutType()
+    public void AstBuilder_ShouldBuildArrayLiteralWithEmpty()
     {
         var source = """
             namespace app;
             func test(): i32 {
-                var arr = [}1, 2, 3};
+                var arr = [5]i32{};
                 return 0;
             }
             """;
@@ -550,8 +550,11 @@ public class AstBuilderTests
 
         var func = ast.Declarations![0].As<FuncDeclarationNode>();
         var varDecl = func.Body!.Statements[0].As<VarDeclStatementNode>();
-        // Without explicit type, this may parse differently
         varDecl.Initializer.Should().NotBeNull();
+        varDecl.Initializer.Should().BeOfType<ArrayLiteralNode>();
+        var arrLit = varDecl.Initializer.As<ArrayLiteralNode>();
+        arrLit.ArrayType.Should().NotBeNull();
+        arrLit.ArrayType!.Size.Should().Be(5);
     }
 
     [Fact]
@@ -634,7 +637,7 @@ public class AstBuilderTests
         var source = """
             namespace app;
             func test(): i32 {
-                var arr = [i32}1, 2, 3};
+                var arr = [3]i32{1, 2, 3};
                 return arr[0];
             }
             """;
@@ -674,6 +677,134 @@ public class AstBuilderTests
         outerAccess.Target.Should().BeOfType<FieldAccessExpressionNode>();
         var innerAccess = outerAccess.Target.As<FieldAccessExpressionNode>();
         innerAccess.FieldName.Should().Be("inner");
+    }
+
+    [Fact]
+    public void AstBuilder_ShouldBuildDeferStatementWithExpression()
+    {
+        var source = """
+            namespace app;
+            func test(): i32 {
+                defer 1;
+                return 0;
+            }
+            """;
+        var ast = BuildAst(source);
+
+        var func = ast.Declarations![0].As<FuncDeclarationNode>();
+        var deferStmt = func.Body!.Statements[0].As<DeferStatementNode>();
+        deferStmt.DeferredStatement.Should().BeOfType<ExpressionStatementNode>();
+    }
+
+    [Fact]
+    public void AstBuilder_ShouldBuildDeferStatementWithBlock()
+    {
+        var source = """
+            namespace app;
+            func test(): i32 {
+                defer {
+                    var x: i32 = 1;
+                }
+                return 0;
+            }
+            """;
+        var ast = BuildAst(source);
+
+        var func = ast.Declarations![0].As<FuncDeclarationNode>();
+        var deferStmt = func.Body!.Statements[0].As<DeferStatementNode>();
+        deferStmt.DeferredStatement.Should().BeOfType<BlockStatementNode>();
+    }
+
+    [Fact]
+    public void AstBuilder_ShouldBuildDeferStatementWithAssignment()
+    {
+        var source = """
+            namespace app;
+            func test(): i32 {
+                var x: i32 = 0;
+                defer x = 42;
+                return x;
+            }
+            """;
+        var ast = BuildAst(source);
+
+        var func = ast.Declarations![0].As<FuncDeclarationNode>();
+        var deferStmt = func.Body!.Statements[1].As<DeferStatementNode>();
+        deferStmt.DeferredStatement.Should().BeOfType<AssignmentStatementNode>();
+    }
+
+    [Fact]
+    public void AstBuilder_ShouldBuildRefType()
+    {
+        var source = """
+            namespace app;
+            func test(x: ^i32): i32 {
+                return 0;
+            }
+            """;
+        var ast = BuildAst(source);
+
+        var func = ast.Declarations![0].As<FuncDeclarationNode>();
+        var paramType = func.Parameters![0].Type.Should().BeOfType<RefTypeNode>().Subject;
+        paramType.TargetType.As<IntegerTypeNode>().Kind.Should().Be(IntegerKind.I32);
+        paramType.IsMutable.Should().BeFalse();
+    }
+
+    [Fact]
+    public void AstBuilder_ShouldBuildMutRefType()
+    {
+        var source = """
+            namespace app;
+            func test(x: ^!i32): i32 {
+                return 0;
+            }
+            """;
+        var ast = BuildAst(source);
+
+        var func = ast.Declarations![0].As<FuncDeclarationNode>();
+        var paramType = func.Parameters![0].Type.Should().BeOfType<RefTypeNode>().Subject;
+        paramType.TargetType.As<IntegerTypeNode>().Kind.Should().Be(IntegerKind.I32);
+        paramType.IsMutable.Should().BeTrue();
+    }
+
+    [Fact]
+    public void AstBuilder_ShouldBuildRefExpression()
+    {
+        var source = """
+            namespace app;
+            func test(): i32 {
+                var x: i32 = 42;
+                var ref: ^i32 = ^x;
+                return 0;
+            }
+            """;
+        var ast = BuildAst(source);
+
+        var func = ast.Declarations![0].As<FuncDeclarationNode>();
+        var varDecl = func.Body!.Statements[1].As<VarDeclStatementNode>();
+        varDecl.Initializer.Should().BeOfType<UnaryExpressionNode>();
+        var unary = varDecl.Initializer.As<UnaryExpressionNode>();
+        unary.Operator.Should().Be(UnaryOperator.Ref);
+    }
+
+    [Fact]
+    public void AstBuilder_ShouldBuildMutRefExpression()
+    {
+        var source = """
+            namespace app;
+            func test(): i32 {
+                var x: i32 = 42;
+                var ref: ^!i32 = ^!x;
+                return 0;
+            }
+            """;
+        var ast = BuildAst(source);
+
+        var func = ast.Declarations![0].As<FuncDeclarationNode>();
+        var varDecl = func.Body!.Statements[1].As<VarDeclStatementNode>();
+        varDecl.Initializer.Should().BeOfType<UnaryExpressionNode>();
+        var unary = varDecl.Initializer.As<UnaryExpressionNode>();
+        unary.Operator.Should().Be(UnaryOperator.MutRef);
     }
 }
 

@@ -179,6 +179,7 @@ public class SemaBuilder
             ForStatementNode forStmt => BuildFor(forStmt),
             BreakStatementNode => new SemaBreak { Location = ConvLoc(node.Location) },
             ContinueStatementNode => new SemaContinue { Location = ConvLoc(node.Location) },
+            DeferStatementNode deferStmt => BuildDefer(deferStmt),
             VarDeclStatementNode varDecl => BuildLocalDeclFromStmt(varDecl),
             SwitchStatementNode switchStmt => BuildSwitch(switchStmt),
             _ => null
@@ -379,6 +380,19 @@ public class SemaBuilder
         return new SemaReturn
         {
             Value = value,
+            Location = ConvLoc(node.Location)
+        };
+    }
+
+    private SemaDefer? BuildDefer(DeferStatementNode node)
+    {
+        var stmt = BuildStatement(node.DeferredStatement);
+        if (stmt == null)
+            return null;
+
+        return new SemaDefer
+        {
+            DeferredStatement = stmt,
             Location = ConvLoc(node.Location)
         };
     }
@@ -650,11 +664,24 @@ public class SemaBuilder
 
         var op = ConvertUnaryOp(node.Operator);
 
+        // Determine the result type based on the operator
+        SemaType resultType = node.Operator switch
+        {
+            UnaryOperator.Ref => new SemaRefType(operand.Type, false),
+            UnaryOperator.MutRef => new SemaRefType(operand.Type, true),
+            UnaryOperator.Dereference => operand.Type is SemaRefType refType
+                ? refType.TargetType
+                : operand.Type is SemaPointerType ptrType
+                    ? ptrType.TargetType
+                    : operand.Type,
+            _ => operand.Type
+        };
+
         return new SemaUnaryExpr
         {
             Operator = op,
             Operand = operand,
-            Type = operand.Type,
+            Type = resultType,
             Location = ConvLoc(node.Location)
         };
     }
@@ -777,6 +804,14 @@ public class SemaBuilder
     {
         var elements = new List<SemaExpression>();
         SemaType? elementType = null;
+        ulong size = 0;
+
+        // Get size and element type from ArrayType if provided
+        if (node.ArrayType != null)
+        {
+            size = node.ArrayType.Size;
+            elementType = ResolveType(node.ArrayType.ElementType);
+        }
 
         if (node.Elements != null)
         {
@@ -787,15 +822,13 @@ public class SemaBuilder
                     return null;
                 elements.Add(semaElem);
 
-                // Infer element type from first element
+                // Infer element type from first element if not set
                 elementType ??= semaElem.Type;
             }
-        }
 
-        // Use explicit type if provided
-        if (node.ElementType != null)
-        {
-            elementType = ResolveType(node.ElementType);
+            // Use element count if size not provided
+            if (size == 0)
+                size = (ulong)elements.Count;
         }
 
         if (elementType == null)
@@ -805,7 +838,7 @@ public class SemaBuilder
             return null;
         }
 
-        var arrayType = new SemaArrayType(elementType, (ulong)elements.Count);
+        var arrayType = new SemaArrayType(elementType, size);
 
         return new SemaArrayLiteral
         {

@@ -2,9 +2,9 @@
 
 ## 当前状态
 
-- 测试: 68 单元测试 + 25 集成测试通过
+- 测试: 69 单元测试 + 26 集成测试通过
 - 基础管道: 词法分析 → 语法分析 → AST → SemanticTree → LLVM IR/目标文件
-- 已支持: 基本类型、函数、if/while、算术/比较运算、return/赋值、for循环、break/continue、switch语句、数组字面量、结构体字面量、枚举字面量、字段访问、数组索引
+- 已支持: 基本类型、函数、if/while、算术/比较运算、return/赋值、for循环、break/continue、switch语句、数组字面量、结构体字面量、枚举字面量、字段访问、数组索引、defer语句
 
 ---
 
@@ -70,33 +70,33 @@
 
 ---
 
-### Iteration 5: defer 语句
+### Iteration 5: defer 语句 ✅ 已完成
 **目标**: 实现 defer 延迟执行
 
 **任务**:
-1. AST 添加 DeferStatementNode
-2. SemanticTree 添加 SemaDefer
-3. SemaBuilder 收集 defer 语句
-4. CodeGenerator 在函数返回前插入 defer 代码
-5. 处理多层 defer 的执行顺序 (LIFO)
-6. 添加测试
+1. AST 添加 DeferStatementNode ✅ (已存在)
+2. SemanticTree 添加 SemaDefer ✅
+3. SemaBuilder 收集 defer 语句 ✅
+4. CodeGenerator 在函数返回前插入 defer 代码 ✅
+5. 处理多层 defer 的执行顺序 (LIFO) ✅
+6. 添加测试 ✅
 
 **验证**: defer 在 return 前正确执行
 
 ---
 
-### Iteration 6: 引用类型完善
+### Iteration 6: 引用类型完善 ✅ 已完成
 **目标**: 完善 `^T` 和 `^!T` 引用类型
 
 **任务**:
-1. 实现 `^expr` 取引用操作
-2. 实现引用类型的自动解引用
-3. 可变引用 `^!T` 的写权限检查
-4. CodeGenerator 正确处理引用 (作为指针)
+1. 实现 `^expr` 取引用操作 ✅
+2. 实现引用类型的自动解引用 ✅
+3. 可变引用 `^!T` 的写权限检查 ✅ (类型解析已修复)
+4. CodeGenerator 正确处理引用 (作为指针) ✅
 5. 添加借用检查基础 (可选，可作为后续迭代)
-6. 添加测试
+6. 添加测试 ✅
 
-**验证**: 能正确使用引用传递参数
+**验证**: 能正确使用引用传递参数 ✅
 
 ---
 

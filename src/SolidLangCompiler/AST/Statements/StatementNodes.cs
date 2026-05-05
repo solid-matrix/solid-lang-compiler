@@ -97,11 +97,12 @@ public record ExpressionStatementNode(ExpressionNode Expression) : StatementNode
 }
 
 /// <summary>
-/// Represents a defer statement (defer expr;).
+/// Represents a defer statement (defer stmt).
+/// Deferred statements execute when leaving the current scope in LIFO order.
 /// </summary>
-public record DeferStatementNode(ExpressionNode Expression) : StatementNode
+public record DeferStatementNode(StatementNode DeferredStatement) : StatementNode
 {
-    public override string ToString() => $"defer {Expression};";
+    public override string ToString() => $"defer {DeferredStatement}";
 }
 
 /// <summary>

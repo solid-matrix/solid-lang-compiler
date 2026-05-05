@@ -447,7 +447,7 @@ public class CompilationTests : IDisposable
             namespace app;
 
             func test(): i32 {
-                var arr = [i32}1, 2, 3};
+                var arr = [3]i32{1, 2, 3};
                 return 0;
             }
             """);
@@ -555,7 +555,7 @@ public class CompilationTests : IDisposable
             namespace app;
 
             func get_first(): i32 {
-                var arr = [i32}10, 20, 30};
+                var arr = [3]i32{10, 20, 30};
                 return arr[0];
             }
             """);
@@ -590,6 +590,166 @@ public class CompilationTests : IDisposable
             func get_nested(): i32 {
                 var o = Outer{inner = Inner{value = 42}};
                 return o.inner.value;
+            }
+            """);
+
+        using var analyzer = new SemanticAnalyzer();
+        var semanticTree = analyzer.Analyze(File.ReadAllText(sourcePath), sourcePath);
+
+        semanticTree.IsSuccessful.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Compile_ShouldHandleDefer()
+    {
+        // Test defer with expression statement (not function call, which has a pre-existing bug)
+        var sourcePath = WriteSourceFile("defer.solid", """
+            namespace app;
+
+            func test(): i32 {
+                var x: i32 = 0;
+                defer x + 1;
+                defer x + 2;
+                return x;
+            }
+            """);
+
+        using var analyzer = new SemanticAnalyzer();
+        var semanticTree = analyzer.Analyze(File.ReadAllText(sourcePath), sourcePath);
+
+        semanticTree.IsSuccessful.Should().BeTrue();
+
+        using var codeGen = new CodeGenerator();
+        var outputPath = Path.Combine(_tempDir, "defer");
+        codeGen.GenerateIr(semanticTree, outputPath + ".ll", CodeGenerator.DefaultTriple);
+
+        File.Exists(outputPath + ".ll").Should().BeTrue();
+    }
+
+    [Fact]
+    public void Compile_ShouldHandleDeferWithBlock()
+    {
+        var sourcePath = WriteSourceFile("defer_block.solid", """
+            namespace app;
+
+            func test(): i32 {
+                var x: i32 = 0;
+                defer {
+                    x + 1;
+                    x + 2;
+                }
+                return x;
+            }
+            """);
+
+        using var analyzer = new SemanticAnalyzer();
+        var semanticTree = analyzer.Analyze(File.ReadAllText(sourcePath), sourcePath);
+
+        semanticTree.IsSuccessful.Should().BeTrue();
+
+        using var codeGen = new CodeGenerator();
+        var outputPath = Path.Combine(_tempDir, "defer_block");
+        codeGen.GenerateIr(semanticTree, outputPath + ".ll", CodeGenerator.DefaultTriple);
+
+        File.Exists(outputPath + ".ll").Should().BeTrue();
+    }
+
+    [Fact]
+    public void Compile_ShouldHandleDeferWithAssignment()
+    {
+        var sourcePath = WriteSourceFile("defer_assign.solid", """
+            namespace app;
+
+            func test(): i32 {
+                var x: i32 = 0;
+                defer x = 42;
+                return x;
+            }
+            """);
+
+        using var analyzer = new SemanticAnalyzer();
+        var semanticTree = analyzer.Analyze(File.ReadAllText(sourcePath), sourcePath);
+
+        semanticTree.IsSuccessful.Should().BeTrue();
+
+        using var codeGen = new CodeGenerator();
+        var outputPath = Path.Combine(_tempDir, "defer_assign");
+        codeGen.GenerateIr(semanticTree, outputPath + ".ll", CodeGenerator.DefaultTriple);
+
+        File.Exists(outputPath + ".ll").Should().BeTrue();
+    }
+
+    [Fact]
+    public void Compile_ShouldHandleRefType()
+    {
+        var sourcePath = WriteSourceFile("ref_type.solid", """
+            namespace app;
+
+            func increment(x: ^!i32) {
+            }
+
+            func test(): i32 {
+                var value: i32 = 42;
+                increment(^!value);
+                return value;
+            }
+            """);
+
+        using var analyzer = new SemanticAnalyzer();
+        var semanticTree = analyzer.Analyze(File.ReadAllText(sourcePath), sourcePath);
+
+        semanticTree.IsSuccessful.Should().BeTrue();
+
+        using var codeGen = new CodeGenerator();
+        var outputPath = Path.Combine(_tempDir, "ref_type");
+        codeGen.GenerateIr(semanticTree, outputPath + ".ll", CodeGenerator.DefaultTriple);
+
+        File.Exists(outputPath + ".ll").Should().BeTrue();
+    }
+
+    [Fact]
+    public void Compile_ShouldHandleRefExpression()
+    {
+        var sourcePath = WriteSourceFile("ref_expr.solid", """
+            namespace app;
+
+            func test(): i32 {
+                var x: i32 = 42;
+                var ref: ^i32 = ^x;
+                return 0;
+            }
+            """);
+
+        using var analyzer = new SemanticAnalyzer();
+        var semanticTree = analyzer.Analyze(File.ReadAllText(sourcePath), sourcePath);
+
+        semanticTree.IsSuccessful.Should().BeTrue();
+
+        using var codeGen = new CodeGenerator();
+        var outputPath = Path.Combine(_tempDir, "ref_expr");
+        codeGen.GenerateIr(semanticTree, outputPath + ".ll", CodeGenerator.DefaultTriple);
+
+        File.Exists(outputPath + ".ll").Should().BeTrue();
+    }
+
+    [Fact]
+    public void Compile_ShouldHandleRefFieldAccess()
+    {
+        var sourcePath = WriteSourceFile("ref_field.solid", """
+            namespace app;
+
+            struct Point {
+                x: i32,
+                y: i32,
+            }
+
+            func get_x(p: ^Point): i32 {
+                return 0;
+            }
+
+            func test(): i32 {
+                var pt = Point{x = 10, y = 20};
+                return get_x(^pt);
             }
             """);
 

@@ -193,6 +193,16 @@ public record SemaContinue : SemaStatement
 }
 
 /// <summary>
+/// Represents a defer statement.
+/// Deferred statements execute when leaving the current scope in LIFO order.
+/// </summary>
+public record SemaDefer : SemaStatement
+{
+    public required SemaStatement DeferredStatement { get; init; }
+    public override string ToString() => $"defer {DeferredStatement}";
+}
+
+/// <summary>
 /// Represents an empty statement.
 /// </summary>
 public record SemaEmpty : SemaStatement
