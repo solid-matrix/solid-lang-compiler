@@ -568,6 +568,7 @@ public sealed class CodeGenerator : IDisposable
             SemaCallExpr call => GenerateCall(call),
             SemaArrayLiteral arrLit => GenerateArrayLiteral(arrLit),
             SemaStructLiteral structLit => GenerateStructLiteral(structLit),
+            SemaUnionLiteral unionLit => GenerateUnionLiteral(unionLit),
             SemaFieldAccessExpr fieldAccess => GenerateFieldAccess(fieldAccess),
             SemaIndexExpr indexExpr => GenerateIndexExpr(indexExpr),
             _ => LLVMValueRef.CreateConstInt(_ctx.Int32Type, 0, false)
@@ -913,6 +914,28 @@ public sealed class CodeGenerator : IDisposable
         return _builder.BuildLoad2(llvmStructType, alloca, "struct.val");
     }
 
+    private LLVMValueRef GenerateUnionLiteral(SemaUnionLiteral unionLit)
+    {
+        var unionType = unionLit.UnionType;
+        var llvmUnionType = ConvertType(unionType);
+
+        // Allocate union on stack
+        var alloca = _builder.BuildAlloca(llvmUnionType, "union");
+
+        // Generate the value
+        var fieldValue = GenerateExpression(unionLit.Value);
+
+        // Store the value at the beginning of the union (all fields share the same memory)
+        var indices = new[] {
+            LLVMValueRef.CreateConstInt(_ctx.Int64Type, 0, false),
+            LLVMValueRef.CreateConstInt(_ctx.Int64Type, 0, false)
+        };
+        var fieldPtr = _builder.BuildInBoundsGEP2(llvmUnionType, alloca, indices, "union.field.ptr");
+        _builder.BuildStore(fieldValue, fieldPtr);
+
+        return _builder.BuildLoad2(llvmUnionType, alloca, "union.val");
+    }
+
     private LLVMValueRef GenerateFieldAccess(SemaFieldAccessExpr fieldAccess)
     {
         // For field access, we need to:
@@ -928,6 +951,10 @@ public sealed class CodeGenerator : IDisposable
         }
 
         var llvmTargetType = ConvertType(targetType);
+        var fieldType = ConvertType(fieldAccess.Type);
+
+        // Check if this is a union field access
+        bool isUnionField = targetType is SemaUnionType;
 
         // Get pointer to the target
         LLVMValueRef targetPtr;
@@ -960,16 +987,23 @@ public sealed class CodeGenerator : IDisposable
                 break;
         }
 
+        if (isUnionField)
+        {
+            // For union field access, we need to bitcast the pointer to the field type
+            var fieldPtrType = LLVMTypeRef.CreatePointer(fieldType, 0);
+            var bitcastPtr = _builder.BuildBitCast(targetPtr, fieldPtrType, "union.field.ptr");
+            return _builder.BuildLoad2(fieldType, bitcastPtr, fieldAccess.FieldName);
+        }
+
         // Use GEP to get pointer to the field
         var indices = new[] {
             LLVMValueRef.CreateConstInt(_ctx.Int64Type, 0, false),
             LLVMValueRef.CreateConstInt(_ctx.Int64Type, (ulong)fieldAccess.FieldIndex, false)
         };
-        var fieldPtr = _builder.BuildInBoundsGEP2(llvmTargetType, targetPtr, indices, "field.ptr");
+        var structFieldPtr = _builder.BuildInBoundsGEP2(llvmTargetType, targetPtr, indices, "field.ptr");
 
         // Load the field value
-        var fieldType = ConvertType(fieldAccess.Type);
-        return _builder.BuildLoad2(fieldType, fieldPtr, fieldAccess.FieldName);
+        return _builder.BuildLoad2(fieldType, structFieldPtr, fieldAccess.FieldName);
     }
 
     private LLVMValueRef GenerateIndexExpr(SemaIndexExpr indexExpr)
@@ -1098,6 +1132,7 @@ public sealed class CodeGenerator : IDisposable
                 structType.Fields.Select(f => ConvertType(f.Type)).ToArray(),
                 false
             ),
+            SemaUnionType unionType => GenerateUnionType(unionType),
             SemaNamedType namedType => namedType.UnderlyingType != null
                 ? ConvertType(namedType.UnderlyingType)
                 : _ctx.Int8Type,
@@ -1107,5 +1142,20 @@ public sealed class CodeGenerator : IDisposable
             ),
             _ => _ctx.Int32Type
         };
+    }
+
+    private LLVMTypeRef GenerateUnionType(SemaUnionType unionType)
+    {
+        if (unionType.Fields.Count == 0)
+            return LLVMTypeRef.CreateStruct([], false);
+
+        // Find the largest field
+        var largestField = unionType.Fields
+            .OrderByDescending(f => f.Type.SizeBytes)
+            .First();
+
+        // Create a struct with the largest field type as the storage
+        // This ensures proper alignment for the union
+        return LLVMTypeRef.CreateStruct([ConvertType(largestField.Type)], false);
     }
 }

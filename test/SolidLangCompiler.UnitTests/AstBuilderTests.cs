@@ -806,6 +806,50 @@ public class AstBuilderTests
         var unary = varDecl.Initializer.As<UnaryExpressionNode>();
         unary.Operator.Should().Be(UnaryOperator.MutRef);
     }
+
+    [Fact]
+    public void AstBuilder_ShouldBuildUnionDeclaration()
+    {
+        var source = """
+            namespace app;
+            union Value {
+                int_val: i32,
+                float_val: f64,
+            }
+            """;
+        var ast = BuildAst(source);
+
+        ast.Declarations![0].Should().BeOfType<UnionDeclarationNode>();
+        var unionDecl = ast.Declarations[0].As<UnionDeclarationNode>();
+        unionDecl.Name.Should().Be("Value");
+        unionDecl.Fields.Should().HaveCount(2);
+        unionDecl.Fields![0].Name.Should().Be("int_val");
+        unionDecl.Fields[1].Name.Should().Be("float_val");
+    }
+
+    [Fact]
+    public void AstBuilder_ShouldBuildUnionLiteral()
+    {
+        var source = """
+            namespace app;
+            union Value {
+                int_val: i32,
+                float_val: f64,
+            }
+            func test(): i32 {
+                var v = Value::int_val(42);
+                return 0;
+            }
+            """;
+        var ast = BuildAst(source);
+
+        var func = ast.Declarations![1].As<FuncDeclarationNode>();
+        var varDecl = func.Body!.Statements[0].As<VarDeclStatementNode>();
+        varDecl.Initializer.Should().BeOfType<UnionLiteralNode>();
+        var unionLit = varDecl.Initializer.As<UnionLiteralNode>();
+        unionLit.Type.Name.Should().Be("Value");
+        unionLit.FieldName.Should().Be("int_val");
+    }
 }
 
 file static class AstExtensions

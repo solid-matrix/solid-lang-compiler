@@ -758,4 +758,94 @@ public class CompilationTests : IDisposable
 
         semanticTree.IsSuccessful.Should().BeTrue();
     }
+
+    [Fact]
+    public void Compile_ShouldHandleUnionDeclaration()
+    {
+        var sourcePath = WriteSourceFile("union_decl.solid", """
+            namespace app;
+
+            union Value {
+                int_val: i32,
+                float_val: f64,
+            }
+
+            func test(): i32 {
+                var v = Value::int_val(42);
+                return 0;
+            }
+            """);
+
+        using var analyzer = new SemanticAnalyzer();
+        var semanticTree = analyzer.Analyze(File.ReadAllText(sourcePath), sourcePath);
+
+        semanticTree.IsSuccessful.Should().BeTrue();
+
+        using var codeGen = new CodeGenerator();
+        var outputPath = Path.Combine(_tempDir, "union_decl");
+        codeGen.GenerateIr(semanticTree, outputPath + ".ll", CodeGenerator.DefaultTriple);
+
+        File.Exists(outputPath + ".ll").Should().BeTrue();
+        var irContent = File.ReadAllText(outputPath + ".ll");
+        // Union is generated as an anonymous struct with the largest field type
+        irContent.Should().Contain("define i32 @test()");
+    }
+
+    [Fact]
+    public void Compile_ShouldHandleUnionLiteral()
+    {
+        var sourcePath = WriteSourceFile("union_lit.solid", """
+            namespace app;
+
+            union Value {
+                int_val: i32,
+                float_val: f64,
+            }
+
+            func test(): i32 {
+                var v = Value::int_val(42);
+                return 0;
+            }
+            """);
+
+        using var analyzer = new SemanticAnalyzer();
+        var semanticTree = analyzer.Analyze(File.ReadAllText(sourcePath), sourcePath);
+
+        semanticTree.IsSuccessful.Should().BeTrue();
+
+        using var codeGen = new CodeGenerator();
+        var outputPath = Path.Combine(_tempDir, "union_lit");
+        codeGen.GenerateIr(semanticTree, outputPath + ".ll", CodeGenerator.DefaultTriple);
+
+        File.Exists(outputPath + ".ll").Should().BeTrue();
+    }
+
+    [Fact]
+    public void Compile_ShouldHandleUnionFieldAccess()
+    {
+        var sourcePath = WriteSourceFile("union_access.solid", """
+            namespace app;
+
+            union Value {
+                int_val: i32,
+                float_val: f64,
+            }
+
+            func test(): i32 {
+                var v = Value::int_val(42);
+                return v.int_val;
+            }
+            """);
+
+        using var analyzer = new SemanticAnalyzer();
+        var semanticTree = analyzer.Analyze(File.ReadAllText(sourcePath), sourcePath);
+
+        semanticTree.IsSuccessful.Should().BeTrue();
+
+        using var codeGen = new CodeGenerator();
+        var outputPath = Path.Combine(_tempDir, "union_access");
+        codeGen.GenerateIr(semanticTree, outputPath + ".ll", CodeGenerator.DefaultTriple);
+
+        File.Exists(outputPath + ".ll").Should().BeTrue();
+    }
 }

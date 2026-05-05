@@ -115,18 +115,18 @@
 
 ---
 
-### Iteration 8: 联合体 (union)
+### Iteration 8: 联合体 (union) ✅ 已完成
 **目标**: 实现 union 类型
 
 **任务**:
-1. AST 添加 UnionDeclarationNode, UnionLiteralNode
-2. SemanticTree 添加 SemaUnionType
-3. SemaBuilder 处理 union 声明
-4. SemaBuilder 处理 union 字面量 `TypeName::field(value)`
-5. CodeGenerator 生成 union 类型 (使用足够大的存储)
-6. 添加测试
+1. AST 添加 UnionDeclarationNode, UnionLiteralNode ✅ (已存在)
+2. SemanticTree 添加 SemaUnionType ✅
+3. SemaBuilder 处理 union 声明 ✅
+4. SemaBuilder 处理 union 字面量 `TypeName::field(value)` ✅
+5. CodeGenerator 生成 union 类型 (使用足够大的存储) ✅
+6. 添加测试 ✅
 
-**验证**: 能声明和使用 union 类型
+**验证**: 能声明和使用 union 类型 ✅
 
 ---
 

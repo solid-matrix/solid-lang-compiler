@@ -36,6 +36,11 @@ public class SemaProgram
     public IReadOnlyList<SemaEnumType> Enums { get; init; } = [];
 
     /// <summary>
+    /// All union types.
+    /// </summary>
+    public IReadOnlyList<SemaUnionType> Unions { get; init; } = [];
+
+    /// <summary>
     /// List of errors encountered during semantic analysis.
     /// </summary>
     public List<SemanticError> Errors { get; set; } = [];

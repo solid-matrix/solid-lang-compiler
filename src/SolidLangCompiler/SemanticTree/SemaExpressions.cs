@@ -279,3 +279,14 @@ public record SemaStructLiteralField(string Name, SemaExpression Value)
 {
     public override string ToString() => $"{Name} = {Value}";
 }
+
+/// <summary>
+/// Union literal expression Type::field(value).
+/// </summary>
+public record SemaUnionLiteral : SemaExpression
+{
+    public required SemaUnionType UnionType { get; init; }
+    public required string FieldName { get; init; }
+    public required SemaExpression Value { get; init; }
+    public override string ToString() => $"{UnionType.Name}::{FieldName}({Value})";
+}

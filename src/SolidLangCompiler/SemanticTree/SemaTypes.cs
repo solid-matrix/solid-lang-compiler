@@ -163,3 +163,19 @@ public record SemaNamedType(string FullyQualifiedName, SemaType? UnderlyingType)
     public override int SizeBytes => UnderlyingType?.SizeBytes ?? 0;
     public override string ToString() => FullyQualifiedName;
 }
+
+/// <summary>
+/// Represents a named union type.
+/// Union size is determined by the largest field.
+/// </summary>
+public record SemaUnionType(string Name, IReadOnlyList<SemaUnionField> Fields) : SemaType
+{
+    public override int SizeBytes => Fields.Count > 0 ? Fields.Max(f => f.Type.SizeBytes) : 0;
+    public override string ToString() => Name;
+}
+
+/// <summary>
+/// Represents a field in a union.
+/// All fields share the same memory location (offset 0).
+/// </summary>
+public record SemaUnionField(string Name, SemaType Type);

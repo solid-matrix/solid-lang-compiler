@@ -18,6 +18,7 @@ public class SemaBuilder
     private readonly List<SemaGlobal> _globals = new();
     private readonly List<SemaStructType> _structs = new();
     private readonly List<SemaEnumType> _enums = new();
+    private readonly List<SemaUnionType> _unions = new();
     private readonly Dictionary<string, int> _localIndices = new();
     private readonly Dictionary<string, SemaType> _localTypes = new();
     private int _localCount;
@@ -33,6 +34,7 @@ public class SemaBuilder
         _globals.Clear();
         _structs.Clear();
         _enums.Clear();
+        _unions.Clear();
 
         // Collect all declarations first
         CollectDeclarations(ast);
@@ -51,6 +53,7 @@ public class SemaBuilder
             Globals = _globals,
             Structs = _structs,
             Enums = _enums,
+            Unions = _unions,
             Errors = _errors,
             Warnings = _warnings
         };
@@ -67,6 +70,9 @@ public class SemaBuilder
                     break;
                 case EnumDeclarationNode enumDecl:
                     _enums.Add(BuildEnumType(enumDecl));
+                    break;
+                case UnionDeclarationNode unionDecl:
+                    _unions.Add(BuildUnionType(unionDecl));
                     break;
             }
         }
@@ -549,6 +555,7 @@ public class SemaBuilder
             ArrayLiteralNode arrLit => BuildArrayLiteral(arrLit),
             StructLiteralNode structLit => BuildStructLiteral(structLit),
             EnumLiteralNode enumLit => BuildEnumLiteral(enumLit),
+            UnionLiteralNode unionLit => BuildUnionLiteral(unionLit),
             FieldAccessExpressionNode fieldAccess => BuildFieldAccess(fieldAccess),
             IndexExpressionNode indexExpr => BuildIndexExpr(indexExpr),
             _ => BuildExpressionFallback(node)
@@ -910,13 +917,48 @@ public class SemaBuilder
         };
     }
 
+    private SemaExpression? BuildUnionLiteral(UnionLiteralNode node)
+    {
+        // Find the union type
+        var unionType = _unions.FirstOrDefault(u => u.Name == node.Type.Name);
+        if (unionType == null)
+        {
+            _errors.Add(new SemanticError($"Unknown union type: {node.Type.Name}",
+                ConvLoc(node.Location)));
+            return null;
+        }
+
+        // Find the field
+        var field = unionType.Fields.FirstOrDefault(f => f.Name == node.FieldName);
+        if (field == null)
+        {
+            _errors.Add(new SemanticError($"Unknown union field: {node.Type.Name}::{node.FieldName}",
+                ConvLoc(node.Location)));
+            return null;
+        }
+
+        // Build the value expression
+        var value = BuildExpression(node.Value);
+        if (value == null)
+            return null;
+
+        return new SemaUnionLiteral
+        {
+            UnionType = unionType,
+            FieldName = node.FieldName,
+            Value = value,
+            Type = unionType,
+            Location = ConvLoc(node.Location)
+        };
+    }
+
     private SemaExpression? BuildFieldAccess(FieldAccessExpressionNode node)
     {
         var target = BuildExpression(node.Target);
         if (target == null)
             return null;
 
-        // Get the struct type from the target
+        // Check for struct type
         SemaStructType? structType = null;
         if (target.Type is SemaStructType st)
         {
@@ -927,41 +969,74 @@ public class SemaBuilder
             structType = underlying;
         }
 
-        if (structType == null)
+        // Check for union type
+        SemaUnionType? unionType = null;
+        if (target.Type is SemaUnionType ut)
         {
-            _errors.Add(new SemanticError($"Cannot access field '{node.FieldName}' on non-struct type {target.Type}",
-                ConvLoc(node.Location)));
-            return null;
+            unionType = ut;
+        }
+        else if (target.Type is SemaNamedType namedType2 && namedType2.UnderlyingType is SemaUnionType underlyingUnion)
+        {
+            unionType = underlyingUnion;
         }
 
-        // Find the field
-        var fieldIndex = -1;
-        SemaStructField? field = null;
-        for (int i = 0; i < structType.Fields.Count; i++)
+        if (structType != null)
         {
-            if (structType.Fields[i].Name == node.FieldName)
+            // Find the field in struct
+            var fieldIndex = -1;
+            SemaStructField? field = null;
+            for (int i = 0; i < structType.Fields.Count; i++)
             {
-                fieldIndex = i;
-                field = structType.Fields[i];
-                break;
+                if (structType.Fields[i].Name == node.FieldName)
+                {
+                    fieldIndex = i;
+                    field = structType.Fields[i];
+                    break;
+                }
             }
+
+            if (field == null)
+            {
+                _errors.Add(new SemanticError($"Struct '{structType.Name}' has no field '{node.FieldName}'",
+                    ConvLoc(node.Location)));
+                return null;
+            }
+
+            return new SemaFieldAccessExpr
+            {
+                Target = target,
+                FieldName = node.FieldName,
+                FieldIndex = fieldIndex,
+                Type = field.Type,
+                Location = ConvLoc(node.Location)
+            };
         }
 
-        if (field == null)
+        if (unionType != null)
         {
-            _errors.Add(new SemanticError($"Struct '{structType.Name}' has no field '{node.FieldName}'",
-                ConvLoc(node.Location)));
-            return null;
+            // Find the field in union
+            var field = unionType.Fields.FirstOrDefault(f => f.Name == node.FieldName);
+            if (field == null)
+            {
+                _errors.Add(new SemanticError($"Union '{unionType.Name}' has no field '{node.FieldName}'",
+                    ConvLoc(node.Location)));
+                return null;
+            }
+
+            // Union field access - all fields are at index 0
+            return new SemaFieldAccessExpr
+            {
+                Target = target,
+                FieldName = node.FieldName,
+                FieldIndex = 0, // All union fields share the same memory location
+                Type = field.Type,
+                Location = ConvLoc(node.Location)
+            };
         }
 
-        return new SemaFieldAccessExpr
-        {
-            Target = target,
-            FieldName = node.FieldName,
-            FieldIndex = fieldIndex,
-            Type = field.Type,
-            Location = ConvLoc(node.Location)
-        };
+        _errors.Add(new SemanticError($"Cannot access field '{node.FieldName}' on non-struct/union type {target.Type}",
+            ConvLoc(node.Location)));
+        return null;
     }
 
     private SemaExpression? BuildIndexExpr(IndexExpressionNode node)
@@ -1064,6 +1139,19 @@ public class SemaBuilder
         };
     }
 
+    private SemaUnionType BuildUnionType(UnionDeclarationNode node)
+    {
+        var fields = new List<SemaUnionField>();
+
+        foreach (var field in node.Fields ?? [])
+        {
+            var fieldType = ResolveType(field.Type) ?? new SemaIntType(SemaIntegerKind.I32);
+            fields.Add(new SemaUnionField(field.Name, fieldType));
+        }
+
+        return new SemaUnionType(node.Name, fields);
+    }
+
     private SemaType? ResolveType(TypeNode node)
     {
         return node switch
@@ -1093,6 +1181,10 @@ public class SemaBuilder
         var enumType = _enums.FirstOrDefault(e => e.Name == node.Name);
         if (enumType != null)
             return enumType;
+
+        var unionType = _unions.FirstOrDefault(u => u.Name == node.Name);
+        if (unionType != null)
+            return unionType;
 
         return new SemaNamedType(node.FullyQualifiedName, null);
     }
