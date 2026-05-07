@@ -1,0 +1,51 @@
+
+@import
+func malloc(size: usize)cdecl:*opaque;
+
+@import
+func create_window(size: usize)stdcall:*opaque;
+
+@export
+func add(a: i32, b: i32)cdecl:i32{
+    return a+b;
+}
+
+func get_size<T>(value: T):usize{
+    return @sizeof(T);
+}
+
+func flat<T>(value: List<List<T>>):List<T>{
+    return List<T>::new();
+}
+
+func flat<List<List<i32>>>(value: List<List<i32>>):List<i32>{
+    return List<i32>::new();
+}
+
+struct Vector2{
+    x: f32,
+    y: f32,
+}
+
+struct Vector2<T>{
+    x: T,
+    y: T,
+}
+
+@hint(NOTHING)
+func Vector2::add(left: Vector2, right: Vector2):Vector2{
+    return Vector2{x = left.x + right.x, y = left.y + right.y };
+}
+
+func Vector2<T>::add(left: Vector2<T>, right: Vector2<T>): Vector2<T> where T:IAdd<T,T,T>{
+    return Vector2<T>{x = left.x + right.x, y = left.y + right.y };
+}
+
+func resursive(n: i32):i32{
+    if n <= 0 {return 1;}
+    return resursive(i-1) + resursive(i-2);
+}
+
+func main(args: Slice<String>):i32{
+    return 0;
+}
