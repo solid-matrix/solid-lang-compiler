@@ -1,8 +1,6 @@
 <Solution>
-    <Project
-            Path="src/SolidLangCompiler/SolidLangCompiler.csproj"/>
-    <Project
-            Path="test/SolidLangCompiler.UnitTests/SolidLangCompiler.UnitTests.csproj"/>
-    <Project
-            Path="test/SolidLangCompiler.IntegrationTests/SolidLangCompiler.IntegrationTests.csproj"/>
+    <Project Path="src/SolidLang.Compiler/SolidLang.Compiler.csproj" />
+    <Project Path="src/SolidLangCompiler/SolidLangCompiler.csproj" />
+    <Project Path="test/SolidLangCompiler.UnitTests/SolidLangCompiler.UnitTests.csproj" />
+    <Project Path="test/SolidLangCompiler.IntegrationTests/SolidLangCompiler.IntegrationTests.csproj" />
 </Solution>
