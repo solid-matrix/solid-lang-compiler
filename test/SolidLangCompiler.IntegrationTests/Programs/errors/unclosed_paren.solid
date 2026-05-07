@@ -1,5 +1,0 @@
-namespace app;
-
-func main( {
-    return 0;
-}

@@ -1,5 +1,0 @@
-namespace app;
-using std;
-using collections.list;
-
-func main(): i32 { return 0; }

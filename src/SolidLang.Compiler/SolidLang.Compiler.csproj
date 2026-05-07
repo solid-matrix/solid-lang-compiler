@@ -10,7 +10,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Antlr4.Runtime.Standard" Version="4.13.1"/>
+        <ProjectReference Include="..\SolidLang.Parser\SolidLang.Parser.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="libLLVM" Version="21.1.8"/>
         <PackageReference Include="LLVMSharp" Version="20.1.2"/>
     </ItemGroup>
@@ -22,12 +25,6 @@
         <PackageReference Include="libLLVM.runtime.osx-x64" Version="18.1.3"/>
         <PackageReference Include="libLLVM.runtime.win-arm64" Version="21.1.8"/>
         <PackageReference Include="libLLVM.runtime.win-x64" Version="21.1.8"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Folder Include="ASTNodes\"/>
-        <Folder Include="CSTNodes\"/>
-        <Folder Include="IRTNodes\"/>
     </ItemGroup>
 
 </Project>

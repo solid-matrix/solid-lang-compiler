@@ -1,0 +1,20 @@
+@sealed
+union DynamicVariable{
+    as_i32: i32,
+    as_f32: f32,
+}
+
+union RawOptional<T>{
+    value: T,
+    none: *opaque,
+}
+
+const RawOptional<T>::None = RawOptional<T>::none(null);
+
+func RawOptional<T>::Value(value: T):RawOptional<T>{
+    return RawOptional::value(value);
+}
+
+func RawOptional<T>::is_none(self: RawOptional<T>):bool{
+    return self.none == null;
+}

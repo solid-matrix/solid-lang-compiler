@@ -1,0 +1,4 @@
+/// it is a document
+func main():i32{
+    return 0; // it is a comment
+}

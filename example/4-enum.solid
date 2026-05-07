@@ -1,0 +1,23 @@
+enum Color{
+    Red,
+    Green,
+    Blue,
+}
+
+@flags
+enum WindowFlags:u32{
+    Resizable = 0x0001,
+    Hidden = 0x0002,
+    Maximum = 0x0004,
+    Minimum = 0x0008,
+}
+
+func WindowFlags::Set(self: *WindowFlags, flags: WindowFlags){
+    *self |= flags;
+}
+
+func WindowFlags::Reset(self: *WindowFlags, flags: WindowFlags){
+    *self &= ~flags;
+}
+
+const WindowFlags::Default = WindowFlags::Resizable | WindowFlags::Hidden;

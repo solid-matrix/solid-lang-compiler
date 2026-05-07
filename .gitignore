@@ -10,6 +10,7 @@ riderModule.iml
 .vscode
 .claude
 .cache
+.archive
 *.ll
 *.o
 *.exe

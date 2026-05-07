@@ -1,0 +1,4 @@
+variant Result<TValue, TError>{
+    Okay: TValue,
+    Fault: TError,
+}

@@ -1,0 +1,8 @@
+namespace main;
+
+using std::math;
+using std::core;
+
+func main(args: Slice<String>):i32{
+    return 0;
+}

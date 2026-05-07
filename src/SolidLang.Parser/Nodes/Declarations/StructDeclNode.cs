@@ -1,0 +1,122 @@
+using SolidLang.Parser.Nodes.Types;
+
+namespace SolidLang.Parser.Nodes.Declarations;
+
+/// <summary>
+/// Represents a struct declaration: struct Name&lt;T&gt; where T: Trait { fields }
+/// </summary>
+public sealed class StructDeclNode : DeclNode
+{
+    public CtAnnotatesNode? Annotations { get; }
+    public string Name { get; }
+    public GenericParamsNode? GenericParams { get; }
+    public WhereClausesNode? WhereClauses { get; }
+    public StructFieldsNode? Fields { get; }
+    public bool IsForwardDecl { get; }
+    private readonly TextSpan _span;
+    private readonly string _fullText;
+
+    public StructDeclNode(
+        CtAnnotatesNode? annotations,
+        string name,
+        GenericParamsNode? genericParams,
+        WhereClausesNode? whereClauses,
+        StructFieldsNode? fields,
+        bool isForwardDecl,
+        TextSpan span,
+        string fullText)
+    {
+        Annotations = annotations;
+        Name = name;
+        GenericParams = genericParams;
+        WhereClauses = whereClauses;
+        Fields = fields;
+        IsForwardDecl = isForwardDecl;
+        _span = span;
+        _fullText = fullText;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.StructDeclNode;
+    public override TextSpan Span => _span;
+
+    public override IEnumerable<SyntaxNode> GetChildren()
+    {
+        if (Annotations != null)
+            yield return Annotations;
+        if (GenericParams != null)
+            yield return GenericParams;
+        if (WhereClauses != null)
+            yield return WhereClauses;
+        if (Fields != null)
+            yield return Fields;
+    }
+
+    public override string GetFullText() => _fullText;
+
+    protected override void WriteAdditionalInfo(TextWriter writer)
+    {
+        writer.Write($" [{Name}]");
+    }
+}
+
+/// <summary>
+/// Represents struct fields: field1: type1, field2: type2, ...
+/// </summary>
+public sealed class StructFieldsNode : SyntaxNode
+{
+    public IReadOnlyList<StructFieldNode> Fields { get; }
+    private readonly TextSpan _span;
+    private readonly string _fullText;
+
+    public StructFieldsNode(IReadOnlyList<StructFieldNode> fields, TextSpan span, string fullText)
+    {
+        Fields = fields;
+        _span = span;
+        _fullText = fullText;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.StructFieldsNode;
+    public override TextSpan Span => _span;
+
+    public override IEnumerable<SyntaxNode> GetChildren() => Fields;
+
+    public override string GetFullText() => _fullText;
+}
+
+/// <summary>
+/// Represents a struct field: name: type
+/// </summary>
+public sealed class StructFieldNode : SyntaxNode
+{
+    public CtAnnotatesNode? Annotations { get; }
+    public string Name { get; }
+    public TypeNode Type { get; }
+    private readonly TextSpan _span;
+    private readonly string _fullText;
+
+    public StructFieldNode(CtAnnotatesNode? annotations, string name, TypeNode type, TextSpan span, string fullText)
+    {
+        Annotations = annotations;
+        Name = name;
+        Type = type;
+        _span = span;
+        _fullText = fullText;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.StructFieldNode;
+    public override TextSpan Span => _span;
+
+    public override IEnumerable<SyntaxNode> GetChildren()
+    {
+        if (Annotations != null)
+            yield return Annotations;
+        yield return Type;
+    }
+
+    public override string GetFullText() => _fullText;
+
+    protected override void WriteAdditionalInfo(TextWriter writer)
+    {
+        writer.Write($" [{Name}]");
+    }
+}

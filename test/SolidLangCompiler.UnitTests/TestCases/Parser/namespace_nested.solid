@@ -1,3 +1,0 @@
-namespace foo.bar.baz;
-
-func main(): i32 { return 0; }

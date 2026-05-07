@@ -1,7 +1,0 @@
-namespace app;
-
-func generic_func[T, U](a: T, b: U): T {
-    return a;
-}
-
-func main(): i32 { return 0; }
