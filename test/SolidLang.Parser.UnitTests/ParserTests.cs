@@ -196,6 +196,116 @@ public class ParserTests
         Assert.NotNull(program);
     }
 
+    [Fact]
+    public void Parse_9_Function_ShouldSucceed()
+    {
+        var (program, hasErrors, diagnostics) = ParseFile("9-function.solid");
+
+        if (hasErrors)
+        {
+            foreach (var d in diagnostics)
+                Console.WriteLine($"Diagnostic: {d}");
+        }
+
+        Assert.False(hasErrors, diagnostics.FirstOrDefault()?.ToString() ?? "Unknown error");
+        Assert.NotNull(program);
+
+        var funcs = program.Declarations.OfType<FunctionDeclNode>().ToList();
+        var structs = program.Declarations.OfType<StructDeclNode>().ToList();
+
+        Assert.True(funcs.Count >= 8, $"Should have at least 8 functions, got {funcs.Count}");
+        Assert.Equal(2, structs.Count);
+
+        // Verify key function names are present
+        var names = funcs.Select(f => f.Name).ToHashSet();
+        Assert.Contains("malloc", names);
+        Assert.Contains("create_window", names);
+        Assert.Contains("add", names);
+        Assert.Contains("get_size", names);
+        Assert.Contains("flat", names);
+        Assert.Contains("resursive", names);
+        Assert.Contains("main", names);
+    }
+
+    [Fact]
+    public void Parse_9a_FunctionDetails()
+    {
+        var (program, hasErrors, diagnostics) = ParseFile("9-function.solid");
+        Assert.False(hasErrors, diagnostics.FirstOrDefault()?.ToString() ?? "Unknown error");
+
+        var funcs = program.Declarations.OfType<FunctionDeclNode>().ToList();
+
+        // @import func malloc(size: usize)cdecl:*opaque;
+        var malloc = funcs.First(f => f.Name == "malloc");
+        Assert.True(malloc.IsForwardDecl);
+        Assert.NotNull(malloc.Annotations);
+        Assert.NotNull(malloc.CallingConvention);
+        Assert.Equal(SyntaxKind.CDeclKeyword, malloc.CallingConvention!.Convention);
+
+        // @import func create_window(size: usize)stdcall:*opaque;
+        var createWindow = funcs.First(f => f.Name == "create_window");
+        Assert.True(createWindow.IsForwardDecl);
+        Assert.NotNull(createWindow.CallingConvention);
+        Assert.Equal(SyntaxKind.StdCallKeyword, createWindow.CallingConvention!.Convention);
+
+        // @export func add(a: i32, b: i32)cdecl:i32{ return a+b; }
+        var add = funcs.First(f => f.Name == "add" && f.NamespacePrefix == null && f.WhereClauses == null);
+        Assert.False(add.IsForwardDecl);
+        Assert.NotNull(add.Body);
+        Assert.NotNull(add.Parameters);
+        Assert.Equal(2, add.Parameters!.Parameters.Count);
+
+        // func get_size<T>(value: T):usize{ ... }
+        var getSize = funcs.First(f => f.Name == "get_size");
+        Assert.NotNull(getSize.GenericParams);
+        Assert.Single(getSize.GenericParams!.Parameters);
+
+        // func flat<T>(value: List<List<T>>):List<T>{ ... }
+        var flat = funcs.First(f => f.Name == "flat" && f.GenericParams != null);
+        Assert.NotNull(flat.Parameters);
+        Assert.Single(flat.Parameters!.Parameters);
+
+        // func main(args: Slice<String>):i32{ return 0; }
+        var main = funcs.Last(f => f.Name == "main");
+        Assert.NotNull(main.Parameters);
+        Assert.Single(main.Parameters!.Parameters);
+        Assert.Equal("args", main.Parameters.Parameters[0].Name);
+
+        // func resursive(n: i32):i32{ if n <= 0 {return 1;} ... }
+        var recursive = funcs.First(f => f.Name == "resursive");
+        Assert.NotNull(recursive.Body);
+
+        // func Vector2::add — extension method with namespace prefix
+        var vecAdd2 = funcs.FirstOrDefault(f => f.Name == "add" && f.NamespacePrefix != null);
+        Assert.NotNull(vecAdd2);
+        Assert.NotNull(vecAdd2.Body);
+
+        // func Vector2<T>::add — generic extension method with where clause
+        var vecAddT = funcs.FirstOrDefault(f => f.Name == "add" && f.WhereClauses != null);
+        Assert.NotNull(vecAddT);
+        Assert.NotNull(vecAddT.GenericParams);
+        Assert.NotNull(vecAddT.WhereClauses);
+        Assert.Single(vecAddT.WhereClauses!.Clauses);
+        Assert.Equal("T", vecAddT.WhereClauses.Clauses[0].TypeParamName);
+    }
+
+    // Quick verification: parse all new example files
+    [Fact]
+    public void Parse_NewExamples_Verify()
+    {
+        foreach (var f in new[] { "10-operators.solid", "11-control-flow.solid", "12-pointers.solid", "13-interface.solid", "14-array.solid", "15-generics-edge.solid" })
+        {
+            var (program, hasErrors, diagnostics) = ParseFile(f);
+            Console.WriteLine($"\n=== {f} ===");
+            if (hasErrors)
+            {
+                foreach (var d in diagnostics)
+                    Console.WriteLine($"  ERROR: {d}");
+            }
+            Console.WriteLine($"  Declarations: {program.Declarations.Count}, HasErrors: {hasErrors}");
+        }
+    }
+
     // Mixed: generic and right shift
     [Fact]
     public void Parse_GenericAndRightShift_ShouldSucceed()

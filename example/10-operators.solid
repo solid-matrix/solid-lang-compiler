@@ -1,0 +1,84 @@
+// Test all operator categories
+
+func arithmetic_ops():i32{
+    var a = 10;
+    var b = 3;
+
+    // Binary arithmetic
+    var add = a + b;
+    var sub = a - b;
+    var mul = a * b;
+    var div = a / b;
+    var mod = a % b;
+
+    // Unary
+    var neg = -a;
+    var pos = +a;
+
+    return add + sub + mul + div + mod + neg + pos;
+}
+
+func bitwise_ops():u32{
+    var x: u32 = 0xFF;
+    var y: u32 = 0x0F;
+
+    // Bitwise binary
+    var or = x | y;
+    var xor = x ^ y;
+    var and = x & y;
+
+    // Shift
+    var shl = x << 2;
+    var shr = y >> 1;
+
+    // Bitwise not
+    var not = ~x;
+
+    return or ^ xor & and | shl | shr | not;
+}
+
+func comparison_ops(a: i32, b: i32):bool{
+    var eq = a == b;
+    var neq = a != b;
+    var lt = a < b;
+    var gt = a > b;
+    var le = a <= b;
+    var ge = a >= b;
+
+    return eq && neq && lt && gt && le && ge;
+}
+
+func logical_ops(a: bool, b: bool):bool{
+    var and = a && b;
+    var or = a || b;
+    var not = !a;
+
+    var combined = (a && !b) || (!a && b);
+    return combined;
+}
+
+func ternary_ops(cond: bool, a: i32, b: i32):i32{
+    return cond ? a : b;
+}
+
+func assignment_ops(){
+    var a = 0;
+
+    a = 10;
+    a += 1;
+    a -= 2;
+    a *= 3;
+    a /= 2;
+    a %= 3;
+
+    var b: u32 = 0;
+    b |= 0xFF;
+    b ^= 0x0F;
+    b &= 0xF0;
+    b <<= 2;
+    b >>= 1;
+}
+
+func main():i32{
+    return 0;
+}

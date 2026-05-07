@@ -21,6 +21,14 @@ public sealed class DiagnosticBag
         _diagnostics.AddRange(diagnostics);
     }
 
+    public int Count => _diagnostics.Count;
+
+    public void TruncateTo(int count)
+    {
+        if (count < _diagnostics.Count)
+            _diagnostics.RemoveRange(count, _diagnostics.Count - count);
+    }
+
     // ========================================
     // Lexical Errors
     // ========================================

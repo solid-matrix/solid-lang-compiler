@@ -228,7 +228,7 @@ public sealed partial class Parser
 
         // Generic arguments: <T1, T2, ...>
         TypeArgumentListNode? typeArgs = null;
-        if (Current == '<')
+        if (name.Length > 0 && Current == '<')
         {
             // ========================================
             // ENTER GENERIC CONTEXT
@@ -260,6 +260,7 @@ public sealed partial class Parser
             }
             else
             {
+                _genericDepth--;
                 _diagnostics.MissingGreaterThan(GetCurrentSpan());
             }
 

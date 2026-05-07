@@ -1,0 +1,53 @@
+// Interface declarations, generics with constraints, and @implements
+
+interface IHashable<T>{
+    func hash(self: T): u64;
+}
+
+interface IAdd<TLeft, TRight, TResult>{
+    func add(left: TLeft, right: TRight): TResult;
+}
+
+interface ICast<TFrom, TTo>{
+    func into(from: TFrom): TTo;
+    func from(value: TFrom): TTo;
+}
+
+interface IDefault<T>{
+    func default_value(): T;
+}
+
+// Generic interface with where clause
+interface IComparable<T> where T: IHashable<T>{
+    func compare(self: T, other: T): i32;
+}
+
+// Struct implementing multiple interfaces
+@implements(IHashable<Point>, IDefault<Point>)
+struct Point{
+    x: f32,
+    y: f32,
+}
+
+func Point::hash(self: Point): u64{
+    return 0;
+}
+
+func Point::default_value(): Point{
+    return Point{x = 0.0, y = 0.0};
+}
+
+// Struct with interface constraint via where clause
+@implements(IHashable<Pair<TKey, TValue>>)
+struct Pair<TKey, TValue> where TKey: IHashable<TKey>{
+    key: TKey,
+    value: TValue,
+}
+
+func Pair<TKey, TValue>::hash(self: Pair<TKey, TValue>): u64{
+    return self.key.hash();
+}
+
+func main():i32{
+    return 0;
+}

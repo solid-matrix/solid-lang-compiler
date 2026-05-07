@@ -877,6 +877,10 @@ public sealed partial class Parser
     {
         var start = _position;
         var savedPos = _position;
+        var savedDepth = _genericDepth;
+
+        // Save diagnostic count to allow rollback on speculative failure
+        var diagCount = _diagnostics.Count;
 
         // Try to parse as named type
         var namedType = ParseNamedType();
@@ -895,8 +899,10 @@ public sealed partial class Parser
         }
         else
         {
-            // Not a literal, backtrack
+            // Not a literal, backtrack — restore position, generic depth, and diagnostics
             _position = savedPos;
+            _genericDepth = savedDepth;
+            _diagnostics.TruncateTo(diagCount);
             return null;
         }
     }

@@ -1,0 +1,56 @@
+// Generic edge cases and >> ambiguity tests
+
+// Deeply nested generics with double >>
+func deep_nested(a: Map<String, List<Set<i32>>>):*opaque{
+    return null;
+}
+
+// Triple nesting
+func triple_nested(x: A<B<C<D>>>):*opaque{
+    return null;
+}
+
+// Generics with mixed types
+struct Container<T, U>{
+    first: T,
+    second: U,
+}
+
+// Multiple where clause constraints
+func combine<A, B, C>(a: A, b: B): C where A: IHashable<A>, B: IHashable<B>, C: IAdd<A, B, C>{
+    return C::default_value();
+}
+
+// Generics with pointer types
+func box_value<T>(value: T): *!T{
+    return null;
+}
+
+// Generic struct with complex where
+struct Map<K, V> where K: IHashable<K>{
+    entries: *opaque,
+}
+
+// Generics in return type only
+func make_pair<K, V>(key: K, value: V): Pair<K, V>{
+    return Pair<K, V>{key = key, value = value};
+}
+
+// Constraint that references multiple type params
+func compose<A, B, C>(a: A, f: *func(A): B, g: *func(B): C): C{
+    return (*g)((*f)(a));
+}
+
+// Generic with function pointer parameter
+func transform<T, U>(input: List<T>, mapper: *func(T): U): List<U>{
+    return List<U>::new();
+}
+
+// Extension method with generics
+func Container<T, U>::swap(self: *!Container<T, U>){
+    // placeholder
+}
+
+func main():i32{
+    return 0;
+}
