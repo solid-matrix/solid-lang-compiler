@@ -293,7 +293,7 @@ public class ParserTests
     [Fact]
     public void Parse_NewExamples_Verify()
     {
-        foreach (var f in new[] { "10-operators.solid", "11-control-flow.solid", "12-pointers.solid", "13-interface.solid", "14-array.solid", "15-generics-edge.solid" })
+        foreach (var f in new[] { "10-operators.solid", "11-for.solid", "12-if.solid", "13-switch.solid", "14-array.solid", "15-generics-edge.solid", "16-pointers.solid", "17-interface.solid" })
         {
             var (program, hasErrors, diagnostics) = ParseFile(f);
             Console.WriteLine($"\n=== {f} ===");

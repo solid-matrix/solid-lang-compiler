@@ -29,8 +29,8 @@ enum Color:u32{
 }
 
 func switch_enum(color: Color){
-    switch color{
-        Color::Red => print("red);
+    switch color {
+        Color::Red => print("red");
         Color::Black, Color::White => print("white or black");
         else => print("other");
     }
@@ -42,17 +42,17 @@ variant Result<TValue, TError>{
 }
 
 struct Error<T>{
-    OutOfRange: T
-    NullArgument: T
+    OutOfRange: T,
+    NullArgument: T,
 }
 
 struct Vector2<T>{
-    x: T，
+    x: T,
     y: T,
 }
 
 func switch_variant(result: Result<Vector2<f32>,Error<String>>){
-    switch result{
+    switch result {
         Result::Okay(value) => print(value);
         Result::Fault(error) => print(error);
     }

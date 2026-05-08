@@ -236,7 +236,21 @@ public sealed partial class Parser
         ExprNode? update = null;
         if (Current != '{')
         {
-            update = ParseExpression();
+            var updateExpr = ParseExpression();
+            SkipWhitespaceAndComments();
+            var assignOp = ParseAssignmentOperator();
+            if (assignOp != null)
+            {
+                SkipWhitespaceAndComments();
+                var value = ParseExpression();
+                var updateSpan = TextSpan.FromBounds(updateExpr.Span.Start, _position);
+                var updateText = _source.GetText(updateSpan);
+                update = new BinaryExprNode(updateExpr, assignOp.Value, value, updateSpan, updateText);
+            }
+            else
+            {
+                update = updateExpr;
+            }
         }
         SkipWhitespaceAndComments();
 
@@ -382,7 +396,7 @@ public sealed partial class Parser
     {
         var start = _position;
         bool isElse = false;
-        SwitchPatternNode? pattern = null;
+        var patterns = new List<SwitchPatternNode>();
 
         if (LookAheadKeyword("else"))
         {
@@ -391,7 +405,25 @@ public sealed partial class Parser
         }
         else
         {
-            pattern = ParseSwitchPattern();
+            // Parse first pattern
+            var firstPattern = ParseSwitchPattern();
+            if (firstPattern != null)
+                patterns.Add(firstPattern);
+
+            SkipWhitespaceAndComments();
+
+            // Handle comma-separated patterns: pattern1, pattern2, pattern3 => ...
+            while (Current == ',')
+            {
+                Advance();
+                SkipWhitespaceAndComments();
+
+                var nextPattern = ParseSwitchPattern();
+                if (nextPattern != null)
+                    patterns.Add(nextPattern);
+
+                SkipWhitespaceAndComments();
+            }
         }
 
         SkipWhitespaceAndComments();
@@ -403,7 +435,21 @@ public sealed partial class Parser
         }
         else
         {
-            _diagnostics.ExpectedToken(SyntaxKind.EqualsArrowToken, SyntaxKind.BadToken, GetCurrentSpan());
+            // Error recovery: if no patterns were parsed and => is missing, skip to safe point
+            if (patterns.Count == 0 && !isElse)
+            {
+                // Skip to next => or } or end of line to avoid infinite loop
+                while (Current != '\0' && Current != '}' && !(Current == '=' && Peek() == '>'))
+                    Advance();
+                if (Current == '=' && Peek() == '>')
+                {
+                    Advance(); Advance();
+                }
+            }
+            else
+            {
+                _diagnostics.ExpectedToken(SyntaxKind.EqualsArrowToken, SyntaxKind.BadToken, GetCurrentSpan());
+            }
         }
 
         SkipWhitespaceAndComments();
@@ -412,10 +458,10 @@ public sealed partial class Parser
 
         var span = GetSpanFrom(start);
         var text = _source.GetText(span);
-        return new SwitchArmNode(isElse, pattern, stmt, span, text);
+        return new SwitchArmNode(isElse, patterns, stmt, span, text);
     }
 
-    private SwitchPatternNode ParseSwitchPattern()
+    private SwitchPatternNode? ParseSwitchPattern()
     {
         var start = _position;
 
@@ -428,11 +474,11 @@ public sealed partial class Parser
             return new SwitchPatternNode(SwitchPatternKind.Literal, literal, null, null, null, null, span, text);
         }
 
-        // Try to parse as named type with member
+        // Try to parse as named type with member.
+        // Use ParseSimpleNamedType because in this context :: separates type from member.
         if (char.IsLetter(Current) || Current == '_')
         {
-            var savedPos = _position;
-            var namedType = ParseNamedType();
+            var namedType = ParseSimpleNamedType();
             SkipWhitespaceAndComments();
 
             if (Current == ':' && Peek() == ':')
@@ -472,16 +518,21 @@ public sealed partial class Parser
             }
             else
             {
-                // Just an identifier
-                _position = savedPos;
+                // Just an identifier — backtrack to let the identifier pattern handle it
+                _position = namedType.Span.Start;
             }
         }
 
         // Identifier pattern
-        var identifier = ScanIdentifier();
-        var span2 = GetSpanFrom(start);
-        var text2 = _source.GetText(span2);
-        return new SwitchPatternNode(SwitchPatternKind.Identifier, null, null, null, null, identifier, span2, text2);
+        if (char.IsLetter(Current) || Current == '_')
+        {
+            var identifier = ScanIdentifier();
+            var span2 = GetSpanFrom(start);
+            var text2 = _source.GetText(span2);
+            return new SwitchPatternNode(SwitchPatternKind.Identifier, null, null, null, null, identifier, span2, text2);
+        }
+
+        return null;
     }
 
     private BreakStmtNode ParseBreakStmt(int start)

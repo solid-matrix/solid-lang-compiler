@@ -863,14 +863,45 @@ public sealed partial class Parser
 
     private ArrayLiteralNode? TryParseArrayLiteral()
     {
-        // This is called when we see '[' at the start of an expression
-        // Need to distinguish between array literal and array index
-        // Array literal: [size]type{ ... }
-        // This should be parsed in the context where a literal is expected
+        // Array literal: [size]type{ elements... }
+        // In expression context, [ at the start must be an array literal
+        // (index access is handled in ParsePostfixExpr)
+        var start = _position;
+        var savedPos = _position;
 
-        // For now, we'll handle this in the specific context
-        // (array literals are less common than index expressions)
-        return null;
+        var arrayType = ParseArrayType();
+        SkipWhitespaceAndComments();
+
+        if (Current != '{')
+        {
+            // Not an array literal — backtrack
+            _position = savedPos;
+            return null;
+        }
+
+        Advance(); // Skip {
+        SkipWhitespaceAndComments();
+
+        var elements = new List<ExprNode>();
+        if (Current != '}')
+        {
+            elements.Add(ParseExpression());
+            SkipWhitespaceAndComments();
+
+            while (Current == ',')
+            {
+                Advance();
+                SkipWhitespaceAndComments();
+                elements.Add(ParseExpression());
+                SkipWhitespaceAndComments();
+            }
+        }
+
+        Expect('}');
+
+        var span = GetSpanFrom(start);
+        var text = _source.GetText(span);
+        return new ArrayLiteralNode(arrayType, elements, span, text);
     }
 
     private LiteralNode? TryParseCompositeLiteral()
@@ -882,17 +913,30 @@ public sealed partial class Parser
         // Save diagnostic count to allow rollback on speculative failure
         var diagCount = _diagnostics.Count;
 
-        // Try to parse as named type
-        var namedType = ParseNamedType();
+        // Try to parse as a simple named type (no namespace prefix).
+        // We use ParseSimpleNamedType because in this context :: separates type from member,
+        // not namespace from type.
+        if (!char.IsLetter(Current) && Current != '_')
+            return null;
+
+        var namedType = ParseSimpleNamedType();
         SkipWhitespaceAndComments();
 
+        var hasWhitespaceAfterName = namedType.Span.Length > 0
+            && namedType.Span.End > 0
+            && namedType.Span.End <= _source.Length
+            && char.IsWhiteSpace(_source[namedType.Span.End - 1]);
+
+        // If type parsing produced errors, this is not a valid composite literal
+        var hasTypeErrors = _diagnostics.Count > diagCount;
+
         // Check what follows
-        if (Current == '{')
+        if (!hasTypeErrors && Current == '{' && !hasWhitespaceAfterName)
         {
             // Struct literal: Name{ field = value, ... }
             return ParseStructLiteral(namedType, start);
         }
-        else if (Current == ':' && Peek() == ':')
+        else if (!hasTypeErrors && Current == ':' && Peek() == ':')
         {
             // Enum or variant literal: Name::member or Name::member(expr)
             return ParseEnumOrVariantLiteral(namedType, start);

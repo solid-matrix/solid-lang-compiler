@@ -34,7 +34,7 @@ func for_cstyle_2(){
 
 func for_cstyle_3(){
     for var i = 0; ; i += 1 {
-        if i >= 0 break;
+        if i >= 0 { break; }
     }
 }
 

@@ -65,7 +65,8 @@ public sealed class BinaryExprNode : ExprNode
         SyntaxKind.LessLessToken or SyntaxKind.GreaterGreaterToken => SyntaxKind.ShiftExprNode,
         SyntaxKind.PlusToken or SyntaxKind.MinusToken => SyntaxKind.AddExprNode,
         SyntaxKind.StarToken or SyntaxKind.SlashToken or SyntaxKind.PercentToken => SyntaxKind.MulExprNode,
-        _ => SyntaxKind.AddExprNode,
+        SyntaxKind.EqualsToken or SyntaxKind.PlusEqualsToken or SyntaxKind.MinusEqualsToken or SyntaxKind.StarEqualsToken or SyntaxKind.SlashEqualsToken or SyntaxKind.PercentEqualsToken or SyntaxKind.AmpersandEqualsToken or SyntaxKind.PipeEqualsToken or SyntaxKind.CaretEqualsToken or SyntaxKind.LessLessEqualsToken or SyntaxKind.GreaterGreaterEqualsToken => SyntaxKind.AssignExprNode,
+        _ => SyntaxKind.AssignExprNode,
     };
 
     public override TextSpan Span => _span;

@@ -34,16 +34,17 @@ public sealed partial class Parser
             return ParseArrayType();
         }
 
+        // Function pointer type: *func(...) call_conv: type
+        // Must be checked before plain pointer since both start with '*'
+        if (Current == '*' && LookAheadKeyword("func", 1))
+        {
+            return ParseFuncPointerType();
+        }
+
         // Pointer type: * type or *! type
         if (Current == '*')
         {
             return ParsePointerType();
-        }
-
-        // Function pointer type: *func(...) call_conv: type
-        if (LookAheadKeyword("func"))
-        {
-            return ParseFuncPointerType();
         }
 
         // Named type (possibly with generic arguments)
@@ -162,6 +163,60 @@ public sealed partial class Parser
         var span = GetSpanFrom(start);
         var text = _source.GetText(span);
         return new FuncPointerTypeNode(paramTypes, callConv, returnType, span, text);
+    }
+
+    /// <summary>
+    /// Parses a simple named type (identifier + optional generics) without namespace prefix.
+    /// Used in composite literal and switch pattern contexts where :: separates type from member.
+    /// </summary>
+    private NamedTypeNode ParseSimpleNamedType()
+    {
+        var start = _position;
+
+        SkipWhitespaceAndComments();
+        var name = ScanIdentifier();
+        SkipWhitespaceAndComments();
+
+        // Generic arguments: <T1, T2, ...>
+        TypeArgumentListNode? typeArgs = null;
+        if (name.Length > 0 && Current == '<')
+        {
+            _genericDepth++;
+            Advance(); // Skip <
+            SkipWhitespaceAndComments();
+
+            var args = new List<TypeNode>();
+            args.Add(ParseType());
+            SkipWhitespaceAndComments();
+
+            while (Current == ',')
+            {
+                Advance();
+                SkipWhitespaceAndComments();
+                args.Add(ParseType());
+                SkipWhitespaceAndComments();
+            }
+
+            SkipWhitespaceAndComments();
+            if (Current == '>')
+            {
+                Advance();
+                _genericDepth--;
+            }
+            else
+            {
+                _genericDepth--;
+                _diagnostics.MissingGreaterThan(GetCurrentSpan());
+            }
+
+            var argsSpan = TextSpan.FromBounds(start + name.Length + 1, _position);
+            var argsText = _source.GetText(argsSpan);
+            typeArgs = new TypeArgumentListNode(args, argsSpan, argsText);
+        }
+
+        var span = GetSpanFrom(start);
+        var text = _source.GetText(span);
+        return new NamedTypeNode(null, name, typeArgs, span, text);
     }
 
     /// <summary>

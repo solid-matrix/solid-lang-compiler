@@ -242,19 +242,20 @@ public sealed partial class Parser
     /// Checks if the current position starts with the given keyword.
     /// A keyword must be followed by a non-identifier character.
     /// </summary>
-    private bool LookAheadKeyword(string keyword)
+    private bool LookAheadKeyword(string keyword, int offset = 0)
     {
-        if (_position + keyword.Length > _source.Length)
+        var start = _position + offset;
+        if (start + keyword.Length > _source.Length)
             return false;
 
         for (int i = 0; i < keyword.Length; i++)
         {
-            if (_source[_position + i] != keyword[i])
+            if (_source[start + i] != keyword[i])
                 return false;
         }
 
         // Ensure the keyword is not part of a larger identifier
-        var nextPos = _position + keyword.Length;
+        var nextPos = start + keyword.Length;
         if (nextPos < _source.Length)
         {
             var next = _source[nextPos];

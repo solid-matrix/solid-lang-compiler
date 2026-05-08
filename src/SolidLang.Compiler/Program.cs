@@ -1,21 +1,32 @@
 using SolidLang.Parser;
 using SolidParser = SolidLang.Parser.Parser.Parser;
 
-var file = args.Length > 0 ? args[0] : "10-operators.solid";
+var file = args.Length > 0 ? args[0] : null;
+
+if (file == null)
+{
+    Console.WriteLine("Usage: dotnet run -- <filename>");
+    return 1;
+}
+
 var baseDir = "/workspace/solid-lang-compiler/example";
 var path = Path.Combine(baseDir, file);
 
-Console.WriteLine($"Parsing: {path}");
+if (!File.Exists(path))
+{
+    Console.WriteLine($"File not found: {path}");
+    return 1;
+}
 
 var source = SourceText.From(File.ReadAllText(path));
 var parser = new SolidParser(source);
 var program = parser.ParseProgram();
 
-Console.WriteLine($"Declarations: {program.Declarations.Count}");
-Console.WriteLine($"HasErrors: {parser.HasErrors}");
+Console.WriteLine($"{file}: {program.Declarations.Count} decls, errors={parser.HasErrors}");
 if (parser.HasErrors)
 {
     foreach (var d in parser.Diagnostics)
         Console.WriteLine($"  {d}");
 }
+
 return parser.HasErrors ? 1 : 0;

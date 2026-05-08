@@ -35,20 +35,20 @@ public sealed class SwitchStmtNode : StmtNode
 }
 
 /// <summary>
-/// Represents a switch arm: pattern => stmt or else => stmt
+/// Represents a switch arm: patterns... => stmt or else => stmt
 /// </summary>
 public sealed class SwitchArmNode : SyntaxNode
 {
     public bool IsElse { get; }
-    public SwitchPatternNode? Pattern { get; }
+    public IReadOnlyList<SwitchPatternNode> Patterns { get; }
     public StmtNode Statement { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
-    public SwitchArmNode(bool isElse, SwitchPatternNode? pattern, StmtNode statement, TextSpan span, string fullText)
+    public SwitchArmNode(bool isElse, IReadOnlyList<SwitchPatternNode> patterns, StmtNode statement, TextSpan span, string fullText)
     {
         IsElse = isElse;
-        Pattern = pattern;
+        Patterns = patterns;
         Statement = statement;
         _span = span;
         _fullText = fullText;
@@ -59,8 +59,8 @@ public sealed class SwitchArmNode : SyntaxNode
 
     public override IEnumerable<SyntaxNode> GetChildren()
     {
-        if (Pattern != null)
-            yield return Pattern;
+        foreach (var p in Patterns)
+            yield return p;
         yield return Statement;
     }
 

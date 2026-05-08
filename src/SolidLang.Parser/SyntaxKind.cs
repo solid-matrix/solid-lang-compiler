@@ -225,6 +225,7 @@ public enum SyntaxKind
     MulExprNode,
     UnaryExprNode,
     PostfixExprNode,
+    AssignExprNode,
     PrimaryExprNode,
 
     // Postfix Components
