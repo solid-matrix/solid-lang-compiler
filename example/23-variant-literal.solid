@@ -1,0 +1,23 @@
+// Variant literal construction expressions
+
+variant Result<TValue, TError>{
+    Okay: TValue,
+    Fault: TError,
+}
+
+func make_ok(value: i32): Result<i32, String>{
+    return Result::Okay(value);
+}
+
+func make_fault(msg: String): Result<i32, String>{
+    return Result::Fault(msg);
+}
+
+struct ErrorInfo{
+    code: i32,
+    message: String,
+}
+
+func make_error(): Result<String, ErrorInfo>{
+    return Result::Fault(ErrorInfo{code = 404, message = "not found"});
+}

@@ -1,0 +1,99 @@
+└──ProgramNode
+   ├──FunctionDeclNode [identity]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [x]
+   │  │     └──PrimitiveTypeNode [I32Keyword]
+   │  ├──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──PrimaryExprNode [x]
+   ├──FunctionDeclNode [add]
+   │  ├──FuncParametersNode
+   │  │  ├──FuncParameterNode [a]
+   │  │  │  └──PrimitiveTypeNode [I32Keyword]
+   │  │  └──FuncParameterNode [b]
+   │  │     └──PrimitiveTypeNode [I32Keyword]
+   │  ├──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──AddExprNode [PlusToken]
+   │           ├──PrimaryExprNode [a]
+   │           └──PrimaryExprNode [b]
+   ├──FunctionDeclNode [simple_call]
+   │  ├──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──PostfixExprNode
+   │           ├──PrimaryExprNode [identity]
+   │           └──CallExprNode
+   │              └──CallArgsNode
+   │                 └──CallArgNode
+   │                    └──PrimaryExprNode
+   │                       └──IntegerLiteralNode [42]
+   ├──FunctionDeclNode [nested_call]
+   │  ├──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──PostfixExprNode
+   │           ├──PrimaryExprNode [identity]
+   │           └──CallExprNode
+   │              └──CallArgsNode
+   │                 └──CallArgNode
+   │                    └──PostfixExprNode
+   │                       ├──PrimaryExprNode [add]
+   │                       └──CallExprNode
+   │                          └──CallArgsNode
+   │                             ├──CallArgNode
+   │                             │  └──PrimaryExprNode
+   │                             │     └──IntegerLiteralNode [1]
+   │                             └──CallArgNode
+   │                                └──PrimaryExprNode
+   │                                   └──IntegerLiteralNode [2]
+   ├──FunctionDeclNode [scope_call]
+   │  ├──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──PrimaryExprNode
+   │           └──VariantLiteralNode [Set]
+   │              ├──NamedTypeNode [Color]
+   │              └──PrimaryExprNode
+   │                 └──IntegerLiteralNode [1]
+   ├──FunctionDeclNode [chained_arg_call]
+   │  ├──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──PostfixExprNode
+   │           ├──PrimaryExprNode [add]
+   │           └──CallExprNode
+   │              └──CallArgsNode
+   │                 ├──CallArgNode
+   │                 │  └──PostfixExprNode
+   │                 │     ├──PrimaryExprNode [identity]
+   │                 │     └──CallExprNode
+   │                 │        └──CallArgsNode
+   │                 │           └──CallArgNode
+   │                 │              └──PrimaryExprNode
+   │                 │                 └──IntegerLiteralNode [1]
+   │                 └──CallArgNode
+   │                    └──PostfixExprNode
+   │                       ├──PrimaryExprNode [identity]
+   │                       └──CallExprNode
+   │                          └──CallArgsNode
+   │                             └──CallArgNode
+   │                                └──PrimaryExprNode
+   │                                   └──IntegerLiteralNode [2]
+   ├──EnumDeclNode [Color]
+   │  └──EnumFieldsNode
+   │     ├──EnumFieldNode [Red]
+   │     ├──EnumFieldNode [Green]
+   │     └──EnumFieldNode [Blue]
+   └──FunctionDeclNode [Set]
+      ├──NamespacePrefixNode
+      │  └──NamespacePathNode [Color]
+      ├──FuncParametersNode
+      │  └──FuncParameterNode [v]
+      │     └──PrimitiveTypeNode [I32Keyword]
+      ├──PrimitiveTypeNode [I32Keyword]
+      └──BodyStmtNode
+         └──ReturnStmtNode
+            └──PrimaryExprNode [v]

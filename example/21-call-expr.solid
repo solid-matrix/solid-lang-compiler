@@ -1,0 +1,36 @@
+// Call expressions: simple, nested, scope access
+
+func identity(x: i32): i32{
+    return x;
+}
+
+func add(a: i32, b: i32): i32{
+    return a + b;
+}
+
+func simple_call(): i32{
+    return identity(42);
+}
+
+func nested_call(): i32{
+    return identity(add(1, 2));
+}
+
+func scope_call(): i32{
+    return Color::Set(1);
+}
+
+func chained_arg_call(): i32{
+    return add(identity(1), identity(2));
+}
+
+// Just supporting types
+enum Color{
+    Red,
+    Green,
+    Blue,
+}
+
+func Color::Set(v: i32): i32{
+    return v;
+}

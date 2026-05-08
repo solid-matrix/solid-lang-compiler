@@ -1,0 +1,63 @@
+└──ProgramNode
+   ├──VariantDeclNode [Result]
+   │  ├──GenericParamsNode
+   │  │  ├──GenericParamNode [TValue]
+   │  │  └──GenericParamNode [TError]
+   │  └──VariantFieldsNode
+   │     ├──VariantFieldNode [Okay]
+   │     │  └──NamedTypeNode [TValue]
+   │     └──VariantFieldNode [Fault]
+   │        └──NamedTypeNode [TError]
+   ├──FunctionDeclNode [make_ok]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [value]
+   │  │     └──PrimitiveTypeNode [I32Keyword]
+   │  ├──NamedTypeNode [Result]
+   │  │  └──TypeArgumentListNode
+   │  │     ├──PrimitiveTypeNode [I32Keyword]
+   │  │     └──NamedTypeNode [String]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──PrimaryExprNode
+   │           └──VariantLiteralNode [Okay]
+   │              ├──NamedTypeNode [Result]
+   │              └──PrimaryExprNode [value]
+   ├──FunctionDeclNode [make_fault]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [msg]
+   │  │     └──NamedTypeNode [String]
+   │  ├──NamedTypeNode [Result]
+   │  │  └──TypeArgumentListNode
+   │  │     ├──PrimitiveTypeNode [I32Keyword]
+   │  │     └──NamedTypeNode [String]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──PrimaryExprNode
+   │           └──VariantLiteralNode [Fault]
+   │              ├──NamedTypeNode [Result]
+   │              └──PrimaryExprNode [msg]
+   ├──StructDeclNode [ErrorInfo]
+   │  └──StructFieldsNode
+   │     ├──StructFieldNode [code]
+   │     │  └──PrimitiveTypeNode [I32Keyword]
+   │     └──StructFieldNode [message]
+   │        └──NamedTypeNode [String]
+   └──FunctionDeclNode [make_error]
+      ├──NamedTypeNode [Result]
+      │  └──TypeArgumentListNode
+      │     ├──NamedTypeNode [String]
+      │     └──NamedTypeNode [ErrorInfo]
+      └──BodyStmtNode
+         └──ReturnStmtNode
+            └──PrimaryExprNode
+               └──VariantLiteralNode [Fault]
+                  ├──NamedTypeNode [Result]
+                  └──PrimaryExprNode
+                     └──StructLiteralNode
+                        ├──NamedTypeNode [ErrorInfo]
+                        ├──StructLiteralFieldNode [code]
+                        │  └──PrimaryExprNode
+                        │     └──IntegerLiteralNode [404]
+                        └──StructLiteralFieldNode [message]
+                           └──PrimaryExprNode
+                              └──StringLiteralNode ["not found"]

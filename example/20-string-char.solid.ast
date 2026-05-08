@@ -1,0 +1,38 @@
+└──ProgramNode
+   ├──FunctionDeclNode [string_basic]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [s]
+   │     │  └──PrimaryExprNode
+   │     │     └──StringLiteralNode ["hello"]
+   │     └──VarDeclNode [empty]
+   │        └──PrimaryExprNode
+   │           └──StringLiteralNode [""]
+   ├──FunctionDeclNode [char_basic]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [a]
+   │     │  └──PrimaryExprNode
+   │     │     └──CharLiteralNode ['a']
+   │     ├──VarDeclNode [b]
+   │     │  └──PrimaryExprNode
+   │     │     └──CharLiteralNode ['Z']
+   │     ├──VarDeclNode [c]
+   │     │  └──PrimaryExprNode
+   │     │     └──CharLiteralNode ['0']
+   │     └──VarDeclNode [space]
+   │        └──PrimaryExprNode
+   │           └──CharLiteralNode [' ']
+   └──FunctionDeclNode [string_escapes]
+      └──BodyStmtNode
+         ├──VarDeclNode [newline]
+         │  └──PrimaryExprNode
+         │     └──StringLiteralNode ["hello
+world"]
+         ├──VarDeclNode [tab]
+         │  └──PrimaryExprNode
+         │     └──StringLiteralNode ["hello	world"]
+         ├──VarDeclNode [quote]
+         │  └──PrimaryExprNode
+         │     └──StringLiteralNode ["hello"world"]
+         └──VarDeclNode [backslash]
+            └──PrimaryExprNode
+               └──StringLiteralNode ["hello\world"]

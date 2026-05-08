@@ -1,0 +1,32 @@
+// Defer statement
+
+func defer_empty(){
+    defer ;
+    var x = 1;
+}
+
+func defer_block(){
+    defer {
+        var cleanup = 1;
+    }
+    var x = 2;
+}
+
+func defer_if(){
+    defer if true {
+        var cleanup = 1;
+    }
+}
+
+func defer_expr(){
+    var resource = acquire();
+    defer release(resource);
+}
+
+// Stubs for the example
+func acquire(): i32{
+    return 42;
+}
+
+func release(r: i32){
+}

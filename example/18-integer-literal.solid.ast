@@ -1,0 +1,67 @@
+└──ProgramNode
+   ├──FunctionDeclNode [integer_prefixes]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [hex]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [255]
+   │     ├──VarDeclNode [octal]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [63]
+   │     ├──VarDeclNode [binary]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [10]
+   │     └──VarDeclNode [decimal]
+   │        └──PrimaryExprNode
+   │           └──IntegerLiteralNode [42]
+   ├──FunctionDeclNode [integer_suffixes]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [a]
+   │     │  ├──PrimitiveTypeNode [U8Keyword]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [255]
+   │     ├──VarDeclNode [b]
+   │     │  ├──PrimitiveTypeNode [U16Keyword]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [65535]
+   │     ├──VarDeclNode [c]
+   │     │  ├──PrimitiveTypeNode [U32Keyword]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [4294967295]
+   │     ├──VarDeclNode [d]
+   │     │  ├──PrimitiveTypeNode [U64Keyword]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [18446744073709551615]
+   │     ├──VarDeclNode [e]
+   │     │  ├──PrimitiveTypeNode [I8Keyword]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [127]
+   │     ├──VarDeclNode [f]
+   │     │  ├──PrimitiveTypeNode [I16Keyword]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [32767]
+   │     ├──VarDeclNode [g]
+   │     │  ├──PrimitiveTypeNode [I32Keyword]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [2147483647]
+   │     ├──VarDeclNode [h]
+   │     │  ├──PrimitiveTypeNode [I64Keyword]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [9223372036854775807]
+   │     ├──VarDeclNode [i]
+   │     │  ├──PrimitiveTypeNode [USizeKeyword]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [42]
+   │     └──VarDeclNode [j]
+   │        ├──PrimitiveTypeNode [ISizeKeyword]
+   │        └──PrimaryExprNode
+   │           └──IntegerLiteralNode [42]
+   └──FunctionDeclNode [hex_with_suffix]
+      └──BodyStmtNode
+         ├──VarDeclNode [a]
+         │  ├──PrimitiveTypeNode [U32Keyword]
+         │  └──PrimaryExprNode
+         │     └──IntegerLiteralNode [43981]
+         └──VarDeclNode [b]
+            ├──PrimitiveTypeNode [U16Keyword]
+            └──PrimaryExprNode
+               └──IntegerLiteralNode [255]

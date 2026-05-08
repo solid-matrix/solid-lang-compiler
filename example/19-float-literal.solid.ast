@@ -1,0 +1,37 @@
+└──ProgramNode
+   ├──FunctionDeclNode [float_regular]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [a]
+   │     │  └──PrimaryExprNode
+   │     │     └──FloatLiteralNode [1.5]
+   │     ├──VarDeclNode [b]
+   │     │  └──PrimaryExprNode
+   │     │     └──FloatLiteralNode [0.5]
+   │     └──VarDeclNode [c]
+   │        └──PrimaryExprNode
+   │           └──FloatLiteralNode [3.14159]
+   ├──FunctionDeclNode [float_scientific]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [a]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [1]
+   │     ├──VarDeclNode [b]
+   │     │  └──PrimaryExprNode
+   │     │     └──FloatLiteralNode [0.0015]
+   │     └──VarDeclNode [c]
+   │        └──PrimaryExprNode
+   │           └──FloatLiteralNode [20000]
+   └──FunctionDeclNode [float_suffixes]
+      └──BodyStmtNode
+         ├──VarDeclNode [a]
+         │  ├──PrimitiveTypeNode [F32Keyword]
+         │  └──PrimaryExprNode
+         │     └──FloatLiteralNode [1.5]
+         ├──VarDeclNode [b]
+         │  ├──PrimitiveTypeNode [F64Keyword]
+         │  └──PrimaryExprNode
+         │     └──FloatLiteralNode [1.5]
+         └──VarDeclNode [d]
+            ├──PrimitiveTypeNode [F64Keyword]
+            └──PrimaryExprNode
+               └──IntegerLiteralNode [1]

@@ -1,0 +1,26 @@
+// Integer literal prefixes and suffixes
+
+func integer_prefixes(){
+    var hex = 0xFF;
+    var octal = 0o77;
+    var binary = 0b1010;
+    var decimal = 42;
+}
+
+func integer_suffixes(){
+    var a: u8 = 255u8;
+    var b: u16 = 65535u16;
+    var c: u32 = 4294967295u32;
+    var d: u64 = 18446744073709551615u64;
+    var e: i8 = 127i8;
+    var f: i16 = 32767i16;
+    var g: i32 = 2147483647i32;
+    var h: i64 = 9223372036854775807i64;
+    var i: usize = 42usize;
+    var j: isize = 42isize;
+}
+
+func hex_with_suffix(){
+    var a: u32 = 0xABCDu32;
+    var b: u16 = 0xFFu16;
+}

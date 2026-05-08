@@ -1,0 +1,32 @@
+// Postfix expressions: index access, member access, call chains
+
+struct Point{
+    x: f32,
+    y: f32,
+}
+
+struct Rect{
+    min: Point,
+    max: Point,
+}
+
+func index_chain(arr: [3][3]i32): i32{
+    return arr[0][1];
+}
+
+func member_chain(){
+    var r = Rect{
+        min = Point{x = 0.0, y = 0.0},
+        max = Point{x = 10.0, y = 10.0},
+    };
+    var x = r.min.x;
+    var y = r.max.y;
+}
+
+func mixed_chain(arr: [2]Point): f32{
+    return arr[0].x;
+}
+
+func call_chain(value: Point): f32{
+    return value.x;
+}

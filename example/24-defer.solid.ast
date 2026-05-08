@@ -1,0 +1,53 @@
+└──ProgramNode
+   ├──FunctionDeclNode [defer_empty]
+   │  └──BodyStmtNode
+   │     ├──DeferStmtNode
+   │     │  └──EmptyStmtNode
+   │     └──VarDeclNode [x]
+   │        └──PrimaryExprNode
+   │           └──IntegerLiteralNode [1]
+   ├──FunctionDeclNode [defer_block]
+   │  └──BodyStmtNode
+   │     ├──DeferStmtNode
+   │     │  └──BodyStmtNode
+   │     │     └──VarDeclNode [cleanup]
+   │     │        └──PrimaryExprNode
+   │     │           └──IntegerLiteralNode [1]
+   │     └──VarDeclNode [x]
+   │        └──PrimaryExprNode
+   │           └──IntegerLiteralNode [2]
+   ├──FunctionDeclNode [defer_if]
+   │  └──BodyStmtNode
+   │     └──DeferStmtNode
+   │        └──IfStmtNode
+   │           ├──PrimaryExprNode
+   │           │  └──BoolLiteralNode [True]
+   │           └──BodyStmtNode
+   │              └──VarDeclNode [cleanup]
+   │                 └──PrimaryExprNode
+   │                    └──IntegerLiteralNode [1]
+   ├──FunctionDeclNode [defer_expr]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [resource]
+   │     │  └──PostfixExprNode
+   │     │     ├──PrimaryExprNode [acquire]
+   │     │     └──CallExprNode
+   │     └──DeferStmtNode
+   │        └──ExprStmtNode
+   │           └──PostfixExprNode
+   │              ├──PrimaryExprNode [release]
+   │              └──CallExprNode
+   │                 └──CallArgsNode
+   │                    └──CallArgNode
+   │                       └──PrimaryExprNode [resource]
+   ├──FunctionDeclNode [acquire]
+   │  ├──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──PrimaryExprNode
+   │           └──IntegerLiteralNode [42]
+   └──FunctionDeclNode [release]
+      ├──FuncParametersNode
+      │  └──FuncParameterNode [r]
+      │     └──PrimitiveTypeNode [I32Keyword]
+      └──BodyStmtNode

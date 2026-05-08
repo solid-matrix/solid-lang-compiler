@@ -1,0 +1,20 @@
+// String and char literals
+
+func string_basic(){
+    var s = "hello";
+    var empty = "";
+}
+
+func char_basic(){
+    var a = 'a';
+    var b = 'Z';
+    var c = '0';
+    var space = ' ';
+}
+
+func string_escapes(){
+    var newline = "hello\nworld";
+    var tab = "hello\tworld";
+    var quote = "hello\"world";
+    var backslash = "hello\\world";
+}
