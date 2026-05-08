@@ -4,17 +4,16 @@ func array_params(arr: [5]i32):i32{
     return arr[0] + arr[1];
 }
 
-func array_of_structs(){
-    struct Value{
-        data: [4]u8,
-    }
+struct Value{
+    data: [4]u8,
+}
 
+func array_of_structs(){
     var v = Value{data = [4]u8{}};
 }
 
 func multi_dim_array(){
-    // Array of arrays
-    var matrix: [4][4]f32;
+    var matrix: [4][4]f32 = [4][4]f32{};
 }
 
 func array_index_write(){
@@ -24,7 +23,6 @@ func array_index_write(){
     arr[2] = 3;
 }
 
-// Array with pointer type
 struct Buffer{
     data: *[256]u8,
     len: usize,
@@ -34,9 +32,5 @@ struct Buffer{
 const BUFFER_SIZE = 256;
 
 func fixed_buffer(){
-    var buf: [BUFFER_SIZE]u8;
-}
-
-func main():i32{
-    return 0;
+    var buf: [BUFFER_SIZE]u8 = [BUFFER_SIZE]u8{};
 }

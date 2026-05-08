@@ -17,12 +17,16 @@ struct Container<T, U>{
 }
 
 // Multiple where clause constraints
-func combine<A, B, C>(a: A, b: B): C where A: IHashable<A>, B: IHashable<B>, C: IAdd<A, B, C>{
-    return C::default_value();
+func combine<A, B, C>(a: A, b: B): C 
+    where A: IHashable<A>
+    where B: IHashable<B>
+    where C: IAdd<A, B, C>
+{
+    return a + b;
 }
 
 // Generics with pointer types
-func box_value<T>(value: T): *!T{
+func box_value<T>(value: T): *T{
     return null;
 }
 
@@ -47,7 +51,7 @@ func transform<T, U>(input: List<T>, mapper: *func(T): U): List<U>{
 }
 
 // Extension method with generics
-func Container<T, U>::swap(self: *!Container<T, U>){
+func Container<T, U>::swap(self: *Container<T, U>){
     // placeholder
 }
 

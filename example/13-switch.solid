@@ -1,0 +1,61 @@
+func switch_literal(value: i32):i32{
+    switch value {
+        0 => return 0;
+        1 => return 10;
+        2 => return 20;
+        else=> return -1;
+    }
+}
+
+func switch_literal_multiple(){
+    var value: i32 = 1;
+    switch value {
+        0, 1, 2 => value = 100;
+        3 => {
+            value = -100;
+        }
+        else => {
+            value = 500;
+        }
+    }
+}
+
+enum Color:u32{
+    Red,
+    Green,
+    Blue,
+    Black,
+    White,
+}
+
+func switch_enum(color: Color){
+    switch color{
+        Color::Red => print("red);
+        Color::Black, Color::White => print("white or black");
+        else => print("other");
+    }
+}
+
+variant Result<TValue, TError>{
+    Okay: TValue,
+    Fault: TError,
+}
+
+struct Error<T>{
+    OutOfRange: T
+    NullArgument: T
+}
+
+struct Vector2<T>{
+    x: T，
+    y: T,
+}
+
+func switch_variant(result: Result<Vector2<f32>,Error<String>>){
+    switch result{
+        Result::Okay(value) => print(value);
+        Result::Fault(error) => print(error);
+    }
+}
+
+

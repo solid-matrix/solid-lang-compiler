@@ -9,7 +9,7 @@ interface IAdd<TLeft, TRight, TResult>{
 }
 
 interface ICast<TFrom, TTo>{
-    func into(from: TFrom): TTo;
+    func into<TTo>(from: TFrom): TTo;
     func from(value: TFrom): TTo;
 }
 

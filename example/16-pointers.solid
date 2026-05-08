@@ -30,7 +30,7 @@ func pointer_to_struct(){
 
 func mutable_pointer(){
     var value: i32 = 42;
-    var p: *!i32 = &!value;
+    var p: *i32 = &value;
     *p = 100;
 }
 
