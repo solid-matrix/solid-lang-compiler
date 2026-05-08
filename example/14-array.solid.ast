@@ -1,0 +1,122 @@
+└──ProgramNode
+   ├──FunctionDeclNode [array_params]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [arr]
+   │  │     └──ArrayTypeNode
+   │  │        ├──PrimaryExprNode
+   │  │        │  └──IntegerLiteralNode [5]
+   │  │        └──PrimitiveTypeNode [I32Keyword]
+   │  ├──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──AddExprNode [PlusToken]
+   │           ├──PostfixExprNode
+   │           │  ├──PrimaryExprNode [arr]
+   │           │  └──IndexAccessNode
+   │           │     └──PrimaryExprNode
+   │           │        └──IntegerLiteralNode [0]
+   │           └──PostfixExprNode
+   │              ├──PrimaryExprNode [arr]
+   │              └──IndexAccessNode
+   │                 └──PrimaryExprNode
+   │                    └──IntegerLiteralNode [1]
+   ├──StructDeclNode [Value]
+   │  └──StructFieldsNode
+   │     └──StructFieldNode [data]
+   │        └──ArrayTypeNode
+   │           ├──PrimaryExprNode
+   │           │  └──IntegerLiteralNode [4]
+   │           └──PrimitiveTypeNode [U8Keyword]
+   ├──FunctionDeclNode [array_of_structs]
+   │  └──BodyStmtNode
+   │     └──VarDeclNode [v]
+   │        └──PrimaryExprNode
+   │           └──StructLiteralNode
+   │              ├──NamedTypeNode [Value]
+   │              └──StructLiteralFieldNode [data]
+   │                 └──PrimaryExprNode
+   │                    └──ArrayLiteralNode
+   │                       └──ArrayTypeNode
+   │                          ├──PrimaryExprNode
+   │                          │  └──IntegerLiteralNode [4]
+   │                          └──PrimitiveTypeNode [U8Keyword]
+   ├──FunctionDeclNode [multi_dim_array]
+   │  └──BodyStmtNode
+   │     └──VarDeclNode [matrix]
+   │        ├──ArrayTypeNode
+   │        │  ├──PrimaryExprNode
+   │        │  │  └──IntegerLiteralNode [4]
+   │        │  └──ArrayTypeNode
+   │        │     ├──PrimaryExprNode
+   │        │     │  └──IntegerLiteralNode [4]
+   │        │     └──PrimitiveTypeNode [F32Keyword]
+   │        └──PrimaryExprNode
+   │           └──ArrayLiteralNode
+   │              └──ArrayTypeNode
+   │                 ├──PrimaryExprNode
+   │                 │  └──IntegerLiteralNode [4]
+   │                 └──ArrayTypeNode
+   │                    ├──PrimaryExprNode
+   │                    │  └──IntegerLiteralNode [4]
+   │                    └──PrimitiveTypeNode [F32Keyword]
+   ├──FunctionDeclNode [array_index_write]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [arr]
+   │     │  ├──ArrayTypeNode
+   │     │  │  ├──PrimaryExprNode
+   │     │  │  │  └──IntegerLiteralNode [3]
+   │     │  │  └──PrimitiveTypeNode [I32Keyword]
+   │     │  └──PrimaryExprNode
+   │     │     └──ArrayLiteralNode
+   │     │        └──ArrayTypeNode
+   │     │           ├──PrimaryExprNode
+   │     │           │  └──IntegerLiteralNode [3]
+   │     │           └──PrimitiveTypeNode [I32Keyword]
+   │     ├──AssignStmtNode
+   │     │  ├──PostfixExprNode
+   │     │  │  ├──PrimaryExprNode [arr]
+   │     │  │  └──IndexAccessNode
+   │     │  │     └──PrimaryExprNode
+   │     │  │        └──IntegerLiteralNode [0]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [1]
+   │     ├──AssignStmtNode
+   │     │  ├──PostfixExprNode
+   │     │  │  ├──PrimaryExprNode [arr]
+   │     │  │  └──IndexAccessNode
+   │     │  │     └──PrimaryExprNode
+   │     │  │        └──IntegerLiteralNode [1]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [2]
+   │     └──AssignStmtNode
+   │        ├──PostfixExprNode
+   │        │  ├──PrimaryExprNode [arr]
+   │        │  └──IndexAccessNode
+   │        │     └──PrimaryExprNode
+   │        │        └──IntegerLiteralNode [2]
+   │        └──PrimaryExprNode
+   │           └──IntegerLiteralNode [3]
+   ├──StructDeclNode [Buffer]
+   │  └──StructFieldsNode
+   │     ├──StructFieldNode [data]
+   │     │  └──PointerTypeNode
+   │     │     └──ArrayTypeNode
+   │     │        ├──PrimaryExprNode
+   │     │        │  └──IntegerLiteralNode [256]
+   │     │        └──PrimitiveTypeNode [U8Keyword]
+   │     └──StructFieldNode [len]
+   │        └──PrimitiveTypeNode [USizeKeyword]
+   ├──ConstDeclNode [BUFFER_SIZE]
+   │  └──PrimaryExprNode
+   │     └──IntegerLiteralNode [256]
+   └──FunctionDeclNode [fixed_buffer]
+      └──BodyStmtNode
+         └──VarDeclNode [buf]
+            ├──ArrayTypeNode
+            │  ├──PrimaryExprNode [BUFFER_SIZE]
+            │  └──PrimitiveTypeNode [U8Keyword]
+            └──PrimaryExprNode
+               └──ArrayLiteralNode
+                  └──ArrayTypeNode
+                     ├──PrimaryExprNode [BUFFER_SIZE]
+                     └──PrimitiveTypeNode [U8Keyword]

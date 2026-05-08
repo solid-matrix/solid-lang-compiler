@@ -1,0 +1,7 @@
+└──ProgramNode
+   └──FunctionDeclNode [main]
+      ├──PrimitiveTypeNode [I32Keyword]
+      └──BodyStmtNode
+         └──ReturnStmtNode
+            └──PrimaryExprNode
+               └──IntegerLiteralNode [0]

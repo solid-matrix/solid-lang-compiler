@@ -22,6 +22,11 @@ var source = SourceText.From(File.ReadAllText(path));
 var parser = new SolidParser(source);
 var program = parser.ParseProgram();
 
+// Save AST to .ast file
+var astPath = Path.ChangeExtension(path, ".solid.ast");
+var astText = program.ToString();
+File.WriteAllText(astPath, astText);
+
 Console.WriteLine($"{file}: {program.Declarations.Count} decls, errors={parser.HasErrors}");
 if (parser.HasErrors)
 {

@@ -1,0 +1,191 @@
+└──ProgramNode
+   ├──FunctionDeclNode [for_infinite]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [count]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [0]
+   │     └──ForStmtNode
+   │        └──ForInfiniteNode
+   │           └──BodyStmtNode
+   │              ├──AssignStmtNode
+   │              │  ├──PrimaryExprNode [count]
+   │              │  └──PrimaryExprNode
+   │              │     └──IntegerLiteralNode [1]
+   │              └──IfStmtNode
+   │                 ├──ComparisonExprNode [GreaterEqualsToken]
+   │                 │  ├──PrimaryExprNode [count]
+   │                 │  └──PrimaryExprNode
+   │                 │     └──IntegerLiteralNode [10]
+   │                 └──BodyStmtNode
+   │                    └──BreakStmtNode
+   ├──FunctionDeclNode [for_cond]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [i]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [0]
+   │     └──ForStmtNode
+   │        └──ForCondNode
+   │           ├──ComparisonExprNode [LessToken]
+   │           │  ├──PrimaryExprNode [i]
+   │           │  └──PrimaryExprNode
+   │           │     └──IntegerLiteralNode [10]
+   │           └──BodyStmtNode
+   │              └──AssignStmtNode
+   │                 ├──PrimaryExprNode [i]
+   │                 └──PrimaryExprNode
+   │                    └──IntegerLiteralNode [1]
+   ├──FunctionDeclNode [for_cstyle_0]
+   │  └──BodyStmtNode
+   │     └──ForStmtNode
+   │        └──ForCStyleNode
+   │           ├──ForVarDeclNode
+   │           │  └──PrimaryExprNode
+   │           │     └──IntegerLiteralNode [0]
+   │           ├──ComparisonExprNode [LessToken]
+   │           │  ├──PrimaryExprNode [i]
+   │           │  └──PrimaryExprNode
+   │           │     └──IntegerLiteralNode [10]
+   │           ├──AssignExprNode [PlusEqualsToken]
+   │           │  ├──PrimaryExprNode [i]
+   │           │  └──PrimaryExprNode
+   │           │     └──IntegerLiteralNode [1]
+   │           └──BodyStmtNode
+   │              └──IfStmtNode
+   │                 ├──EqualityExprNode [EqualsEqualsToken]
+   │                 │  ├──PrimaryExprNode [i]
+   │                 │  └──PrimaryExprNode
+   │                 │     └──IntegerLiteralNode [5]
+   │                 └──BodyStmtNode
+   │                    └──ContinueStmtNode
+   ├──FunctionDeclNode [for_cstyle_2]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [i]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [0]
+   │     └──ForStmtNode
+   │        └──ForCStyleNode
+   │           ├──ComparisonExprNode [LessToken]
+   │           │  ├──PrimaryExprNode [i]
+   │           │  └──PrimaryExprNode
+   │           │     └──IntegerLiteralNode [10]
+   │           ├──AssignExprNode [PlusEqualsToken]
+   │           │  ├──PrimaryExprNode [i]
+   │           │  └──PrimaryExprNode
+   │           │     └──IntegerLiteralNode [1]
+   │           └──BodyStmtNode
+   │              └──IfStmtNode
+   │                 ├──EqualityExprNode [EqualsEqualsToken]
+   │                 │  ├──PrimaryExprNode [i]
+   │                 │  └──PrimaryExprNode
+   │                 │     └──IntegerLiteralNode [5]
+   │                 └──BodyStmtNode
+   │                    └──ContinueStmtNode
+   ├──FunctionDeclNode [for_cstyle_3]
+   │  └──BodyStmtNode
+   │     └──ForStmtNode
+   │        └──ForCStyleNode
+   │           ├──ForVarDeclNode
+   │           │  └──PrimaryExprNode
+   │           │     └──IntegerLiteralNode [0]
+   │           ├──AssignExprNode [PlusEqualsToken]
+   │           │  ├──PrimaryExprNode [i]
+   │           │  └──PrimaryExprNode
+   │           │     └──IntegerLiteralNode [1]
+   │           └──BodyStmtNode
+   │              └──IfStmtNode
+   │                 ├──ComparisonExprNode [GreaterEqualsToken]
+   │                 │  ├──PrimaryExprNode [i]
+   │                 │  └──PrimaryExprNode
+   │                 │     └──IntegerLiteralNode [0]
+   │                 └──BodyStmtNode
+   │                    └──BreakStmtNode
+   ├──FunctionDeclNode [for_cstyle_4]
+   │  └──BodyStmtNode
+   │     └──ForStmtNode
+   │        └──ForCStyleNode
+   │           ├──ForVarDeclNode
+   │           │  └──PrimaryExprNode
+   │           │     └──IntegerLiteralNode [0]
+   │           ├──ComparisonExprNode [LessToken]
+   │           │  ├──PrimaryExprNode [i]
+   │           │  └──PrimaryExprNode
+   │           │     └──IntegerLiteralNode [10]
+   │           └──BodyStmtNode
+   │              ├──IfStmtNode
+   │              │  ├──EqualityExprNode [EqualsEqualsToken]
+   │              │  │  ├──PrimaryExprNode [i]
+   │              │  │  └──PrimaryExprNode
+   │              │  │     └──IntegerLiteralNode [5]
+   │              │  └──BodyStmtNode
+   │              │     └──ContinueStmtNode
+   │              └──AssignStmtNode
+   │                 ├──PrimaryExprNode [i]
+   │                 └──PrimaryExprNode
+   │                    └──IntegerLiteralNode [1]
+   ├──FunctionDeclNode [for_cstyle_5]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [i]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [0]
+   │     └──ForStmtNode
+   │        └──ForCStyleNode
+   │           ├──AssignExprNode [PlusEqualsToken]
+   │           │  ├──PrimaryExprNode [i]
+   │           │  └──PrimaryExprNode
+   │           │     └──IntegerLiteralNode [1]
+   │           └──BodyStmtNode
+   │              └──BreakStmtNode
+   ├──FunctionDeclNode [for_cstyle_6]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [i]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [0]
+   │     └──ForStmtNode
+   │        └──ForCStyleNode
+   │           ├──ComparisonExprNode [LessToken]
+   │           │  ├──PrimaryExprNode [i]
+   │           │  └──PrimaryExprNode
+   │           │     └──IntegerLiteralNode [10]
+   │           └──BodyStmtNode
+   │              └──AssignStmtNode
+   │                 ├──PrimaryExprNode [i]
+   │                 └──PrimaryExprNode
+   │                    └──IntegerLiteralNode [1]
+   ├──FunctionDeclNode [for_cstyle_7]
+   │  └──BodyStmtNode
+   │     └──ForStmtNode
+   │        └──ForCStyleNode
+   │           ├──ForVarDeclNode
+   │           │  └──PrimaryExprNode
+   │           │     └──IntegerLiteralNode [0]
+   │           └──BodyStmtNode
+   │              ├──IfStmtNode
+   │              │  ├──ComparisonExprNode [GreaterEqualsToken]
+   │              │  │  ├──PrimaryExprNode [i]
+   │              │  │  └──PrimaryExprNode
+   │              │  │     └──IntegerLiteralNode [10]
+   │              │  └──BodyStmtNode
+   │              │     └──BreakStmtNode
+   │              └──AssignStmtNode
+   │                 ├──PrimaryExprNode [i]
+   │                 └──PrimaryExprNode
+   │                    └──IntegerLiteralNode [1]
+   └──FunctionDeclNode [for_cstyle_8]
+      └──BodyStmtNode
+         ├──VarDeclNode [i]
+         │  └──PrimaryExprNode
+         │     └──IntegerLiteralNode [0]
+         └──ForStmtNode
+            └──ForCStyleNode
+               └──BodyStmtNode
+                  ├──IfStmtNode
+                  │  ├──ComparisonExprNode [LessToken]
+                  │  │  ├──PrimaryExprNode [i]
+                  │  │  └──PrimaryExprNode
+                  │  │     └──IntegerLiteralNode [10]
+                  │  └──BodyStmtNode
+                  │     └──BreakStmtNode
+                  └──AssignStmtNode
+                     ├──PrimaryExprNode [i]
+                     └──PrimaryExprNode
+                        └──IntegerLiteralNode [1]

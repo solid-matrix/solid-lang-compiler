@@ -1,0 +1,222 @@
+└──ProgramNode
+   ├──FunctionDeclNode [malloc]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [import]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [size]
+   │  │     └──PrimitiveTypeNode [USizeKeyword]
+   │  ├──CallConventionNode [CDeclKeyword]
+   │  └──PointerTypeNode
+   │     └──NamedTypeNode [opaque]
+   ├──FunctionDeclNode [create_window]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [import]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [size]
+   │  │     └──PrimitiveTypeNode [USizeKeyword]
+   │  ├──CallConventionNode [StdCallKeyword]
+   │  └──PointerTypeNode
+   │     └──NamedTypeNode [opaque]
+   ├──FunctionDeclNode [add]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [export]
+   │  ├──FuncParametersNode
+   │  │  ├──FuncParameterNode [a]
+   │  │  │  └──PrimitiveTypeNode [I32Keyword]
+   │  │  └──FuncParameterNode [b]
+   │  │     └──PrimitiveTypeNode [I32Keyword]
+   │  ├──CallConventionNode [CDeclKeyword]
+   │  ├──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──AddExprNode [PlusToken]
+   │           ├──PrimaryExprNode [a]
+   │           └──PrimaryExprNode [b]
+   ├──FunctionDeclNode [get_size]
+   │  ├──GenericParamsNode
+   │  │  └──GenericParamNode [T]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [value]
+   │  │     └──NamedTypeNode [T]
+   │  ├──PrimitiveTypeNode [USizeKeyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──CtOperatorExprNode [sizeof]
+   │           └──CtOperatorArgsNode
+   │              └──CtOperatorArgNode
+   │                 └──NamedTypeNode [T]
+   ├──FunctionDeclNode [flat]
+   │  ├──GenericParamsNode
+   │  │  └──GenericParamNode [T]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [value]
+   │  │     └──NamedTypeNode [List]
+   │  │        └──TypeArgumentListNode
+   │  │           └──NamedTypeNode [List]
+   │  │              └──TypeArgumentListNode
+   │  │                 └──NamedTypeNode [T]
+   │  ├──NamedTypeNode [List]
+   │  │  └──TypeArgumentListNode
+   │  │     └──NamedTypeNode [T]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──PrimaryExprNode
+   │           └──VariantLiteralNode [new]
+   │              └──NamedTypeNode [List]
+   │                 └──TypeArgumentListNode
+   │                    └──NamedTypeNode [T]
+   ├──FunctionDeclNode [flat]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [value]
+   │  │     └──NamedTypeNode [List]
+   │  │        └──TypeArgumentListNode
+   │  │           └──NamedTypeNode [List]
+   │  │              └──TypeArgumentListNode
+   │  │                 └──PrimitiveTypeNode [I32Keyword]
+   │  ├──NamedTypeNode [List]
+   │  │  └──TypeArgumentListNode
+   │  │     └──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──PrimaryExprNode
+   │           └──VariantLiteralNode [new]
+   │              └──NamedTypeNode [List]
+   │                 └──TypeArgumentListNode
+   │                    └──PrimitiveTypeNode [I32Keyword]
+   ├──StructDeclNode [Vector2]
+   │  └──StructFieldsNode
+   │     ├──StructFieldNode [x]
+   │     │  └──PrimitiveTypeNode [F32Keyword]
+   │     └──StructFieldNode [y]
+   │        └──PrimitiveTypeNode [F32Keyword]
+   ├──StructDeclNode [Vector2]
+   │  ├──GenericParamsNode
+   │  │  └──GenericParamNode [T]
+   │  └──StructFieldsNode
+   │     ├──StructFieldNode [x]
+   │     │  └──NamedTypeNode [T]
+   │     └──StructFieldNode [y]
+   │        └──NamedTypeNode [T]
+   ├──FunctionDeclNode [add]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [hint]
+   │  ├──NamespacePrefixNode
+   │  │  └──NamespacePathNode [Vector2]
+   │  ├──FuncParametersNode
+   │  │  ├──FuncParameterNode [left]
+   │  │  │  └──NamedTypeNode [Vector2]
+   │  │  └──FuncParameterNode [right]
+   │  │     └──NamedTypeNode [Vector2]
+   │  ├──NamedTypeNode [Vector2]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──PrimaryExprNode
+   │           └──StructLiteralNode
+   │              ├──NamedTypeNode [Vector2]
+   │              ├──StructLiteralFieldNode [x]
+   │              │  └──AddExprNode [PlusToken]
+   │              │     ├──PostfixExprNode
+   │              │     │  ├──PrimaryExprNode [left]
+   │              │     │  └──DotAccessNode [x]
+   │              │     └──PostfixExprNode
+   │              │        ├──PrimaryExprNode [right]
+   │              │        └──DotAccessNode [x]
+   │              └──StructLiteralFieldNode [y]
+   │                 └──AddExprNode [PlusToken]
+   │                    ├──PostfixExprNode
+   │                    │  ├──PrimaryExprNode [left]
+   │                    │  └──DotAccessNode [y]
+   │                    └──PostfixExprNode
+   │                       ├──PrimaryExprNode [right]
+   │                       └──DotAccessNode [y]
+   ├──FunctionDeclNode [add]
+   │  ├──GenericParamsNode
+   │  │  └──GenericParamNode [T]
+   │  ├──FuncParametersNode
+   │  │  ├──FuncParameterNode [left]
+   │  │  │  └──NamedTypeNode [Vector2]
+   │  │  │     └──TypeArgumentListNode
+   │  │  │        └──NamedTypeNode [T]
+   │  │  └──FuncParameterNode [right]
+   │  │     └──NamedTypeNode [Vector2]
+   │  │        └──TypeArgumentListNode
+   │  │           └──NamedTypeNode [T]
+   │  ├──NamedTypeNode [Vector2]
+   │  │  └──TypeArgumentListNode
+   │  │     └──NamedTypeNode [T]
+   │  ├──WhereClausesNode
+   │  │  └──WhereClauseNode [T]
+   │  │     └──NamedTypeNode [IAdd]
+   │  │        └──TypeArgumentListNode
+   │  │           ├──NamedTypeNode [T]
+   │  │           ├──NamedTypeNode [T]
+   │  │           └──NamedTypeNode [T]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──PrimaryExprNode
+   │           └──StructLiteralNode
+   │              ├──NamedTypeNode [Vector2]
+   │              │  └──TypeArgumentListNode
+   │              │     └──NamedTypeNode [T]
+   │              ├──StructLiteralFieldNode [x]
+   │              │  └──AddExprNode [PlusToken]
+   │              │     ├──PostfixExprNode
+   │              │     │  ├──PrimaryExprNode [left]
+   │              │     │  └──DotAccessNode [x]
+   │              │     └──PostfixExprNode
+   │              │        ├──PrimaryExprNode [right]
+   │              │        └──DotAccessNode [x]
+   │              └──StructLiteralFieldNode [y]
+   │                 └──AddExprNode [PlusToken]
+   │                    ├──PostfixExprNode
+   │                    │  ├──PrimaryExprNode [left]
+   │                    │  └──DotAccessNode [y]
+   │                    └──PostfixExprNode
+   │                       ├──PrimaryExprNode [right]
+   │                       └──DotAccessNode [y]
+   ├──FunctionDeclNode [resursive]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [n]
+   │  │     └──PrimitiveTypeNode [I32Keyword]
+   │  ├──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     ├──IfStmtNode
+   │     │  ├──ComparisonExprNode [LessEqualsToken]
+   │     │  │  ├──PrimaryExprNode [n]
+   │     │  │  └──PrimaryExprNode
+   │     │  │     └──IntegerLiteralNode [0]
+   │     │  └──BodyStmtNode
+   │     │     └──ReturnStmtNode
+   │     │        └──PrimaryExprNode
+   │     │           └──IntegerLiteralNode [1]
+   │     └──ReturnStmtNode
+   │        └──AddExprNode [PlusToken]
+   │           ├──PostfixExprNode
+   │           │  ├──PrimaryExprNode [resursive]
+   │           │  └──CallExprNode
+   │           │     └──CallArgsNode
+   │           │        └──CallArgNode
+   │           │           └──AddExprNode [MinusToken]
+   │           │              ├──PrimaryExprNode [i]
+   │           │              └──PrimaryExprNode
+   │           │                 └──IntegerLiteralNode [1]
+   │           └──PostfixExprNode
+   │              ├──PrimaryExprNode [resursive]
+   │              └──CallExprNode
+   │                 └──CallArgsNode
+   │                    └──CallArgNode
+   │                       └──AddExprNode [MinusToken]
+   │                          ├──PrimaryExprNode [i]
+   │                          └──PrimaryExprNode
+   │                             └──IntegerLiteralNode [2]
+   └──FunctionDeclNode [main]
+      ├──FuncParametersNode
+      │  └──FuncParameterNode [args]
+      │     └──NamedTypeNode [Slice]
+      │        └──TypeArgumentListNode
+      │           └──NamedTypeNode [String]
+      ├──PrimitiveTypeNode [I32Keyword]
+      └──BodyStmtNode
+         └──ReturnStmtNode
+            └──PrimaryExprNode
+               └──IntegerLiteralNode [0]

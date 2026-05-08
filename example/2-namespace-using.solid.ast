@@ -1,0 +1,18 @@
+└──ProgramNode
+   ├──NamespaceDeclNode
+   │  └──NamespacePathNode [main]
+   ├──UsingDeclNode
+   │  └──NamespacePathNode [std::math]
+   ├──UsingDeclNode
+   │  └──NamespacePathNode [std::core]
+   └──FunctionDeclNode [main]
+      ├──FuncParametersNode
+      │  └──FuncParameterNode [args]
+      │     └──NamedTypeNode [Slice]
+      │        └──TypeArgumentListNode
+      │           └──NamedTypeNode [String]
+      ├──PrimitiveTypeNode [I32Keyword]
+      └──BodyStmtNode
+         └──ReturnStmtNode
+            └──PrimaryExprNode
+               └──IntegerLiteralNode [0]

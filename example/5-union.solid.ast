@@ -1,0 +1,58 @@
+└──ProgramNode
+   ├──UnionDeclNode [DynamicVariable]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [sealed]
+   │  └──UnionFieldsNode
+   │     ├──UnionFieldNode [as_i32]
+   │     │  └──PrimitiveTypeNode [I32Keyword]
+   │     └──UnionFieldNode [as_f32]
+   │        └──PrimitiveTypeNode [F32Keyword]
+   ├──UnionDeclNode [RawOptional]
+   │  ├──GenericParamsNode
+   │  │  └──GenericParamNode [T]
+   │  └──UnionFieldsNode
+   │     ├──UnionFieldNode [value]
+   │     │  └──NamedTypeNode [T]
+   │     └──UnionFieldNode [none]
+   │        └──PointerTypeNode
+   │           └──NamedTypeNode [opaque]
+   ├──ConstDeclNode [None]
+   │  └──PrimaryExprNode
+   │     └──VariantLiteralNode [none]
+   │        ├──NamedTypeNode [RawOptional]
+   │        │  └──TypeArgumentListNode
+   │        │     └──NamedTypeNode [T]
+   │        └──PrimaryExprNode
+   │           └──NullLiteralNode
+   ├──FunctionDeclNode [Value]
+   │  ├──GenericParamsNode
+   │  │  └──GenericParamNode [T]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [value]
+   │  │     └──NamedTypeNode [T]
+   │  ├──NamedTypeNode [RawOptional]
+   │  │  └──TypeArgumentListNode
+   │  │     └──NamedTypeNode [T]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──PrimaryExprNode
+   │           └──VariantLiteralNode [value]
+   │              ├──NamedTypeNode [RawOptional]
+   │              └──PrimaryExprNode [value]
+   └──FunctionDeclNode [is_none]
+      ├──GenericParamsNode
+      │  └──GenericParamNode [T]
+      ├──FuncParametersNode
+      │  └──FuncParameterNode [self]
+      │     └──NamedTypeNode [RawOptional]
+      │        └──TypeArgumentListNode
+      │           └──NamedTypeNode [T]
+      ├──PrimitiveTypeNode [BoolKeyword]
+      └──BodyStmtNode
+         └──ReturnStmtNode
+            └──EqualityExprNode [EqualsEqualsToken]
+               ├──PostfixExprNode
+               │  ├──PrimaryExprNode [self]
+               │  └──DotAccessNode [none]
+               └──PrimaryExprNode
+                  └──NullLiteralNode

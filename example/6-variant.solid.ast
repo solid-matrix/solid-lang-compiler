@@ -1,0 +1,10 @@
+└──ProgramNode
+   └──VariantDeclNode [Result]
+      ├──GenericParamsNode
+      │  ├──GenericParamNode [TValue]
+      │  └──GenericParamNode [TError]
+      └──VariantFieldsNode
+         ├──VariantFieldNode [Okay]
+         │  └──NamedTypeNode [TValue]
+         └──VariantFieldNode [Fault]
+            └──NamedTypeNode [TError]

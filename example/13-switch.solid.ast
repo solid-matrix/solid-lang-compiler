@@ -1,0 +1,180 @@
+└──ProgramNode
+   ├──FunctionDeclNode [switch_literal]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [value]
+   │  │     └──PrimitiveTypeNode [I32Keyword]
+   │  ├──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     └──SwitchStmtNode
+   │        ├──PrimaryExprNode [value]
+   │        ├──SwitchArmNode
+   │        │  ├──SwitchPatternNode
+   │        │  │  └──IntegerLiteralNode [0]
+   │        │  └──ReturnStmtNode
+   │        │     └──PrimaryExprNode
+   │        │        └──IntegerLiteralNode [0]
+   │        ├──SwitchArmNode
+   │        │  ├──SwitchPatternNode
+   │        │  │  └──IntegerLiteralNode [1]
+   │        │  └──ReturnStmtNode
+   │        │     └──PrimaryExprNode
+   │        │        └──IntegerLiteralNode [10]
+   │        ├──SwitchArmNode
+   │        │  ├──SwitchPatternNode
+   │        │  │  └──IntegerLiteralNode [2]
+   │        │  └──ReturnStmtNode
+   │        │     └──PrimaryExprNode
+   │        │        └──IntegerLiteralNode [20]
+   │        └──SwitchArmNode [else]
+   │           └──ReturnStmtNode
+   │              └──UnaryExprNode [MinusToken]
+   │                 └──PrimaryExprNode
+   │                    └──IntegerLiteralNode [1]
+   ├──FunctionDeclNode [switch_literal_multiple]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [value]
+   │     │  ├──PrimitiveTypeNode [I32Keyword]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [1]
+   │     └──SwitchStmtNode
+   │        ├──PrimaryExprNode [value]
+   │        ├──SwitchArmNode
+   │        │  ├──SwitchPatternNode
+   │        │  │  └──IntegerLiteralNode [0]
+   │        │  ├──SwitchPatternNode
+   │        │  │  └──IntegerLiteralNode [1]
+   │        │  ├──SwitchPatternNode
+   │        │  │  └──IntegerLiteralNode [2]
+   │        │  └──AssignStmtNode
+   │        │     ├──PrimaryExprNode [value]
+   │        │     └──PrimaryExprNode
+   │        │        └──IntegerLiteralNode [100]
+   │        ├──SwitchArmNode
+   │        │  ├──SwitchPatternNode
+   │        │  │  └──IntegerLiteralNode [3]
+   │        │  └──BodyStmtNode
+   │        │     └──AssignStmtNode
+   │        │        ├──PrimaryExprNode [value]
+   │        │        └──UnaryExprNode [MinusToken]
+   │        │           └──PrimaryExprNode
+   │        │              └──IntegerLiteralNode [100]
+   │        └──SwitchArmNode [else]
+   │           └──BodyStmtNode
+   │              └──AssignStmtNode
+   │                 ├──PrimaryExprNode [value]
+   │                 └──PrimaryExprNode
+   │                    └──IntegerLiteralNode [500]
+   ├──EnumDeclNode [Color]
+   │  ├──PrimitiveTypeNode [U32Keyword]
+   │  └──EnumFieldsNode
+   │     ├──EnumFieldNode [Red]
+   │     ├──EnumFieldNode [Green]
+   │     ├──EnumFieldNode [Blue]
+   │     ├──EnumFieldNode [Black]
+   │     └──EnumFieldNode [White]
+   ├──FunctionDeclNode [switch_enum]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [color]
+   │  │     └──NamedTypeNode [Color]
+   │  └──BodyStmtNode
+   │     └──SwitchStmtNode
+   │        ├──PrimaryExprNode [color]
+   │        ├──SwitchArmNode
+   │        │  ├──SwitchPatternNode
+   │        │  │  └──EnumLiteralNode [Red]
+   │        │  │     └──NamedTypeNode [Color]
+   │        │  └──ExprStmtNode
+   │        │     └──PostfixExprNode
+   │        │        ├──PrimaryExprNode [print]
+   │        │        └──CallExprNode
+   │        │           └──CallArgsNode
+   │        │              └──CallArgNode
+   │        │                 └──PrimaryExprNode
+   │        │                    └──StringLiteralNode ["red"]
+   │        ├──SwitchArmNode
+   │        │  ├──SwitchPatternNode
+   │        │  │  └──EnumLiteralNode [Black]
+   │        │  │     └──NamedTypeNode [Color]
+   │        │  ├──SwitchPatternNode
+   │        │  │  └──EnumLiteralNode [White]
+   │        │  │     └──NamedTypeNode [Color]
+   │        │  └──ExprStmtNode
+   │        │     └──PostfixExprNode
+   │        │        ├──PrimaryExprNode [print]
+   │        │        └──CallExprNode
+   │        │           └──CallArgsNode
+   │        │              └──CallArgNode
+   │        │                 └──PrimaryExprNode
+   │        │                    └──StringLiteralNode ["white or black"]
+   │        └──SwitchArmNode [else]
+   │           └──ExprStmtNode
+   │              └──PostfixExprNode
+   │                 ├──PrimaryExprNode [print]
+   │                 └──CallExprNode
+   │                    └──CallArgsNode
+   │                       └──CallArgNode
+   │                          └──PrimaryExprNode
+   │                             └──StringLiteralNode ["other"]
+   ├──VariantDeclNode [Result]
+   │  ├──GenericParamsNode
+   │  │  ├──GenericParamNode [TValue]
+   │  │  └──GenericParamNode [TError]
+   │  └──VariantFieldsNode
+   │     ├──VariantFieldNode [Okay]
+   │     │  └──NamedTypeNode [TValue]
+   │     └──VariantFieldNode [Fault]
+   │        └──NamedTypeNode [TError]
+   ├──StructDeclNode [Error]
+   │  ├──GenericParamsNode
+   │  │  └──GenericParamNode [T]
+   │  └──StructFieldsNode
+   │     ├──StructFieldNode [OutOfRange]
+   │     │  └──NamedTypeNode [T]
+   │     └──StructFieldNode [NullArgument]
+   │        └──NamedTypeNode [T]
+   ├──StructDeclNode [Vector2]
+   │  ├──GenericParamsNode
+   │  │  └──GenericParamNode [T]
+   │  └──StructFieldsNode
+   │     ├──StructFieldNode [x]
+   │     │  └──NamedTypeNode [T]
+   │     └──StructFieldNode [y]
+   │        └──NamedTypeNode [T]
+   └──FunctionDeclNode [switch_variant]
+      ├──FuncParametersNode
+      │  └──FuncParameterNode [result]
+      │     └──NamedTypeNode [Result]
+      │        └──TypeArgumentListNode
+      │           ├──NamedTypeNode [Vector2]
+      │           │  └──TypeArgumentListNode
+      │           │     └──PrimitiveTypeNode [F32Keyword]
+      │           └──NamedTypeNode [Error]
+      │              └──TypeArgumentListNode
+      │                 └──NamedTypeNode [String]
+      └──BodyStmtNode
+         └──SwitchStmtNode
+            ├──PrimaryExprNode [result]
+            ├──SwitchArmNode
+            │  ├──SwitchPatternNode
+            │  │  └──VariantLiteralNode [Okay]
+            │  │     ├──NamedTypeNode [Result]
+            │  │     └──PrimaryExprNode [value]
+            │  └──ExprStmtNode
+            │     └──PostfixExprNode
+            │        ├──PrimaryExprNode [print]
+            │        └──CallExprNode
+            │           └──CallArgsNode
+            │              └──CallArgNode
+            │                 └──PrimaryExprNode [value]
+            └──SwitchArmNode
+               ├──SwitchPatternNode
+               │  └──VariantLiteralNode [Fault]
+               │     ├──NamedTypeNode [Result]
+               │     └──PrimaryExprNode [error]
+               └──ExprStmtNode
+                  └──PostfixExprNode
+                     ├──PrimaryExprNode [print]
+                     └──CallExprNode
+                        └──CallArgsNode
+                           └──CallArgNode
+                              └──PrimaryExprNode [error]

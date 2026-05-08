@@ -1,0 +1,60 @@
+└──ProgramNode
+   ├──EnumDeclNode [Color]
+   │  └──EnumFieldsNode
+   │     ├──EnumFieldNode [Red]
+   │     ├──EnumFieldNode [Green]
+   │     └──EnumFieldNode [Blue]
+   ├──EnumDeclNode [WindowFlags]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [flags]
+   │  ├──PrimitiveTypeNode [U32Keyword]
+   │  └──EnumFieldsNode
+   │     ├──EnumFieldNode [Resizable]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [1]
+   │     ├──EnumFieldNode [Hidden]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [2]
+   │     ├──EnumFieldNode [Maximum]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [4]
+   │     └──EnumFieldNode [Minimum]
+   │        └──PrimaryExprNode
+   │           └──IntegerLiteralNode [8]
+   ├──FunctionDeclNode [Set]
+   │  ├──NamespacePrefixNode
+   │  │  └──NamespacePathNode [WindowFlags]
+   │  ├──FuncParametersNode
+   │  │  ├──FuncParameterNode [self]
+   │  │  │  └──PointerTypeNode
+   │  │  │     └──NamedTypeNode [WindowFlags]
+   │  │  └──FuncParameterNode [flags]
+   │  │     └──NamedTypeNode [WindowFlags]
+   │  └──BodyStmtNode
+   │     └──AssignStmtNode
+   │        ├──UnaryExprNode [StarToken]
+   │        │  └──PrimaryExprNode [self]
+   │        └──PrimaryExprNode [flags]
+   ├──FunctionDeclNode [Reset]
+   │  ├──NamespacePrefixNode
+   │  │  └──NamespacePathNode [WindowFlags]
+   │  ├──FuncParametersNode
+   │  │  ├──FuncParameterNode [self]
+   │  │  │  └──PointerTypeNode
+   │  │  │     └──NamedTypeNode [WindowFlags]
+   │  │  └──FuncParameterNode [flags]
+   │  │     └──NamedTypeNode [WindowFlags]
+   │  └──BodyStmtNode
+   │     └──AssignStmtNode
+   │        ├──UnaryExprNode [StarToken]
+   │        │  └──PrimaryExprNode [self]
+   │        └──UnaryExprNode [TildeToken]
+   │           └──PrimaryExprNode [flags]
+   └──ConstDeclNode [Default]
+      └──BitOrExprNode [PipeToken]
+         ├──PrimaryExprNode
+         │  └──EnumLiteralNode [Resizable]
+         │     └──NamedTypeNode [WindowFlags]
+         └──PrimaryExprNode
+            └──EnumLiteralNode [Hidden]
+               └──NamedTypeNode [WindowFlags]

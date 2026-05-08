@@ -1,0 +1,121 @@
+└──ProgramNode
+   ├──FunctionDeclNode [if_basic]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [n]
+   │  │     └──PrimitiveTypeNode [I32Keyword]
+   │  ├──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     ├──IfStmtNode
+   │     │  ├──ComparisonExprNode [GreaterToken]
+   │     │  │  ├──PrimaryExprNode [n]
+   │     │  │  └──PrimaryExprNode
+   │     │  │     └──IntegerLiteralNode [0]
+   │     │  └──BodyStmtNode
+   │     │     └──ReturnStmtNode
+   │     │        └──PrimaryExprNode
+   │     │           └──IntegerLiteralNode [1]
+   │     └──ReturnStmtNode
+   │        └──PrimaryExprNode
+   │           └──IntegerLiteralNode [0]
+   ├──FunctionDeclNode [if_else]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [n]
+   │  │     └──PrimitiveTypeNode [I32Keyword]
+   │  ├──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     └──IfStmtNode
+   │        ├──ComparisonExprNode [GreaterToken]
+   │        │  ├──PrimaryExprNode [n]
+   │        │  └──PrimaryExprNode
+   │        │     └──IntegerLiteralNode [0]
+   │        ├──BodyStmtNode
+   │        │  └──ReturnStmtNode
+   │        │     └──PrimaryExprNode
+   │        │        └──IntegerLiteralNode [1]
+   │        └──BodyStmtNode
+   │           └──ReturnStmtNode
+   │              └──PrimaryExprNode
+   │                 └──IntegerLiteralNode [2]
+   ├──FunctionDeclNode [if_else_if]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [n]
+   │  │     └──PrimitiveTypeNode [I32Keyword]
+   │  ├──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     ├──IfStmtNode
+   │     │  ├──ComparisonExprNode [GreaterToken]
+   │     │  │  ├──PrimaryExprNode [n]
+   │     │  │  └──PrimaryExprNode
+   │     │  │     └──IntegerLiteralNode [0]
+   │     │  ├──BodyStmtNode
+   │     │  │  └──ReturnStmtNode
+   │     │  │     └──PrimaryExprNode
+   │     │  │        └──IntegerLiteralNode [1]
+   │     │  └──IfStmtNode
+   │     │     ├──ComparisonExprNode [LessToken]
+   │     │     │  ├──PrimaryExprNode [n]
+   │     │     │  └──PrimaryExprNode
+   │     │     │     └──IntegerLiteralNode [0]
+   │     │     └──BodyStmtNode
+   │     │        └──ReturnStmtNode
+   │     │           └──UnaryExprNode [MinusToken]
+   │     │              └──PrimaryExprNode
+   │     │                 └──IntegerLiteralNode [1]
+   │     └──ReturnStmtNode
+   │        └──PrimaryExprNode
+   │           └──IntegerLiteralNode [0]
+   ├──FunctionDeclNode [if_else_if_else]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [x]
+   │  │     └──PrimitiveTypeNode [I32Keyword]
+   │  ├──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     └──IfStmtNode
+   │        ├──ComparisonExprNode [GreaterToken]
+   │        │  ├──PrimaryExprNode [x]
+   │        │  └──PrimaryExprNode
+   │        │     └──IntegerLiteralNode [0]
+   │        ├──BodyStmtNode
+   │        │  └──ReturnStmtNode
+   │        │     └──PrimaryExprNode
+   │        │        └──IntegerLiteralNode [1]
+   │        └──IfStmtNode
+   │           ├──EqualityExprNode [EqualsEqualsToken]
+   │           │  ├──PrimaryExprNode [x]
+   │           │  └──PrimaryExprNode
+   │           │     └──IntegerLiteralNode [0]
+   │           ├──BodyStmtNode
+   │           │  └──ReturnStmtNode
+   │           │     └──PrimaryExprNode
+   │           │        └──IntegerLiteralNode [0]
+   │           └──BodyStmtNode
+   │              └──ReturnStmtNode
+   │                 └──UnaryExprNode [MinusToken]
+   │                    └──PrimaryExprNode
+   │                       └──IntegerLiteralNode [1]
+   └──FunctionDeclNode [nested_if]
+      ├──FuncParametersNode
+      │  ├──FuncParameterNode [a]
+      │  │  └──PrimitiveTypeNode [I32Keyword]
+      │  └──FuncParameterNode [b]
+      │     └──PrimitiveTypeNode [I32Keyword]
+      ├──PrimitiveTypeNode [BoolKeyword]
+      └──BodyStmtNode
+         ├──IfStmtNode
+         │  ├──ComparisonExprNode [GreaterToken]
+         │  │  ├──PrimaryExprNode [a]
+         │  │  └──PrimaryExprNode
+         │  │     └──IntegerLiteralNode [0]
+         │  └──BodyStmtNode
+         │     └──IfStmtNode
+         │        ├──ComparisonExprNode [GreaterToken]
+         │        │  ├──PrimaryExprNode [b]
+         │        │  └──PrimaryExprNode
+         │        │     └──IntegerLiteralNode [0]
+         │        └──BodyStmtNode
+         │           └──ReturnStmtNode
+         │              └──PrimaryExprNode
+         │                 └──BoolLiteralNode [True]
+         └──ReturnStmtNode
+            └──PrimaryExprNode
+               └──BoolLiteralNode [False]
