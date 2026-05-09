@@ -4,20 +4,22 @@ using SolidLang.Parser.Nodes.Types;
 namespace SolidLang.Parser.Nodes.Declarations;
 
 /// <summary>
-/// Represents a constant declaration: const name: type = expr;
+/// Represents a constant declaration: const [Type::]name: type = expr;
 /// </summary>
 public sealed class ConstDeclNode : DeclNode
 {
     public CtAnnotatesNode? Annotations { get; }
+    public NamedTypeSpacePrefixNode? NamedTypePrefix { get; }
     public string Name { get; }
     public TypeNode? Type { get; }
     public ExprNode Initializer { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
-    public ConstDeclNode(CtAnnotatesNode? annotations, string name, TypeNode? type, ExprNode initializer, TextSpan span, string fullText)
+    public ConstDeclNode(CtAnnotatesNode? annotations, NamedTypeSpacePrefixNode? namedTypePrefix, string name, TypeNode? type, ExprNode initializer, TextSpan span, string fullText)
     {
         Annotations = annotations;
+        NamedTypePrefix = namedTypePrefix;
         Name = name;
         Type = type;
         Initializer = initializer;
@@ -32,6 +34,8 @@ public sealed class ConstDeclNode : DeclNode
     {
         if (Annotations != null)
             yield return Annotations;
+        if (NamedTypePrefix != null)
+            yield return NamedTypePrefix;
         if (Type != null)
             yield return Type;
         yield return Initializer;
@@ -46,20 +50,22 @@ public sealed class ConstDeclNode : DeclNode
 }
 
 /// <summary>
-/// Represents a static variable declaration: static name: type = expr;
+/// Represents a static variable declaration: static [Type::]name: type = expr;
 /// </summary>
 public sealed class StaticDeclNode : DeclNode
 {
     public CtAnnotatesNode? Annotations { get; }
+    public NamedTypeSpacePrefixNode? NamedTypePrefix { get; }
     public string Name { get; }
     public TypeNode? Type { get; }
     public ExprNode Initializer { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
-    public StaticDeclNode(CtAnnotatesNode? annotations, string name, TypeNode? type, ExprNode initializer, TextSpan span, string fullText)
+    public StaticDeclNode(CtAnnotatesNode? annotations, NamedTypeSpacePrefixNode? namedTypePrefix, string name, TypeNode? type, ExprNode initializer, TextSpan span, string fullText)
     {
         Annotations = annotations;
+        NamedTypePrefix = namedTypePrefix;
         Name = name;
         Type = type;
         Initializer = initializer;
@@ -74,6 +80,8 @@ public sealed class StaticDeclNode : DeclNode
     {
         if (Annotations != null)
             yield return Annotations;
+        if (NamedTypePrefix != null)
+            yield return NamedTypePrefix;
         if (Type != null)
             yield return Type;
         yield return Initializer;

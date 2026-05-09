@@ -535,7 +535,7 @@ public sealed partial class Parser
         return ParsePostfixExpr();
     }
 
-    // Postfix: . [] () ::
+    // Postfix: . [] ()
     private ExprNode ParsePostfixExpr()
     {
         var primary = ParsePrimaryExpr();
@@ -590,33 +590,6 @@ public sealed partial class Parser
                 var span = GetSpanFrom(start);
                 var text = _source.GetText(span);
                 suffixes.Add(new CallExprNode(args, span, text));
-            }
-            else if (Current == ':' && Peek() == ':')
-            {
-                var start = _position;
-                Advance(); Advance();
-                SkipWhitespaceAndComments();
-
-                var name = ScanIdentifier();
-                SkipWhitespaceAndComments();
-
-                CallArgsNode? args = null;
-                if (Current == '(')
-                {
-                    Advance();
-                    SkipWhitespaceAndComments();
-
-                    if (Current != ')')
-                    {
-                        args = ParseCallArgs();
-                    }
-
-                    Expect(')');
-                }
-
-                var span = GetSpanFrom(start);
-                var text = _source.GetText(span);
-                suffixes.Add(new ScopeAccessNode(name, args, span, text));
             }
             else
             {
@@ -691,18 +664,55 @@ public sealed partial class Parser
             return new PrimaryExprNode(PrimaryExprKind.Literal, literal, null, null, null, literal.Span, literal.GetFullText());
         }
 
-        // Identifier
+        // Identifier (possibly scoped: Name::Name::...::member)
         if (char.IsLetter(Current) || Current == '_')
         {
-            var name = ScanIdentifier();
-            var span = GetSpanFrom(start);
-            var text = _source.GetText(span);
-            return new PrimaryExprNode(PrimaryExprKind.Identifier, null, name, null, null, span, text);
+            return ParseIdentifierOrScopedAccess(start);
         }
 
         // Error
         _diagnostics.ExpectedExpression(GetCurrentSpan());
         return new BadExprNode(GetCurrentSpan());
+    }
+
+    /// <summary>
+    /// Parses an identifier or a scoped access expression: [NS::][Type&lt;T&gt;::]member [ (args) ].
+    /// Uses TryParseNamedTypePrefix to determine if :: follows the first identifier.
+    /// </summary>
+    private ExprNode ParseIdentifierOrScopedAccess(int start)
+    {
+        var namedTypePrefix = TryParseNamedTypePrefix();
+
+        if (namedTypePrefix == null)
+        {
+            // Simple identifier
+            var name = ScanIdentifier();
+            var exprSpan = GetSpanFrom(start);
+            var exprText = _source.GetText(exprSpan);
+            return new PrimaryExprNode(PrimaryExprKind.Identifier, null, name, null, null, exprSpan, exprText);
+        }
+
+        // Scoped access: prefix::member or prefix::member(args)
+        SkipWhitespaceAndComments();
+        var memberName = ScanIdentifier();
+        SkipWhitespaceAndComments();
+
+        CallArgsNode? args = null;
+        if (Current == '(')
+        {
+            Advance();
+            SkipWhitespaceAndComments();
+
+            if (Current != ')')
+                args = ParseCallArgs();
+
+            SkipWhitespaceAndComments();
+            Expect(')');
+        }
+
+        var exprSpan2 = GetSpanFrom(start);
+        var exprText2 = _source.GetText(exprSpan2);
+        return new ScopedAccessExprNode(namedTypePrefix, memberName, args, exprSpan2, exprText2);
     }
 
     private CtOperatorExprNode ParseCtOperatorExpr()
@@ -843,8 +853,7 @@ public sealed partial class Parser
         // Check for float starting with .
         if (Current == '.')
         {
-            Advance();
-            var (text, value, suffix) = ScanFloatLiteral(start, ".");
+            var (text, value, suffix) = ScanFloatLiteral(start, "");
             return new FloatLiteralNode(text, value, suffix, GetSpanFrom(start));
         }
 

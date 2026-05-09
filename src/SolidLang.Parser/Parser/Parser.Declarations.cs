@@ -261,76 +261,134 @@ public sealed partial class Parser
     // Function Declaration
     // ========================================
 
+    /// <summary>
+    /// Tries to parse a named-type prefix for out-of-line declarations (NS::Type&lt;T&gt;::).
+    /// Returns null if no :: follows the first identifier+generics (backtracks).
+    /// Each segment may be followed by optional generic params.
+    /// The last segment is the type name; earlier segments form the namespace prefix.
+    /// </summary>
+    private NamedTypeSpacePrefixNode? TryParseNamedTypePrefix()
+    {
+        var savedPos = _position;
+        var id1 = ScanIdentifier();
+        SkipWhitespaceAndComments();
+
+        // Optional generics after first identifier
+        if (Current == '<')
+        {
+            ParseGenericParams();
+            SkipWhitespaceAndComments();
+        }
+
+        if (!Match("::"))
+        {
+            _position = savedPos;
+            return null;
+        }
+
+        // Collect segments. The last segment will be the type name.
+        var prefixStart = savedPos;
+        var segments = new List<string> { id1 };
+        // Track the start position of each potential type name
+        var typeNameStart = savedPos;
+        // Track the end of the prefix (right before the member name)
+        var memberStart = _position;
+
+        while (true)
+        {
+            SkipWhitespaceAndComments();
+            var nextIdStart = _position;
+            var segment = ScanIdentifier();
+            SkipWhitespaceAndComments();
+
+            // Optional generics after this segment
+            if (Current == '<')
+            {
+                ParseGenericParams();
+                SkipWhitespaceAndComments();
+            }
+
+            if (Current == ':' && Peek() == ':')
+            {
+                segments.Add(segment);
+                typeNameStart = nextIdStart;
+                Advance(); Advance();
+            }
+            else
+            {
+                _position = nextIdStart;
+                memberStart = nextIdStart;
+                break;
+            }
+        }
+
+        // The last segment is the type name, the rest form the namespace prefix
+        var typeName = segments[^1];
+        var nsSegmentCount = segments.Count - 1;
+
+        // Build optional namespace prefix from the non-last segments
+        NamespacePrefixNode? nsPrefix = null;
+        if (nsSegmentCount > 0)
+        {
+            var nsSb = new StringBuilder();
+            for (int i = 0; i < nsSegmentCount; i++)
+            {
+                if (i > 0) nsSb.Append("::");
+                nsSb.Append(segments[i]);
+            }
+            var pathSpan = TextSpan.FromBounds(prefixStart, typeNameStart);
+            var pathText = nsSb.ToString();
+            var path = new NamespacePathNode(segments.Take(nsSegmentCount).ToList(), pathSpan, pathText);
+            nsPrefix = new NamespacePrefixNode(path, pathSpan, pathText + "::");
+        }
+
+        // Re-read the type name at its saved position and parse proper type arguments.
+        // Save and restore position so the caller sees the member name, not the end of type args.
+        var savedAfterPrefix = _position; // equals memberStart
+        _position = typeNameStart;
+        SkipWhitespaceAndComments();
+        typeName = ScanIdentifier();
+        SkipWhitespaceAndComments();
+
+        TypeArgumentListNode? typeArgs = null;
+        if (Current == '<')
+        {
+            typeArgs = ParseTypeArgumentList();
+            SkipWhitespaceAndComments();
+        }
+
+        // Build the NamedType (spans from type start to just before the trailing ::)
+        var namedTypeSpanStart = nsPrefix != null ? nsPrefix.Span.Start : typeNameStart;
+        var namedTypeSpanEnd = typeArgs != null ? typeArgs.Span.End : _position;
+        var namedTypeSpan = TextSpan.FromBounds(namedTypeSpanStart, namedTypeSpanEnd);
+        var namedTypeText = _source.GetText(namedTypeSpan);
+        var namedType = new NamedTypeNode(nsPrefix, typeName, typeArgs, namedTypeSpan, namedTypeText);
+
+        // Preix span: from start to before the member name (includes the trailing ::)
+        var prefixSpan = TextSpan.FromBounds(savedPos, memberStart);
+        var prefixText = _source.GetText(prefixSpan);
+
+        // Restore position so the caller can scan the member name
+        _position = savedAfterPrefix;
+
+        return new NamedTypeSpacePrefixNode(namedType, prefixSpan, prefixText);
+    }
+
     private FunctionDeclNode ParseFunctionDecl(CtAnnotatesNode? annotations, int start)
     {
         Match("func");
         SkipWhitespaceAndComments();
 
-        // namespace_prefix?
-        NamespacePrefixNode? nsPrefix = null;
-        var savedPos = _position;
-        var id1 = ScanIdentifier();
-        SkipWhitespaceAndComments();
-
-        if (Match("::"))
-        {
-            // It was a namespace prefix
-            var pathStart = savedPos;
-            var segments = new List<string> { id1 };
-            var sb = new StringBuilder(id1);
-
-            while (true)
-            {
-                SkipWhitespaceAndComments();
-                var nextIdStart = _position;
-                var segment = ScanIdentifier();
-                SkipWhitespaceAndComments();
-
-                // Only add as namespace segment if followed by ::
-                if (Current == ':' && Peek() == ':')
-                {
-                    segments.Add(segment);
-                    sb.Append("::");
-                    sb.Append(segment);
-                    Advance(); Advance(); // Skip ::
-                }
-                else
-                {
-                    // This segment is the actual name, backtrack
-                    _position = nextIdStart;
-                    break;
-                }
-            }
-
-            var pathSpan = TextSpan.FromBounds(pathStart, _position);
-            var path = new NamespacePathNode(segments, pathSpan, sb.ToString());
-            nsPrefix = new NamespacePrefixNode(path, pathSpan, sb.ToString() + "::");
-        }
-        else
-        {
-            // Not a namespace prefix, backtrack
-            _position = savedPos;
-        }
-
+        var namedTypePrefix = TryParseNamedTypePrefix();
         SkipWhitespaceAndComments();
         var name = ScanIdentifier();
         SkipWhitespaceAndComments();
 
-        // generic_params?
+        // generic_params? (function-level generics)
         GenericParamsNode? genericParams = null;
         if (Current == '<')
         {
             genericParams = ParseGenericParams();
-            SkipWhitespaceAndComments();
-        }
-
-        // Handle Type<T>::method_name pattern
-        // This is used for member functions defined outside the type body
-        if (genericParams != null && Current == ':' && Peek() == ':')
-        {
-            Advance(); Advance(); // Skip ::
-            SkipWhitespaceAndComments();
-            name = ScanIdentifier();
             SkipWhitespaceAndComments();
         }
 
@@ -394,7 +452,7 @@ public sealed partial class Parser
 
         var span = GetSpanFrom(start);
         var fullText = _source.GetText(span);
-        return new FunctionDeclNode(annotations, nsPrefix, name, genericParams, parameters, callConv, returnType, whereClauses, body, isForward, span, fullText);
+        return new FunctionDeclNode(annotations, namedTypePrefix, name, genericParams, parameters, callConv, returnType, whereClauses, body, isForward, span, fullText);
     }
 
     private GenericParamsNode ParseGenericParams()
@@ -997,23 +1055,10 @@ public sealed partial class Parser
         Match("const");
         SkipWhitespaceAndComments();
 
+        var namedTypePrefix = TryParseNamedTypePrefix();
+        SkipWhitespaceAndComments();
         var name = ScanIdentifier();
         SkipWhitespaceAndComments();
-
-        // Handle Type<generics>::member_name and Type::member_name patterns
-        if (Current == '<')
-        {
-            ParseGenericParams();
-            SkipWhitespaceAndComments();
-        }
-
-        if (Current == ':' && Peek() == ':')
-        {
-            Advance(); Advance();
-            SkipWhitespaceAndComments();
-            name = ScanIdentifier();
-            SkipWhitespaceAndComments();
-        }
 
         TypeNode? type = null;
         if (Current == ':')
@@ -1034,7 +1079,7 @@ public sealed partial class Parser
 
         var span = GetSpanFrom(start);
         var text = _source.GetText(span);
-        return new ConstDeclNode(annotations, name, type, initializer, span, text);
+        return new ConstDeclNode(annotations, namedTypePrefix, name, type, initializer, span, text);
     }
 
     private StaticDeclNode ParseStaticDecl(CtAnnotatesNode? annotations, int start)
@@ -1042,6 +1087,8 @@ public sealed partial class Parser
         Match("static");
         SkipWhitespaceAndComments();
 
+        var namedTypePrefix = TryParseNamedTypePrefix();
+        SkipWhitespaceAndComments();
         var name = ScanIdentifier();
         SkipWhitespaceAndComments();
 
@@ -1064,7 +1111,7 @@ public sealed partial class Parser
 
         var span = GetSpanFrom(start);
         var text = _source.GetText(span);
-        return new StaticDeclNode(annotations, name, type, initializer, span, text);
+        return new StaticDeclNode(annotations, namedTypePrefix, name, type, initializer, span, text);
     }
 
     private VarDeclNode ParseVarDecl(CtAnnotatesNode? annotations, int start)

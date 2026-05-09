@@ -249,7 +249,7 @@ public class ParserTests
         Assert.Equal(SyntaxKind.StdCallKeyword, createWindow.CallingConvention!.Convention);
 
         // @export func add(a: i32, b: i32)cdecl:i32{ return a+b; }
-        var add = funcs.First(f => f.Name == "add" && f.NamespacePrefix == null && f.WhereClauses == null);
+        var add = funcs.First(f => f.Name == "add" && f.NamedTypePrefix == null && f.WhereClauses == null);
         Assert.False(add.IsForwardDecl);
         Assert.NotNull(add.Body);
         Assert.NotNull(add.Parameters);
@@ -276,14 +276,14 @@ public class ParserTests
         Assert.NotNull(recursive.Body);
 
         // func Vector2::add — extension method with namespace prefix
-        var vecAdd2 = funcs.FirstOrDefault(f => f.Name == "add" && f.NamespacePrefix != null);
+        var vecAdd2 = funcs.FirstOrDefault(f => f.Name == "add" && f.NamedTypePrefix != null);
         Assert.NotNull(vecAdd2);
         Assert.NotNull(vecAdd2.Body);
 
         // func Vector2<T>::add — generic extension method with where clause
-        var vecAddT = funcs.FirstOrDefault(f => f.Name == "add" && f.WhereClauses != null);
+        var vecAddT = funcs.FirstOrDefault(f => f.Name == "add" && f.NamedTypePrefix != null && f.WhereClauses != null);
         Assert.NotNull(vecAddT);
-        Assert.NotNull(vecAddT.GenericParams);
+        Assert.NotNull(vecAddT.NamedTypePrefix);
         Assert.NotNull(vecAddT.WhereClauses);
         Assert.Single(vecAddT.WhereClauses!.Clauses);
         Assert.Equal("T", vecAddT.WhereClauses.Clauses[0].TypeParamName);

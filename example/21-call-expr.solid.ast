@@ -88,8 +88,8 @@
    │     ├──EnumFieldNode [Green]
    │     └──EnumFieldNode [Blue]
    └──FunctionDeclNode [Set]
-      ├──NamespacePrefixNode
-      │  └──NamespacePathNode [Color]
+      ├──NamedTypeSpacePrefixNode
+      │  └──NamedTypeNode [Color]
       ├──FuncParametersNode
       │  └──FuncParameterNode [v]
       │     └──PrimitiveTypeNode [I32Keyword]

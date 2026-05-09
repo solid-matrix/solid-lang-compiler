@@ -17,6 +17,10 @@
    │        └──PointerTypeNode
    │           └──NamedTypeNode [opaque]
    ├──ConstDeclNode [None]
+   │  ├──NamedTypeSpacePrefixNode
+   │  │  └──NamedTypeNode [RawOptional]
+   │  │     └──TypeArgumentListNode
+   │  │        └──NamedTypeNode [T]
    │  └──PrimaryExprNode
    │     └──VariantLiteralNode [none]
    │        ├──NamedTypeNode [RawOptional]
@@ -25,8 +29,10 @@
    │        └──PrimaryExprNode
    │           └──NullLiteralNode
    ├──FunctionDeclNode [Value]
-   │  ├──GenericParamsNode
-   │  │  └──GenericParamNode [T]
+   │  ├──NamedTypeSpacePrefixNode
+   │  │  └──NamedTypeNode [RawOptional]
+   │  │     └──TypeArgumentListNode
+   │  │        └──NamedTypeNode [T]
    │  ├──FuncParametersNode
    │  │  └──FuncParameterNode [value]
    │  │     └──NamedTypeNode [T]
@@ -40,8 +46,10 @@
    │              ├──NamedTypeNode [RawOptional]
    │              └──PrimaryExprNode [value]
    └──FunctionDeclNode [is_none]
-      ├──GenericParamsNode
-      │  └──GenericParamNode [T]
+      ├──NamedTypeSpacePrefixNode
+      │  └──NamedTypeNode [RawOptional]
+      │     └──TypeArgumentListNode
+      │        └──NamedTypeNode [T]
       ├──FuncParametersNode
       │  └──FuncParameterNode [self]
       │     └──NamedTypeNode [RawOptional]

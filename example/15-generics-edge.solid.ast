@@ -180,9 +180,11 @@
    │                 └──TypeArgumentListNode
    │                    └──NamedTypeNode [U]
    ├──FunctionDeclNode [swap]
-   │  ├──GenericParamsNode
-   │  │  ├──GenericParamNode [T]
-   │  │  └──GenericParamNode [U]
+   │  ├──NamedTypeSpacePrefixNode
+   │  │  └──NamedTypeNode [Container]
+   │  │     └──TypeArgumentListNode
+   │  │        ├──NamedTypeNode [T]
+   │  │        └──NamedTypeNode [U]
    │  ├──FuncParametersNode
    │  │  └──FuncParameterNode [self]
    │  │     └──PointerTypeNode

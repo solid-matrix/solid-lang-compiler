@@ -160,6 +160,7 @@ public enum SyntaxKind
     // Declaration Components
     NamespacePathNode,
     NamespacePrefixNode,
+    NamedTypeSpacePrefixNode,
     GenericParamsNode,
     GenericParamNode,
     WhereClausesNode,
@@ -234,6 +235,7 @@ public enum SyntaxKind
     IndexAccessNode,
     CallExprNode,
     ScopeAccessNode,
+    ScopedAccessExprNode,
     CallArgsNode,
     CallArgNode,
 

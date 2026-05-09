@@ -69,8 +69,8 @@
    │     └──StructFieldNode [y]
    │        └──PrimitiveTypeNode [F32Keyword]
    ├──FunctionDeclNode [hash]
-   │  ├──NamespacePrefixNode
-   │  │  └──NamespacePathNode [Point]
+   │  ├──NamedTypeSpacePrefixNode
+   │  │  └──NamedTypeNode [Point]
    │  ├──FuncParametersNode
    │  │  └──FuncParameterNode [self]
    │  │     └──NamedTypeNode [Point]
@@ -80,8 +80,8 @@
    │        └──PrimaryExprNode
    │           └──IntegerLiteralNode [0]
    ├──FunctionDeclNode [default_value]
-   │  ├──NamespacePrefixNode
-   │  │  └──NamespacePathNode [Point]
+   │  ├──NamedTypeSpacePrefixNode
+   │  │  └──NamedTypeNode [Point]
    │  ├──NamedTypeNode [Point]
    │  └──BodyStmtNode
    │     └──ReturnStmtNode
@@ -111,9 +111,11 @@
    │     └──StructFieldNode [value]
    │        └──NamedTypeNode [TValue]
    ├──FunctionDeclNode [hash]
-   │  ├──GenericParamsNode
-   │  │  ├──GenericParamNode [TKey]
-   │  │  └──GenericParamNode [TValue]
+   │  ├──NamedTypeSpacePrefixNode
+   │  │  └──NamedTypeNode [Pair]
+   │  │     └──TypeArgumentListNode
+   │  │        ├──NamedTypeNode [TKey]
+   │  │        └──NamedTypeNode [TValue]
    │  ├──FuncParametersNode
    │  │  └──FuncParameterNode [self]
    │  │     └──NamedTypeNode [Pair]

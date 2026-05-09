@@ -1,10 +1,11 @@
 // Float literal forms
-// NOTE: .5 (dot-prefix) float literals are not yet supported by the parser
 
 func float_regular(){
     var a = 1.5;
     var b = 0.5;
     var c = 3.14159;
+    var d = .5;
+    var e = .25;
 }
 
 func float_scientific(){

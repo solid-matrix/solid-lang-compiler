@@ -100,8 +100,8 @@
    ├──FunctionDeclNode [add]
    │  ├──CtAnnotatesNode
    │  │  └──CtAnnotateNode [hint]
-   │  ├──NamespacePrefixNode
-   │  │  └──NamespacePathNode [Vector2]
+   │  ├──NamedTypeSpacePrefixNode
+   │  │  └──NamedTypeNode [Vector2]
    │  ├──FuncParametersNode
    │  │  ├──FuncParameterNode [left]
    │  │  │  └──NamedTypeNode [Vector2]
@@ -130,8 +130,10 @@
    │                       ├──PrimaryExprNode [right]
    │                       └──DotAccessNode [y]
    ├──FunctionDeclNode [add]
-   │  ├──GenericParamsNode
-   │  │  └──GenericParamNode [T]
+   │  ├──NamedTypeSpacePrefixNode
+   │  │  └──NamedTypeNode [Vector2]
+   │  │     └──TypeArgumentListNode
+   │  │        └──NamedTypeNode [T]
    │  ├──FuncParametersNode
    │  │  ├──FuncParameterNode [left]
    │  │  │  └──NamedTypeNode [Vector2]

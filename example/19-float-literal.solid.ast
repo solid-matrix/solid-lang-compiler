@@ -7,9 +7,15 @@
    │     ├──VarDeclNode [b]
    │     │  └──PrimaryExprNode
    │     │     └──FloatLiteralNode [0.5]
-   │     └──VarDeclNode [c]
+   │     ├──VarDeclNode [c]
+   │     │  └──PrimaryExprNode
+   │     │     └──FloatLiteralNode [3.14159]
+   │     ├──VarDeclNode [d]
+   │     │  └──PrimaryExprNode
+   │     │     └──FloatLiteralNode [0.5]
+   │     └──VarDeclNode [e]
    │        └──PrimaryExprNode
-   │           └──FloatLiteralNode [3.14159]
+   │           └──FloatLiteralNode [0.25]
    ├──FunctionDeclNode [float_scientific]
    │  └──BodyStmtNode
    │     ├──VarDeclNode [a]

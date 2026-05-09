@@ -22,8 +22,8 @@
    │        └──PrimaryExprNode
    │           └──IntegerLiteralNode [8]
    ├──FunctionDeclNode [Set]
-   │  ├──NamespacePrefixNode
-   │  │  └──NamespacePathNode [WindowFlags]
+   │  ├──NamedTypeSpacePrefixNode
+   │  │  └──NamedTypeNode [WindowFlags]
    │  ├──FuncParametersNode
    │  │  ├──FuncParameterNode [self]
    │  │  │  └──PointerTypeNode
@@ -36,8 +36,8 @@
    │        │  └──PrimaryExprNode [self]
    │        └──PrimaryExprNode [flags]
    ├──FunctionDeclNode [Reset]
-   │  ├──NamespacePrefixNode
-   │  │  └──NamespacePathNode [WindowFlags]
+   │  ├──NamedTypeSpacePrefixNode
+   │  │  └──NamedTypeNode [WindowFlags]
    │  ├──FuncParametersNode
    │  │  ├──FuncParameterNode [self]
    │  │  │  └──PointerTypeNode
@@ -51,6 +51,8 @@
    │        └──UnaryExprNode [TildeToken]
    │           └──PrimaryExprNode [flags]
    └──ConstDeclNode [Default]
+      ├──NamedTypeSpacePrefixNode
+      │  └──NamedTypeNode [WindowFlags]
       └──BitOrExprNode [PipeToken]
          ├──PrimaryExprNode
          │  └──EnumLiteralNode [Resizable]

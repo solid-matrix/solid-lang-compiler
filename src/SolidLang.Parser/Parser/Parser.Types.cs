@@ -220,6 +220,46 @@ public sealed partial class Parser
     }
 
     /// <summary>
+    /// Parses type argument list: &lt;T1, T2, ...&gt;
+    /// Expects Current to be '&lt;'. Handles &gt;&gt; ambiguity via _genericDepth.
+    /// </summary>
+    internal TypeArgumentListNode ParseTypeArgumentList()
+    {
+        var start = _position;
+        _genericDepth++;
+        Advance(); // Skip <
+        SkipWhitespaceAndComments();
+
+        var args = new List<TypeNode>();
+        args.Add(ParseType());
+        SkipWhitespaceAndComments();
+
+        while (Current == ',')
+        {
+            Advance();
+            SkipWhitespaceAndComments();
+            args.Add(ParseType());
+            SkipWhitespaceAndComments();
+        }
+
+        SkipWhitespaceAndComments();
+        if (Current == '>')
+        {
+            Advance();
+            _genericDepth--;
+        }
+        else
+        {
+            _genericDepth--;
+            _diagnostics.MissingGreaterThan(GetCurrentSpan());
+        }
+
+        var span = GetSpanFrom(start);
+        var text = _source.GetText(span);
+        return new TypeArgumentListNode(args, span, text);
+    }
+
+    /// <summary>
     /// Parses a named type, potentially with generic arguments.
     /// This is the key method that handles the >> ambiguity.
     /// </summary>
