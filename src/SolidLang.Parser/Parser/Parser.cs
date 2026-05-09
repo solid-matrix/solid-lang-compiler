@@ -25,6 +25,9 @@ public sealed partial class Parser
     /// </summary>
     private int _genericDepth;
 
+    private int _recursionDepth;
+    private const int MaxRecursionDepth = 256;
+
     private readonly DiagnosticBag _diagnostics = new();
 
     public Parser(SourceText source)
@@ -151,6 +154,22 @@ public sealed partial class Parser
         };
     }
 
+    private bool EnterRecursion()
+    {
+        if (_recursionDepth >= MaxRecursionDepth)
+        {
+            _diagnostics.ExcessiveRecursion(GetCurrentSpan());
+            return false;
+        }
+        _recursionDepth++;
+        return true;
+    }
+
+    private void ExitRecursion()
+    {
+        _recursionDepth--;
+    }
+
     /// <summary>
     /// Gets the current text span.
     /// </summary>
@@ -228,6 +247,24 @@ public sealed partial class Parser
                     }
                     break;
 
+                case '\\':
+                    // Line continuation: \<newline>
+                    if (Peek() == '\r')
+                    {
+                        Advance(); Advance();
+                        if (Current == '\n')
+                            Advance();
+                    }
+                    else if (Peek() == '\n')
+                    {
+                        Advance(); Advance();
+                    }
+                    else
+                    {
+                        return;
+                    }
+                    break;
+
                 default:
                     return;
             }
@@ -298,7 +335,8 @@ public sealed partial class Parser
     /// </summary>
     private bool IsAtStatementKeyword()
     {
-        return LookAheadKeyword("if") || LookAheadKeyword("for") ||
+        return LookAheadKeyword("if") || LookAheadKeyword("while") ||
+               LookAheadKeyword("for") ||
                LookAheadKeyword("switch") || LookAheadKeyword("break") ||
                LookAheadKeyword("continue") || LookAheadKeyword("return") ||
                LookAheadKeyword("defer");
@@ -349,6 +387,7 @@ public sealed partial class Parser
             ("enum", SyntaxKind.EnumKeyword),
             ("true", SyntaxKind.TrueKeyword),
             ("where", SyntaxKind.WhereKeyword),
+            ("while", SyntaxKind.WhileKeyword),
             ("break", SyntaxKind.BreakKeyword),
             ("bool", SyntaxKind.BoolKeyword),
             ("else", SyntaxKind.ElseKeyword),
@@ -382,5 +421,71 @@ public sealed partial class Parser
         }
 
         return SyntaxKind.None;
+    }
+
+    /// <summary>
+    /// Tries to parse a calling convention keyword (cdecl, stdcall).
+    /// Returns a <see cref="CallConventionNode"/> or null.
+    /// </summary>
+    private CallConventionNode? TryParseCallConvention()
+    {
+        if (LookAheadKeyword("cdecl") || LookAheadKeyword("stdcall"))
+        {
+            var start = _position;
+            var kind = ScanKeyword();
+            var span = GetSpanFrom(start);
+            var text = _source.GetText(span);
+            SkipWhitespaceAndComments();
+            return new CallConventionNode(kind, span, text);
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Parses a comma-separated list of items.
+    /// Pattern: item (, item)*
+    /// </summary>
+    private List<T> ParseCommaSeparatedList<T>(Func<T> parseItem)
+    {
+        var list = new List<T>();
+        list.Add(parseItem());
+        SkipWhitespaceAndComments();
+
+        while (Current == ',')
+        {
+            Advance();
+            SkipWhitespaceAndComments();
+            list.Add(parseItem());
+            SkipWhitespaceAndComments();
+        }
+
+        return list;
+    }
+
+    /// <summary>
+    /// Parses a comma-separated list with a closing character, supporting trailing comma.
+    /// Pattern: item (, item)* ,? closeChar
+    /// </summary>
+    private List<T> ParseCommaSeparatedList<T>(Func<T> parseItem, char closeChar)
+    {
+        var list = new List<T>();
+
+        if (Current != closeChar)
+        {
+            list.Add(parseItem());
+            SkipWhitespaceAndComments();
+
+            while (Current == ',')
+            {
+                Advance();
+                SkipWhitespaceAndComments();
+                if (Current == closeChar)
+                    break;
+                list.Add(parseItem());
+                SkipWhitespaceAndComments();
+            }
+        }
+
+        return list;
     }
 }

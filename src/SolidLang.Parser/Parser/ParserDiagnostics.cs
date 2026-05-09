@@ -53,6 +53,11 @@ public sealed class DiagnosticBag
         Report(span, "Empty character literal", DiagnosticSeverity.Error, "SL004");
     }
 
+    public void MultiCharLiteral(TextSpan span)
+    {
+        Report(span, "Multi-character literal; use a string instead", DiagnosticSeverity.Error, "SL008");
+    }
+
     public void InvalidEscapeSequence(string sequence, TextSpan span)
     {
         Report(span, $"Invalid escape sequence: '{sequence}'", DiagnosticSeverity.Error, "SL005");
@@ -61,6 +66,11 @@ public sealed class DiagnosticBag
     public void InvalidNumericFormat(string text, TextSpan span)
     {
         Report(span, $"Invalid numeric format: '{text}'", DiagnosticSeverity.Error, "SL006");
+    }
+
+    public void InvalidUppercasePrefix(string prefix, TextSpan span)
+    {
+        Report(span, $"Invalid uppercase prefix '{prefix}'; use lowercase '{prefix.ToLowerInvariant()}' instead", DiagnosticSeverity.Error, "SL007");
     }
 
     // ========================================
@@ -132,6 +142,11 @@ public sealed class DiagnosticBag
     public void DuplicateModifier(string modifier, TextSpan span)
     {
         Report(span, $"Duplicate modifier: '{modifier}'", DiagnosticSeverity.Warning, "SS013");
+    }
+
+    public void ExcessiveRecursion(TextSpan span)
+    {
+        Report(span, "Excessive recursion depth; possible stack overflow prevented", DiagnosticSeverity.Error, "SS014");
     }
 
     // ========================================

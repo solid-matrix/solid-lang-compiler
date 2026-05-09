@@ -126,34 +126,12 @@ public sealed partial class Parser
         Expect('(');
         SkipWhitespaceAndComments();
 
-        var paramTypes = new List<TypeNode>();
-        if (Current != ')')
-        {
-            paramTypes.Add(ParseType());
-            SkipWhitespaceAndComments();
-
-            while (Current == ',')
-            {
-                Advance();
-                SkipWhitespaceAndComments();
-                paramTypes.Add(ParseType());
-                SkipWhitespaceAndComments();
-            }
-        }
+        var paramTypes = ParseCommaSeparatedList(ParseType, ')');
 
         Expect(')');
         SkipWhitespaceAndComments();
 
-        CallConventionNode? callConv = null;
-        if (LookAheadKeyword("cdecl") || LookAheadKeyword("stdcall"))
-        {
-            var convStart = _position;
-            var convKind = ScanKeyword();
-            var convSpan = GetSpanFrom(convStart);
-            var convText = _source.GetText(convSpan);
-            callConv = new CallConventionNode(convKind, convSpan, convText);
-            SkipWhitespaceAndComments();
-        }
+        var callConv = TryParseCallConvention();
 
         Expect(':');
         SkipWhitespaceAndComments();
@@ -185,27 +163,17 @@ public sealed partial class Parser
             Advance(); // Skip <
             SkipWhitespaceAndComments();
 
-            var args = new List<TypeNode>();
-            args.Add(ParseType());
-            SkipWhitespaceAndComments();
-
-            while (Current == ',')
-            {
-                Advance();
-                SkipWhitespaceAndComments();
-                args.Add(ParseType());
-                SkipWhitespaceAndComments();
-            }
+            var args = ParseCommaSeparatedList(ParseType);
 
             SkipWhitespaceAndComments();
             if (Current == '>')
             {
                 Advance();
-                _genericDepth--;
+                _genericDepth = Math.Max(0, _genericDepth - 1);
             }
             else
             {
-                _genericDepth--;
+                _genericDepth = Math.Max(0, _genericDepth - 1);
                 _diagnostics.MissingGreaterThan(GetCurrentSpan());
             }
 
@@ -230,27 +198,17 @@ public sealed partial class Parser
         Advance(); // Skip <
         SkipWhitespaceAndComments();
 
-        var args = new List<TypeNode>();
-        args.Add(ParseType());
-        SkipWhitespaceAndComments();
-
-        while (Current == ',')
-        {
-            Advance();
-            SkipWhitespaceAndComments();
-            args.Add(ParseType());
-            SkipWhitespaceAndComments();
-        }
+        var args = ParseCommaSeparatedList(ParseType);
 
         SkipWhitespaceAndComments();
         if (Current == '>')
         {
             Advance();
-            _genericDepth--;
+            _genericDepth = Math.Max(0, _genericDepth - 1);
         }
         else
         {
-            _genericDepth--;
+            _genericDepth = Math.Max(0, _genericDepth - 1);
             _diagnostics.MissingGreaterThan(GetCurrentSpan());
         }
 
@@ -333,17 +291,7 @@ public sealed partial class Parser
             Advance(); // Skip <
             SkipWhitespaceAndComments();
 
-            var args = new List<TypeNode>();
-            args.Add(ParseType());
-            SkipWhitespaceAndComments();
-
-            while (Current == ',')
-            {
-                Advance();
-                SkipWhitespaceAndComments();
-                args.Add(ParseType());
-                SkipWhitespaceAndComments();
-            }
+            var args = ParseCommaSeparatedList(ParseType);
 
             // Handle closing >
             // In generic context, >> is treated as two > tokens
@@ -351,11 +299,11 @@ public sealed partial class Parser
             if (Current == '>')
             {
                 Advance();
-                _genericDepth--;
+                _genericDepth = Math.Max(0, _genericDepth - 1);
             }
             else
             {
-                _genericDepth--;
+                _genericDepth = Math.Max(0, _genericDepth - 1);
                 _diagnostics.MissingGreaterThan(GetCurrentSpan());
             }
 

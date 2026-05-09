@@ -1,6 +1,8 @@
 <Solution>
     <Project Path="src/SolidLang.Compiler/SolidLang.Compiler.csproj" />
     <Project Path="src/SolidLang.Parser/SolidLang.Parser.csproj" />
+    <Project Path="src/SolidLang.SemanticAnalyzer/SolidLang.SemanticAnalyzer.csproj" />
+    <Project Path="src/SolidLang.IrGenerator/SolidLang.IrGenerator.csproj" />
     <Project Path="test/SolidLang.Compiler.UnitTests/SolidLang.Compiler.UnitTests.csproj" />
     <Project Path="test/SolidLang.Parser.UnitTests/SolidLang.Parser.UnitTests.csproj" />
 </Solution>

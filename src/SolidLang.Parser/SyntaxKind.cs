@@ -26,6 +26,7 @@ public enum SyntaxKind
     StaticKeyword,
     IfKeyword,
     ElseKeyword,
+    WhileKeyword,
     ForKeyword,
     SwitchKeyword,
     BreakKeyword,

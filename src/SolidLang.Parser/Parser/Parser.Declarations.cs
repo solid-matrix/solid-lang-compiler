@@ -270,6 +270,7 @@ public sealed partial class Parser
     private NamedTypeSpacePrefixNode? TryParseNamedTypePrefix()
     {
         var savedPos = _position;
+        var savedDiagCount = _diagnostics.Count;
         var id1 = ScanIdentifier();
         SkipWhitespaceAndComments();
 
@@ -283,6 +284,7 @@ public sealed partial class Parser
         if (!Match("::"))
         {
             _position = savedPos;
+            _diagnostics.TruncateTo(savedDiagCount);
             return null;
         }
 
@@ -304,8 +306,15 @@ public sealed partial class Parser
             // Optional generics after this segment
             if (Current == '<')
             {
+                var segDiagCount = _diagnostics.Count;
                 ParseGenericParams();
                 SkipWhitespaceAndComments();
+
+                // If :: doesn't follow, the generics were speculative — rollback diagnostics
+                if (!(Current == ':' && Peek() == ':'))
+                {
+                    _diagnostics.TruncateTo(segDiagCount);
+                }
             }
 
             if (Current == ':' && Peek() == ':')
@@ -404,16 +413,7 @@ public sealed partial class Parser
         SkipWhitespaceAndComments();
 
         // call_convention?
-        CallConventionNode? callConv = null;
-        if (LookAheadKeyword("cdecl") || LookAheadKeyword("stdcall"))
-        {
-            var convStart = _position;
-            var convKind = ScanKeyword();
-            var convSpan = GetSpanFrom(convStart);
-            var convText = _source.GetText(convSpan);
-            callConv = new CallConventionNode(convKind, convSpan, convText);
-            SkipWhitespaceAndComments();
-        }
+        var callConv = TryParseCallConvention();
 
         // : type?
         TypeNode? returnType = null;
@@ -503,18 +503,7 @@ public sealed partial class Parser
     private FuncParametersNode ParseFuncParameters()
     {
         var start = _position;
-        var parameters = new List<FuncParameterNode>();
-
-        parameters.Add(ParseFuncParameter());
-        SkipWhitespaceAndComments();
-
-        while (Current == ',')
-        {
-            Advance();
-            SkipWhitespaceAndComments();
-            parameters.Add(ParseFuncParameter());
-            SkipWhitespaceAndComments();
-        }
+        var parameters = ParseCommaSeparatedList(ParseFuncParameter);
 
         var span = GetSpanFrom(start);
         var text = _source.GetText(span);
@@ -627,24 +616,7 @@ public sealed partial class Parser
         Expect('{');
         SkipWhitespaceAndComments();
 
-        var fields = new List<StructFieldNode>();
-
-        if (Current != '}')
-        {
-            fields.Add(ParseStructField());
-            SkipWhitespaceAndComments();
-
-            while (Current == ',')
-            {
-                Advance();
-                SkipWhitespaceAndComments();
-                if (Current == '}')
-                    break;
-
-                fields.Add(ParseStructField());
-                SkipWhitespaceAndComments();
-            }
-        }
+        var fields = ParseCommaSeparatedList(ParseStructField, '}');
 
         Expect('}');
 
@@ -716,24 +688,7 @@ public sealed partial class Parser
         Expect('{');
         SkipWhitespaceAndComments();
 
-        var fields = new List<EnumFieldNode>();
-
-        if (Current != '}')
-        {
-            fields.Add(ParseEnumField());
-            SkipWhitespaceAndComments();
-
-            while (Current == ',')
-            {
-                Advance();
-                SkipWhitespaceAndComments();
-                if (Current == '}')
-                    break;
-
-                fields.Add(ParseEnumField());
-                SkipWhitespaceAndComments();
-            }
-        }
+        var fields = ParseCommaSeparatedList(ParseEnumField, '}');
 
         Expect('}');
 
@@ -810,24 +765,7 @@ public sealed partial class Parser
         Expect('{');
         SkipWhitespaceAndComments();
 
-        var fields = new List<UnionFieldNode>();
-
-        if (Current != '}')
-        {
-            fields.Add(ParseUnionField());
-            SkipWhitespaceAndComments();
-
-            while (Current == ',')
-            {
-                Advance();
-                SkipWhitespaceAndComments();
-                if (Current == '}')
-                    break;
-
-                fields.Add(ParseUnionField());
-                SkipWhitespaceAndComments();
-            }
-        }
+        var fields = ParseCommaSeparatedList(ParseUnionField, '}');
 
         Expect('}');
 
@@ -910,24 +848,7 @@ public sealed partial class Parser
         Expect('{');
         SkipWhitespaceAndComments();
 
-        var fields = new List<VariantFieldNode>();
-
-        if (Current != '}')
-        {
-            fields.Add(ParseVariantField());
-            SkipWhitespaceAndComments();
-
-            while (Current == ',')
-            {
-                Advance();
-                SkipWhitespaceAndComments();
-                if (Current == '}')
-                    break;
-
-                fields.Add(ParseVariantField());
-                SkipWhitespaceAndComments();
-            }
-        }
+        var fields = ParseCommaSeparatedList(ParseVariantField, '}');
 
         Expect('}');
 
@@ -1156,12 +1077,14 @@ public sealed partial class Parser
     private FunctionDeclNode? TryParseKeywordlessFunctionDecl(CtAnnotatesNode? annotations, int start)
     {
         var savedPos = _position;
+        var savedDiagCount = _diagnostics.Count;
 
         // Must see: identifier (<generics>)? :: identifier (
         var typeName = ScanIdentifier();
         if (string.IsNullOrEmpty(typeName))
         {
             _position = savedPos;
+            _diagnostics.TruncateTo(savedDiagCount);
             return null;
         }
         SkipWhitespaceAndComments();
@@ -1177,6 +1100,7 @@ public sealed partial class Parser
         if (Current != ':' || Peek() != ':')
         {
             _position = savedPos;
+            _diagnostics.TruncateTo(savedDiagCount);
             return null;
         }
         Advance(); Advance(); // Skip ::
@@ -1186,6 +1110,7 @@ public sealed partial class Parser
         if (string.IsNullOrEmpty(name))
         {
             _position = savedPos;
+            _diagnostics.TruncateTo(savedDiagCount);
             return null;
         }
         SkipWhitespaceAndComments();
@@ -1194,6 +1119,7 @@ public sealed partial class Parser
         if (Current != '(')
         {
             _position = savedPos;
+            _diagnostics.TruncateTo(savedDiagCount);
             return null;
         }
 
@@ -1249,23 +1175,42 @@ public sealed partial class Parser
 
     private void SyncToNextDeclaration()
     {
+        var braceDepth = 0;
         while (Current != '\0')
         {
-            if (Current == ';')
+            // Track brace depth to avoid premature exit on nested blocks
+            if (Current == '{')
             {
+                braceDepth++;
                 Advance();
-                return;
+                continue;
             }
 
             if (Current == '}')
             {
+                if (braceDepth == 0)
+                {
+                    Advance();
+                    return;
+                }
+                braceDepth--;
                 Advance();
-                return;
+                continue;
             }
 
-            if (IsAtDeclarationKeyword())
+            // Only stop at ; or next declaration when not inside nested braces
+            if (braceDepth == 0)
             {
-                return;
+                if (Current == ';')
+                {
+                    Advance();
+                    return;
+                }
+
+                if (IsAtDeclarationKeyword())
+                {
+                    return;
+                }
             }
 
             Advance();

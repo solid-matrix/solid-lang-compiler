@@ -20,7 +20,12 @@ public sealed partial class Parser
     /// </summary>
     private ExprNode ParseExpression()
     {
-        return ParseConditionalExpr();
+        if (!EnterRecursion()) return new BadExprNode(GetCurrentSpan());
+        try
+        {
+            return ParseConditionalExpr();
+        }
+        finally { ExitRecursion(); }
     }
 
     // Precedence 1: Conditional (?:) - Right associative
@@ -745,18 +750,7 @@ public sealed partial class Parser
     private CtOperatorArgsNode ParseCtOperatorArgs()
     {
         var start = _position;
-        var args = new List<CtOperatorArgNode>();
-
-        args.Add(ParseCtOperatorArg());
-        SkipWhitespaceAndComments();
-
-        while (Current == ',')
-        {
-            Advance();
-            SkipWhitespaceAndComments();
-            args.Add(ParseCtOperatorArg());
-            SkipWhitespaceAndComments();
-        }
+        var args = ParseCommaSeparatedList(ParseCtOperatorArg);
 
         var span = GetSpanFrom(start);
         var text = _source.GetText(span);
@@ -891,20 +885,7 @@ public sealed partial class Parser
         Advance(); // Skip {
         SkipWhitespaceAndComments();
 
-        var elements = new List<ExprNode>();
-        if (Current != '}')
-        {
-            elements.Add(ParseExpression());
-            SkipWhitespaceAndComments();
-
-            while (Current == ',')
-            {
-                Advance();
-                SkipWhitespaceAndComments();
-                elements.Add(ParseExpression());
-                SkipWhitespaceAndComments();
-            }
-        }
+        var elements = ParseCommaSeparatedList(ParseExpression, '}');
 
         Expect('}');
 
@@ -965,24 +946,7 @@ public sealed partial class Parser
         Expect('{');
         SkipWhitespaceAndComments();
 
-        var fields = new List<StructLiteralFieldNode>();
-
-        if (Current != '}')
-        {
-            fields.Add(ParseStructLiteralField());
-            SkipWhitespaceAndComments();
-
-            while (Current == ',')
-            {
-                Advance();
-                SkipWhitespaceAndComments();
-                if (Current == '}')
-                    break;
-
-                fields.Add(ParseStructLiteralField());
-                SkipWhitespaceAndComments();
-            }
-        }
+        var fields = ParseCommaSeparatedList(ParseStructLiteralField, '}');
 
         Expect('}');
 

@@ -20,6 +20,10 @@ public sealed partial class Parser
     /// </summary>
     private StmtNode ParseStatement()
     {
+        if (!EnterRecursion()) return new BadStmtNode(GetCurrentSpan());
+        try
+        {
+
         SkipWhitespaceAndComments();
         var start = _position;
 
@@ -39,6 +43,9 @@ public sealed partial class Parser
         // Statement keywords
         if (LookAheadKeyword("if"))
             return ParseIfStmt(start);
+
+        if (LookAheadKeyword("while"))
+            return ParseWhileStmt(start);
 
         if (LookAheadKeyword("for"))
             return ParseForStmt(start);
@@ -79,6 +86,8 @@ public sealed partial class Parser
 
         // Expression statement or assignment
         return ParseExprOrAssignStmt(start);
+        }
+        finally { ExitRecursion(); }
     }
 
     private BodyStmtNode ParseBodyStmt()
@@ -140,73 +149,36 @@ public sealed partial class Parser
         return new IfStmtNode(condition, thenBody, elseBody, span, text);
     }
 
-    private ForStmtNode ParseForStmt(int start)
+    private ForStmtNode ParseWhileStmt(int start)
     {
-        Match("for");
+        Match("while");
         SkipWhitespaceAndComments();
 
-        // Determine for loop type
         if (Current == '{')
         {
-            // Infinite loop: for { ... }
+            // Infinite loop: while { ... }
             var body = ParseBodyStmt();
             var span = GetSpanFrom(start);
             var text = _source.GetText(span);
             return new ForStmtNode(new ForInfiniteNode(body, span, text), span, text);
         }
 
-        // Check if it's a C-style for loop (starts with ; or has ; later)
-        // or a conditional loop (expression followed by {)
-
-        // Save position for lookahead
-        var savedPos = _position;
-
-        // Try to detect C-style by looking for semicolons before {
-        bool isCStyle = false;
-        int depth = 0;
-        while (_position < _source.Length)
-        {
-            var c = Current;
-            if (c == ';' && depth == 0)
-            {
-                isCStyle = true;
-                break;
-            }
-            if (c == '{')
-            {
-                break;
-            }
-            if (c == '(' || c == '[')
-                depth++;
-            else if (c == ')' || c == ']')
-                depth--;
-
-            Advance();
-        }
-
-        // Restore position
-        _position = savedPos;
-
-        if (isCStyle)
-        {
-            return ParseForCStyle(start);
-        }
-        else
-        {
-            return ParseForCond(start);
-        }
-    }
-
-    private ForStmtNode ParseForCond(int start)
-    {
+        // Conditional loop: while cond { ... }
         var condition = ParseExpression();
         SkipWhitespaceAndComments();
 
-        var body = ParseBodyStmt();
+        var condBody = ParseBodyStmt();
 
-        var span = GetSpanFrom(start);
-        var text = _source.GetText(span);
-        return new ForStmtNode(new ForCondNode(condition, body, span, text), span, text);
+        var condSpan = GetSpanFrom(start);
+        var condText = _source.GetText(condSpan);
+        return new ForStmtNode(new ForCondNode(condition, condBody, condSpan, condText), condSpan, condText);
+    }
+
+    private ForStmtNode ParseForStmt(int start)
+    {
+        Match("for");
+        SkipWhitespaceAndComments();
+        return ParseForCStyle(start);
     }
 
     private ForStmtNode ParseForCStyle(int start)
@@ -593,6 +565,10 @@ public sealed partial class Parser
         else if (LookAheadKeyword("if"))
         {
             deferredStmt = ParseIfStmt(_position);
+        }
+        else if (LookAheadKeyword("while"))
+        {
+            deferredStmt = ParseWhileStmt(_position);
         }
         else if (LookAheadKeyword("for"))
         {

@@ -19,21 +19,50 @@ public sealed partial class Parser
         var start = _position;
         var spanStart = start;
 
-        // Check for prefix (hex, octal, binary)
+        // Check for prefix (decimal, hex, octal, binary)
         if (Current == '0')
         {
             var prefix = Peek();
-            if (prefix == 'x' || prefix == 'X')
+            if (prefix == 'd')
+            {
+                Advance(); Advance(); // Skip 0d
+                return ScanDecimalLiteralBody(spanStart);
+            }
+            else if (prefix == 'D')
+            {
+                _diagnostics.InvalidUppercasePrefix("0D", new TextSpan(_position, 2));
+                Advance(); Advance();
+                return ScanDecimalLiteralBody(spanStart);
+            }
+            else if (prefix == 'x')
             {
                 return ScanHexLiteral(spanStart);
             }
-            else if (prefix == 'o' || prefix == 'O')
+            else if (prefix == 'X')
+            {
+                _diagnostics.InvalidUppercasePrefix("0X", new TextSpan(_position, 2));
+                Advance(); Advance();
+                return ScanHexLiteralBody(spanStart);
+            }
+            else if (prefix == 'o')
             {
                 return ScanOctalLiteral(spanStart);
             }
-            else if (prefix == 'b' || prefix == 'B')
+            else if (prefix == 'O')
+            {
+                _diagnostics.InvalidUppercasePrefix("0O", new TextSpan(_position, 2));
+                Advance(); Advance();
+                return ScanOctalLiteralBody(spanStart);
+            }
+            else if (prefix == 'b')
             {
                 return ScanBinaryLiteral(spanStart);
+            }
+            else if (prefix == 'B')
+            {
+                _diagnostics.InvalidUppercasePrefix("0B", new TextSpan(_position, 2));
+                Advance(); Advance();
+                return ScanBinaryLiteralBody(spanStart);
             }
         }
 
@@ -81,10 +110,41 @@ public sealed partial class Parser
         return (text, value, typeSuffix);
     }
 
+    private (string Text, object Value, SyntaxKind? TypeSuffix) ScanDecimalLiteralBody(int spanStart)
+    {
+        var sb = new StringBuilder();
+
+        while (char.IsDigit(Current) || Current == '_')
+        {
+            if (Current == '_')
+            {
+                Advance();
+                continue;
+            }
+            sb.Append(AdvanceAndReturn());
+        }
+
+        var typeSuffix = TryScanIntegerTypeSuffix();
+        var text = _source.GetText(spanStart, _position - spanStart);
+
+        var valueStr = sb.ToString();
+        if (valueStr.Length == 0 || !ulong.TryParse(valueStr, out var value))
+        {
+            _diagnostics.InvalidNumericFormat(text, new TextSpan(spanStart, _position - spanStart));
+            return (text, 0UL, typeSuffix);
+        }
+
+        return (text, value, typeSuffix);
+    }
+
     private (string Text, object Value, SyntaxKind? TypeSuffix) ScanHexLiteral(int spanStart)
     {
         Advance(); Advance(); // Skip 0x
+        return ScanHexLiteralBody(spanStart);
+    }
 
+    private (string Text, object Value, SyntaxKind? TypeSuffix) ScanHexLiteralBody(int spanStart)
+    {
         var sb = new StringBuilder();
         while (IsHexDigit(Current) || Current == '_')
         {
@@ -112,7 +172,11 @@ public sealed partial class Parser
     private (string Text, object Value, SyntaxKind? TypeSuffix) ScanOctalLiteral(int spanStart)
     {
         Advance(); Advance(); // Skip 0o
+        return ScanOctalLiteralBody(spanStart);
+    }
 
+    private (string Text, object Value, SyntaxKind? TypeSuffix) ScanOctalLiteralBody(int spanStart)
+    {
         var sb = new StringBuilder();
         while (IsOctalDigit(Current) || Current == '_')
         {
@@ -143,7 +207,11 @@ public sealed partial class Parser
     private (string Text, object Value, SyntaxKind? TypeSuffix) ScanBinaryLiteral(int spanStart)
     {
         Advance(); Advance(); // Skip 0b
+        return ScanBinaryLiteralBody(spanStart);
+    }
 
+    private (string Text, object Value, SyntaxKind? TypeSuffix) ScanBinaryLiteralBody(int spanStart)
+    {
         var sb = new StringBuilder();
         while ((Current == '0' || Current == '1' || Current == '_'))
         {
@@ -341,10 +409,18 @@ public sealed partial class Parser
 
         if (Current != '\'')
         {
-            _diagnostics.UnterminatedChar(new TextSpan(start, _position - start));
-            // Try to recover
-            while (Current != '\'' && Current != '\0' && Current != '\n')
-                Advance();
+            // Check if this is a multi-char literal (e.g., 'ab')
+            if (Current != '\0' && Current != '\n' && Current != '\r')
+            {
+                _diagnostics.MultiCharLiteral(new TextSpan(start, _position - start));
+                // Skip to closing quote or line end
+                while (Current != '\'' && Current != '\0' && Current != '\n' && Current != '\r')
+                    Advance();
+            }
+            else
+            {
+                _diagnostics.UnterminatedChar(new TextSpan(start, _position - start));
+            }
         }
 
         if (Current == '\'')
@@ -369,12 +445,17 @@ public sealed partial class Parser
             'n' => "\n",
             'r' => "\r",
             't' => "\t",
+            'a' => "\a",
+            'b' => "\b",
+            'f' => "\f",
+            'v' => "\v",
             '"' => "\"",
             '\'' => "'",
             '\\' => "\\",
             '0' => "\0",
             'x' => ScanHexEscape(),
             'u' => ScanUnicodeEscape(),
+            'U' => ScanUnicodeEscapeLong(),
             _ => ScanInvalidEscape(c),
         };
     }
@@ -394,19 +475,62 @@ public sealed partial class Parser
 
     private string ScanUnicodeEscape()
     {
+        // Support \u{XXXXXX} (braced) and \uXXXX (legacy 4-digit)
+        if (Current == '{')
+        {
+            Advance(); // Skip {
+            var hex = "";
+            while (IsHexDigit(Current))
+            {
+                hex += AdvanceAndReturn();
+            }
+
+            if (Current != '}' || hex.Length == 0 || hex.Length > 6)
+            {
+                _diagnostics.InvalidEscapeSequence("\\u", GetCurrentSpan());
+                if (Current == '}')
+                    Advance();
+                return "?";
+            }
+
+            Advance(); // Skip }
+            var codePoint = Convert.ToInt32(hex, 16);
+            return char.ConvertFromUtf32(codePoint);
+        }
+        else
+        {
+            var hex = "";
+            for (int i = 0; i < 4; i++)
+            {
+                if (!IsHexDigit(Current))
+                {
+                    _diagnostics.InvalidEscapeSequence("\\u", GetCurrentSpan());
+                    return "?";
+                }
+                hex += AdvanceAndReturn();
+            }
+
+            var codePoint = Convert.ToUInt16(hex, 16);
+            return ((char)codePoint).ToString();
+        }
+    }
+
+    private string ScanUnicodeEscapeLong()
+    {
+        // \UXXXXXXXX (8 hex digits)
         var hex = "";
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 8; i++)
         {
             if (!IsHexDigit(Current))
             {
-                _diagnostics.InvalidEscapeSequence("\\u", GetCurrentSpan());
+                _diagnostics.InvalidEscapeSequence("\\U", GetCurrentSpan());
                 return "?";
             }
             hex += AdvanceAndReturn();
         }
 
-        var codePoint = Convert.ToUInt16(hex, 16);
-        return ((char)codePoint).ToString();
+        var codePoint = Convert.ToInt32(hex, 16);
+        return char.ConvertFromUtf32(codePoint);
     }
 
     private string ScanInvalidEscape(char c)
