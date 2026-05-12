@@ -1,0 +1,6 @@
+using std::io;
+
+func main():i32{
+    println("hello, world!");
+    return 0;
+}

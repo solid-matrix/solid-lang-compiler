@@ -15,7 +15,7 @@ public sealed class MemberSymbol : Symbol
     /// The type of this member: field type, enum discriminant type, variant payload type,
     /// or interface method return type.
     /// </summary>
-    public SolidType? MemberType { get; }
+    public SolidType? MemberType { get; internal set; }
 
     public bool IsField => Kind is SymbolKind.StructField or SymbolKind.UnionField or
                                   SymbolKind.EnumField or SymbolKind.VariantField;

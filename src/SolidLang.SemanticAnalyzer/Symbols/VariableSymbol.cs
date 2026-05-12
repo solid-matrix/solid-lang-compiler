@@ -14,12 +14,13 @@ public sealed class VariableSymbol : Symbol
     /// <summary>
     /// The declared type from the : type annotation, or null if type-inferred.
     /// </summary>
-    public SolidType? DeclaredType { get; }
+    public SolidType? DeclaredType { get; internal set; }
 
     public bool IsReadOnly => Kind is SymbolKind.ConstVariable or SymbolKind.Parameter;
     public bool IsStatic => Kind == SymbolKind.StaticVariable;
     public bool IsParameter => Kind == SymbolKind.Parameter;
     public bool IsForLoopVar => Kind == SymbolKind.ForLoopVariable;
+    public string? ImportName { get; internal set; } // @import(name) linker symbol, null = use Name
 
     public VariableSymbol(SymbolKind kind, string name, SyntaxNode declaration, SolidType? declaredType = null)
     {

@@ -1,3 +1,6 @@
 [submodule "spec"]
 	path = spec
 	url = git@github.com:solid-matrix/solid-lang-spec.git
+[submodule "std"]
+	path = std
+	url = git@github.com:solid-matrix/solid-lang-std.git

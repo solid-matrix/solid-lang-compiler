@@ -1,0 +1,5 @@
+using std::io;
+
+func main(){
+    println("hello, world!");
+}

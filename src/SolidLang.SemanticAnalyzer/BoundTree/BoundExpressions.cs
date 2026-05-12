@@ -31,14 +31,15 @@ public sealed class BoundLiteralExpr : BoundExpression
 
 /// <summary>
 /// A reference to a variable or parameter.
-/// The Symbol's DeclaredType provides the type.
+/// The resolved type is derived from the VariableSymbol's declared type.
 /// </summary>
 public sealed class BoundVarExpr : BoundExpression
 {
     public override BoundKind Kind => BoundKind.VarExpr;
-    public VariableSymbol Symbol { get; }
+    public Symbol Symbol { get; }
+    public override SolidType? Type => Symbol is VariableSymbol vs ? vs.DeclaredType : null;
 
-    public BoundVarExpr(VariableSymbol symbol) { Symbol = symbol; }
+    public BoundVarExpr(Symbol symbol) { Symbol = symbol; }
 }
 
 /// <summary>

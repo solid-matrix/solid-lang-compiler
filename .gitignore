@@ -16,3 +16,7 @@ riderModule.iml
 *.exe
 *.tokens
 *.interp
+.build/
+*.obj
+*.solid.ast
+*.bound.ast

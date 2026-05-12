@@ -24,6 +24,9 @@ internal sealed class SymbolBuilderPass
     // Registered namespaces: full path → NamespaceSymbol
     private readonly Dictionary<string, NamespaceSymbol> _namespaces = new();
 
+    // Maps each scope-creating AST node to its Scope, for Pass 2 to find child scopes
+    private readonly Dictionary<SyntaxNode, Scope> _scopeMap = new();
+
     public SymbolBuilderPass(DiagnosticBag diagnostics)
     {
         _diagnostics = diagnostics;
@@ -33,7 +36,7 @@ internal sealed class SymbolBuilderPass
     /// <summary>
     /// Run Pass 1 over all program nodes. Returns the global scope.
     /// </summary>
-    public (Scope GlobalScope, Dictionary<string, NamespaceSymbol> Namespaces) Run(
+    public (Scope GlobalScope, Dictionary<string, NamespaceSymbol> Namespaces, Dictionary<SyntaxNode, Scope> ScopeMap) Run(
         IReadOnlyList<ProgramNode> programs)
     {
         // Create global scope and register primitives
@@ -45,7 +48,11 @@ internal sealed class SymbolBuilderPass
         foreach (var program in programs)
             WalkProgram(program);
 
-        return (_globalScope, _namespaces);
+        // Implicit using std::predeclare — available in all scopes
+        if (_namespaces.TryGetValue("std::predeclare", out var predeclareNs))
+            _globalScope.AddImport(predeclareNs.NamespaceScope);
+
+        return (_globalScope, _namespaces, _scopeMap);
     }
 
     // ========================================
@@ -133,6 +140,9 @@ internal sealed class SymbolBuilderPass
 
     private void WalkDeclaration(DeclNode decl)
     {
+        // Compile-time platform filtering
+        if (ShouldSkipPlatform(decl)) return;
+
         switch (decl)
         {
             case FunctionDeclNode func: WalkFunction(func); break;
@@ -178,6 +188,7 @@ internal sealed class SymbolBuilderPass
         if (existing is FunctionSymbol fs && fs.IsForwardDecl)
         {
             fs.IsForwardDecl = false;
+            fs.ImportName ??= ExtractImportName(node.Annotations);
             funcSymbol = fs;
         }
         else if (existing != null)
@@ -191,8 +202,12 @@ internal sealed class SymbolBuilderPass
             actualScope.Declare(funcSymbol);
         }
 
+        // Extract @import(name) linker symbol
+        funcSymbol.ImportName = ExtractImportName(node.Annotations);
+
         // Enter function scope
-        var funcScope = new Scope(ScopeKind.Function, _currentScope);
+        var funcScope = new Scope(ScopeKind.Function, _currentScope, node);
+        _scopeMap[node] = funcScope;
         var savedScope = _currentScope;
         _currentScope = funcScope;
 
@@ -236,7 +251,8 @@ internal sealed class SymbolBuilderPass
 
         if (node.Fields != null && !node.IsForwardDecl)
         {
-            var typeScope = new Scope(ScopeKind.Type, _currentScope);
+            var typeScope = new Scope(ScopeKind.Type, _currentScope, node);
+            _scopeMap[node] = typeScope;
             typeSymbol.TypeScope = typeScope;
 
             var savedScope = _currentScope;
@@ -271,7 +287,8 @@ internal sealed class SymbolBuilderPass
 
         if (node.Fields != null && !node.IsForwardDecl)
         {
-            var typeScope = new Scope(ScopeKind.Type, _currentScope);
+            var typeScope = new Scope(ScopeKind.Type, _currentScope, node);
+            _scopeMap[node] = typeScope;
             typeSymbol.TypeScope = typeScope;
 
             var savedScope = _currentScope;
@@ -298,7 +315,8 @@ internal sealed class SymbolBuilderPass
 
         if (node.Fields != null && !node.IsForwardDecl)
         {
-            var typeScope = new Scope(ScopeKind.Type, _currentScope);
+            var typeScope = new Scope(ScopeKind.Type, _currentScope, node);
+            _scopeMap[node] = typeScope;
             typeSymbol.TypeScope = typeScope;
 
             var savedScope = _currentScope;
@@ -331,7 +349,8 @@ internal sealed class SymbolBuilderPass
 
         if (node.Fields != null && !node.IsForwardDecl)
         {
-            var typeScope = new Scope(ScopeKind.Type, _currentScope);
+            var typeScope = new Scope(ScopeKind.Type, _currentScope, node);
+            _scopeMap[node] = typeScope;
             typeSymbol.TypeScope = typeScope;
 
             var savedScope = _currentScope;
@@ -364,7 +383,8 @@ internal sealed class SymbolBuilderPass
 
         if (node.Fields != null)
         {
-            var typeScope = new Scope(ScopeKind.Type, _currentScope);
+            var typeScope = new Scope(ScopeKind.Type, _currentScope, node);
+            _scopeMap[node] = typeScope;
             typeSymbol.TypeScope = typeScope;
 
             var savedScope = _currentScope;
@@ -431,6 +451,8 @@ internal sealed class SymbolBuilderPass
         }
 
         var symbol = new VariableSymbol(kind, name, declNode);
+        symbol.ImportName = ExtractImportName(
+            (declNode as ConstDeclNode)?.Annotations ?? (declNode as StaticDeclNode)?.Annotations);
         if (!targetScope.TryDeclare(symbol))
         {
             var existing = targetScope.Lookup(name)!;
@@ -445,6 +467,7 @@ internal sealed class SymbolBuilderPass
     private void WalkBody(BodyStmtNode body)
     {
         var scope = new Scope(ScopeKind.Block, _currentScope, body);
+        _scopeMap[body] = scope;
         var savedScope = _currentScope;
         _currentScope = scope;
 
@@ -484,7 +507,8 @@ internal sealed class SymbolBuilderPass
     private void WalkFor(ForStmtNode forStmt)
     {
         // Enter loop scope
-        var loopScope = new Scope(ScopeKind.Block, _currentScope);
+        var loopScope = new Scope(ScopeKind.Block, _currentScope, forStmt);
+        _scopeMap[forStmt] = loopScope;
         var savedScope = _currentScope;
         _currentScope = loopScope;
 
@@ -511,7 +535,8 @@ internal sealed class SymbolBuilderPass
         foreach (var arm in switchStmt.Arms)
         {
             // Each arm gets its own scope for pattern-capture bindings
-            var armScope = new Scope(ScopeKind.SwitchArm, _currentScope);
+            var armScope = new Scope(ScopeKind.SwitchArm, _currentScope, arm);
+            _scopeMap[arm] = armScope;
             var savedScope = _currentScope;
             _currentScope = armScope;
 
@@ -535,6 +560,50 @@ internal sealed class SymbolBuilderPass
     // ========================================
     // Helpers
     // ========================================
+
+    /// <summary>
+    /// Extracts the linker symbol name from @import(name) annotation.
+    /// Returns null if @import has no argument (use the declared name).
+    /// </summary>
+    private static string? ExtractImportName(CtAnnotatesNode? annotations)
+    {
+        if (annotations == null) return null;
+        var importAnnot = annotations.Annotations.FirstOrDefault(a => a.Name == "import");
+        var firstArg = importAnnot?.Arguments?.Arguments.FirstOrDefault();
+        if (firstArg?.Expression != null)
+            return firstArg.GetFullText();
+        return null;
+    }
+
+    /// <summary>
+    /// Returns true if the declaration should be skipped due to @if_msvc / @if_not_msvc.
+    /// </summary>
+    private static bool ShouldSkipPlatform(DeclNode decl)
+    {
+        var annotations = GetDeclAnnotations(decl);
+        if (annotations == null) return false;
+        var isMsvc = OperatingSystem.IsWindows();
+        foreach (var a in annotations.Annotations)
+        {
+            if (a.Name == "if_msvc" && !isMsvc) return true;
+            if (a.Name == "if_not_msvc" && isMsvc) return true;
+        }
+        return false;
+    }
+
+    private static CtAnnotatesNode? GetDeclAnnotations(DeclNode decl) => decl switch
+    {
+        FunctionDeclNode f => f.Annotations,
+        ConstDeclNode c => c.Annotations,
+        StaticDeclNode s => s.Annotations,
+        StructDeclNode s => s.Annotations,
+        EnumDeclNode e => e.Annotations,
+        UnionDeclNode u => u.Annotations,
+        VariantDeclNode v => v.Annotations,
+        InterfaceDeclNode i => i.Annotations,
+        VarDeclNode v => v.Annotations,
+        _ => null,
+    };
 
     /// <summary>
     /// Creates or merges a TypeSymbol for a type declaration.

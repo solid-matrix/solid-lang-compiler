@@ -162,5 +162,6 @@ public sealed class BoundFieldDecl : BoundDeclaration
         Symbol = symbol;
         FieldType = fieldType;
         Value = value;
+        symbol.MemberType = fieldType;
     }
 }

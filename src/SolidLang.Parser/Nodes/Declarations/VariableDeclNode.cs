@@ -12,11 +12,11 @@ public sealed class ConstDeclNode : DeclNode
     public NamedTypeSpacePrefixNode? NamedTypePrefix { get; }
     public string Name { get; }
     public TypeNode? Type { get; }
-    public ExprNode Initializer { get; }
+    public ExprNode? Initializer { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
-    public ConstDeclNode(CtAnnotatesNode? annotations, NamedTypeSpacePrefixNode? namedTypePrefix, string name, TypeNode? type, ExprNode initializer, TextSpan span, string fullText)
+    public ConstDeclNode(CtAnnotatesNode? annotations, NamedTypeSpacePrefixNode? namedTypePrefix, string name, TypeNode? type, ExprNode? initializer, TextSpan span, string fullText)
     {
         Annotations = annotations;
         NamedTypePrefix = namedTypePrefix;
@@ -38,7 +38,8 @@ public sealed class ConstDeclNode : DeclNode
             yield return NamedTypePrefix;
         if (Type != null)
             yield return Type;
-        yield return Initializer;
+        if (Initializer != null)
+            yield return Initializer;
     }
 
     public override string GetFullText() => _fullText;
@@ -58,11 +59,11 @@ public sealed class StaticDeclNode : DeclNode
     public NamedTypeSpacePrefixNode? NamedTypePrefix { get; }
     public string Name { get; }
     public TypeNode? Type { get; }
-    public ExprNode Initializer { get; }
+    public ExprNode? Initializer { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
-    public StaticDeclNode(CtAnnotatesNode? annotations, NamedTypeSpacePrefixNode? namedTypePrefix, string name, TypeNode? type, ExprNode initializer, TextSpan span, string fullText)
+    public StaticDeclNode(CtAnnotatesNode? annotations, NamedTypeSpacePrefixNode? namedTypePrefix, string name, TypeNode? type, ExprNode? initializer, TextSpan span, string fullText)
     {
         Annotations = annotations;
         NamedTypePrefix = namedTypePrefix;
@@ -84,7 +85,8 @@ public sealed class StaticDeclNode : DeclNode
             yield return NamedTypePrefix;
         if (Type != null)
             yield return Type;
-        yield return Initializer;
+        if (Initializer != null)
+            yield return Initializer;
     }
 
     public override string GetFullText() => _fullText;

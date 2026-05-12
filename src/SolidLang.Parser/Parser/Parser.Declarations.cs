@@ -992,6 +992,11 @@ public sealed partial class Parser
     // Variable Declarations
     // ========================================
 
+    private static bool HasImportAnnotation(CtAnnotatesNode? annotations)
+    {
+        return annotations?.Annotations.Any(a => a.Name == "import") ?? false;
+    }
+
     private ConstDeclNode ParseConstDecl(CtAnnotatesNode? annotations, int start)
     {
         Match("const");
@@ -1011,13 +1016,20 @@ public sealed partial class Parser
             SkipWhitespaceAndComments();
         }
 
-        Expect('=');
-        SkipWhitespaceAndComments();
-
-        var initializer = ParseExpression();
-        SkipWhitespaceAndComments();
-
-        Expect(';');
+        ExprNode? initializer = null;
+        if (HasImportAnnotation(annotations))
+        {
+            // @import const — external declaration, no initializer
+            Expect(';');
+        }
+        else
+        {
+            Expect('=');
+            SkipWhitespaceAndComments();
+            initializer = ParseExpression();
+            SkipWhitespaceAndComments();
+            Expect(';');
+        }
 
         var span = GetSpanFrom(start);
         var text = _source.GetText(span);
@@ -1043,13 +1055,20 @@ public sealed partial class Parser
             SkipWhitespaceAndComments();
         }
 
-        Expect('=');
-        SkipWhitespaceAndComments();
-
-        var initializer = ParseExpression();
-        SkipWhitespaceAndComments();
-
-        Expect(';');
+        ExprNode? initializer = null;
+        if (HasImportAnnotation(annotations))
+        {
+            // @import static — external declaration, no initializer
+            Expect(';');
+        }
+        else
+        {
+            Expect('=');
+            SkipWhitespaceAndComments();
+            initializer = ParseExpression();
+            SkipWhitespaceAndComments();
+            Expect(';');
+        }
 
         var span = GetSpanFrom(start);
         var text = _source.GetText(span);

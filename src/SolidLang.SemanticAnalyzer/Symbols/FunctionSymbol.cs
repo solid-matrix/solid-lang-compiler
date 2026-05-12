@@ -17,6 +17,7 @@ public sealed class FunctionSymbol : Symbol
     public SolidType? ReturnType { get; }           // null = void return
     public string? CallingConvention { get; }       // "cdecl", "stdcall", or null for default
     public Scope? BodyScope { get; internal set; }  // function body scope (for locals)
+    public string? ImportName { get; internal set; } // @import(name) linker symbol, null = use Name
 
     public FunctionSymbol(string name, SyntaxNode declaration, bool isForwardDecl,
         IReadOnlyList<GenericParamSymbol>? genericParams = null,

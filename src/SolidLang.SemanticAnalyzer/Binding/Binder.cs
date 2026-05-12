@@ -17,10 +17,10 @@ public sealed class Binder
     {
         // Pass 1: Build the symbol table across all files
         var pass1 = new SymbolBuilderPass(diagnostics);
-        var (globalScope, namespaces) = pass1.Run(programs);
+        var (globalScope, namespaces, scopeMap) = pass1.Run(programs);
 
         // Pass 2: Build the BoundNode tree with resolved names/types
-        var pass2 = new BoundTreeBuilder(globalScope, namespaces, diagnostics);
+        var pass2 = new BoundTreeBuilder(globalScope, namespaces, scopeMap, diagnostics);
         return pass2.Build(programs);
     }
 }

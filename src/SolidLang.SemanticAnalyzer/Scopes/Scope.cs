@@ -74,16 +74,24 @@ public sealed class Scope
     /// </summary>
     public Symbol? LookupRecursive(string name)
     {
+        return LookupRecursiveImpl(name, new HashSet<Scope>());
+    }
+
+    private Symbol? LookupRecursiveImpl(string name, HashSet<Scope> visited)
+    {
         var current = this;
         while (current != null)
         {
+            if (!visited.Add(current))
+                return null; // cycle detected
+
             if (current._members.TryGetValue(name, out var symbol))
                 return symbol;
 
             // Check imports at this level
             foreach (var import in current._importedScopes)
             {
-                var found = import.LookupRecursive(name);
+                var found = import.LookupRecursiveImpl(name, visited);
                 if (found != null)
                     return found;
             }

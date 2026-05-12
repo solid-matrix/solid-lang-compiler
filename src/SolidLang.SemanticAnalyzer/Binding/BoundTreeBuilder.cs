@@ -18,13 +18,15 @@ internal sealed class BoundTreeBuilder
     private readonly Scope _globalScope;
     private readonly DiagnosticBag _diagnostics;
     private readonly Dictionary<string, NamespaceSymbol> _namespaces;
+    private readonly Dictionary<SyntaxNode, Scope> _scopeMap;
     private Scope _currentScope;
 
     public BoundTreeBuilder(Scope globalScope, Dictionary<string, NamespaceSymbol> namespaces,
-        DiagnosticBag diagnostics)
+        Dictionary<SyntaxNode, Scope> scopeMap, DiagnosticBag diagnostics)
     {
         _globalScope = globalScope;
         _namespaces = namespaces;
+        _scopeMap = scopeMap;
         _diagnostics = diagnostics;
         _currentScope = globalScope;
     }
@@ -66,6 +68,8 @@ internal sealed class BoundTreeBuilder
 
     private BoundDeclaration? BuildDeclaration(DeclNode decl)
     {
+        if (ShouldSkipPlatform(decl)) return null;
+
         return decl switch
         {
             FunctionDeclNode f => BuildFunction(f),
@@ -80,6 +84,33 @@ internal sealed class BoundTreeBuilder
             _ => null,
         };
     }
+
+    private static bool ShouldSkipPlatform(DeclNode decl)
+    {
+        var annotations = GetDeclAnnotations(decl);
+        if (annotations == null) return false;
+        var isMsvc = OperatingSystem.IsWindows();
+        foreach (var a in annotations.Annotations)
+        {
+            if (a.Name == "if_msvc" && !isMsvc) return true;
+            if (a.Name == "if_not_msvc" && isMsvc) return true;
+        }
+        return false;
+    }
+
+    private static CtAnnotatesNode? GetDeclAnnotations(DeclNode decl) => decl switch
+    {
+        FunctionDeclNode f => f.Annotations,
+        ConstDeclNode c => c.Annotations,
+        StaticDeclNode s => s.Annotations,
+        StructDeclNode s => s.Annotations,
+        EnumDeclNode e => e.Annotations,
+        UnionDeclNode u => u.Annotations,
+        VariantDeclNode v => v.Annotations,
+        InterfaceDeclNode i => i.Annotations,
+        VarDeclNode v => v.Annotations,
+        _ => null,
+    };
 
     private BoundFunctionDecl BuildFunction(FunctionDeclNode node)
     {
@@ -97,6 +128,8 @@ internal sealed class BoundTreeBuilder
         SolidType? returnType = null;
         if (node.ReturnType != null)
             returnType = typeResolver.ResolveType(node.ReturnType);
+        else if (node.Name == "main")
+            returnType = PrimitiveType.I32;  // main implicitly returns i32
 
         // Build parameter decls
         var parameters = new List<BoundVariableDecl>();
@@ -106,6 +139,8 @@ internal sealed class BoundTreeBuilder
             {
                 var paramSymbol = _currentScope.Lookup(param.Name) as VariableSymbol;
                 var paramType = typeResolver.ResolveType(param.Type);
+                if (paramSymbol != null)
+                    paramSymbol.DeclaredType = paramType;
                 parameters.Add(new BoundVariableDecl(paramSymbol!, paramType, null));
             }
         }
@@ -274,6 +309,8 @@ internal sealed class BoundTreeBuilder
         if (node.Type != null)
             declaredType = typeResolver.ResolveType(node.Type);
 
+        symbol.DeclaredType = declaredType;
+
         var initializer = BuildExpression(node.Initializer);
         return new BoundVariableDecl(symbol, declaredType, initializer);
     }
@@ -305,7 +342,9 @@ internal sealed class BoundTreeBuilder
         else if (node is StaticDeclNode sd && sd.Type != null)
             declaredType = typeResolver.ResolveType(sd.Type);
 
-        var init = BuildExpression(initializer);
+        symbol.DeclaredType = declaredType;
+
+        BoundExpression? init = initializer != null ? BuildExpression(initializer) : null;
         return new BoundVariableDecl(symbol, declaredType, init);
     }
 
@@ -553,7 +592,8 @@ internal sealed class BoundTreeBuilder
                     var symbol = _currentScope.LookupRecursive(primary.Identifier);
                     if (symbol is VariableSymbol vs)
                         return new BoundVarExpr(vs);
-                    // Function references: not yet supported as expressions
+                    if (symbol is FunctionSymbol fs)
+                        return new BoundVarExpr(fs);
                     if (symbol == null)
                         _diagnostics.UndefinedName(primary.Identifier, primary.Span);
                 }
@@ -578,7 +618,7 @@ internal sealed class BoundTreeBuilder
         {
             IntegerLiteralNode i => new BoundLiteralExpr(PrimitiveType.I32, i.Value),
             FloatLiteralNode f => new BoundLiteralExpr(PrimitiveType.F64, f.Value),
-            StringLiteralNode s => new BoundLiteralExpr(null, s.Value),        // string type TBD
+            StringLiteralNode s => BuildStringLiteral(s),
             CharLiteralNode c => new BoundLiteralExpr(null, c.Value),          // char type TBD
             BoolLiteralNode b => new BoundLiteralExpr(PrimitiveType.Bool, b.Value),
             NullLiteralNode => new BoundLiteralExpr(null, null!),          // null has no inherent type — target-typed
@@ -588,6 +628,14 @@ internal sealed class BoundTreeBuilder
             VariantLiteralNode vl => BuildVariantLiteral(vl),
             _ => new BoundLiteralExpr(null, null!),
         };
+    }
+
+    private BoundExpression BuildStringLiteral(StringLiteralNode s)
+    {
+        var stringTypeSym = _currentScope.LookupRecursive("String") as TypeSymbol;
+        if (stringTypeSym != null)
+            return new BoundLiteralExpr(new NamedType(stringTypeSym), s.Value);
+        return new BoundLiteralExpr(new PointerType(PrimitiveType.U8), s.Value);
     }
 
     private BoundExpression BuildPostfixExpr(PostfixExprNode postfix)
@@ -638,8 +686,13 @@ internal sealed class BoundTreeBuilder
 
     private BoundExpression BuildDotAccess(BoundExpression receiver, DotAccessNode dot)
     {
-        // Simple case: receiver is a variable with a known type
-        return new BoundMemberAccessExpr(receiver, null!); // Member resolution deferred to Phase 2
+        if (receiver.Type is NamedType nt && nt.TypeSymbol.TypeScope != null)
+        {
+            var member = nt.TypeSymbol.TypeScope.Lookup(dot.Name) as MemberSymbol;
+            if (member != null)
+                return new BoundMemberAccessExpr(receiver, member);
+        }
+        return new BoundMemberAccessExpr(receiver, null!);
     }
 
     private BoundExpression BuildPointerAccess(BoundExpression receiver, PointerAccessNode pa)
@@ -724,10 +777,11 @@ internal sealed class BoundTreeBuilder
     // ========================================
 
     /// <summary>
-    /// Finds the child scope that corresponds to a given AST node by comparing owning nodes.
+    /// Finds the child scope that corresponds to a given AST node by looking up the scope map.
     /// </summary>
-    private static Scope? FindChildScope(Scope parent, SyntaxNode owningNode)
+    private Scope? FindChildScope(Scope parent, SyntaxNode owningNode)
     {
-        return null; // Scope traversal TBD — use dictionary from symbol builder
+        _scopeMap.TryGetValue(owningNode, out var scope);
+        return scope;
     }
 }
