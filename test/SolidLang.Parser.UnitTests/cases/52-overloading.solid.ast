@@ -1,0 +1,38 @@
+└──ProgramNode
+   ├──FunctionDeclNode [process]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [x]
+   │  │     └──PrimitiveTypeNode [I32Keyword]
+   │  ├──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──MulExprNode [StarToken]
+   │           ├──PrimaryExprNode [x]
+   │           └──PrimaryExprNode
+   │              └──IntegerLiteralNode [2]
+   ├──FunctionDeclNode [process]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [x]
+   │  │     └──PrimitiveTypeNode [F32Keyword]
+   │  ├──PrimitiveTypeNode [F32Keyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──MulExprNode [StarToken]
+   │           ├──PrimaryExprNode [x]
+   │           └──PrimaryExprNode
+   │              └──FloatLiteralNode [2]
+   └──FunctionDeclNode [process]
+      ├──FuncParametersNode
+      │  └──FuncParameterNode [x]
+      │     └──PrimitiveTypeNode [BoolKeyword]
+      ├──PrimitiveTypeNode [I32Keyword]
+      └──BodyStmtNode
+         ├──IfStmtNode
+         │  ├──PrimaryExprNode [x]
+         │  └──BodyStmtNode
+         │     └──ReturnStmtNode
+         │        └──PrimaryExprNode
+         │           └──IntegerLiteralNode [1]
+         └──ReturnStmtNode
+            └──PrimaryExprNode
+               └──IntegerLiteralNode [0]

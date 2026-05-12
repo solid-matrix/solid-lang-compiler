@@ -1,0 +1,21 @@
+└──ProgramNode
+   └──FunctionDeclNode [int_literal_edge_cases]
+      └──BodyStmtNode
+         ├──VarDeclNode [large]
+         │  └──PrimaryExprNode
+         │     └──IntegerLiteralNode [1000000000]
+         ├──VarDeclNode [hex_under]
+         │  └──PrimaryExprNode
+         │     └──IntegerLiteralNode [4294967295]
+         ├──VarDeclNode [bin_under]
+         │  └──PrimaryExprNode
+         │     └──IntegerLiteralNode [165]
+         ├──VarDeclNode [idx]
+         │  └──PrimaryExprNode
+         │     └──IntegerLiteralNode [0]
+         ├──VarDeclNode [sgn]
+         │  └──PrimaryExprNode
+         │     └──IntegerLiteralNode [0]
+         └──VarDeclNode [dec]
+            └──PrimaryExprNode
+               └──IntegerLiteralNode [13579]

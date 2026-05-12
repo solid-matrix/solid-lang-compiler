@@ -1,0 +1,89 @@
+└──ProgramNode
+   ├──FunctionDeclNode [nested_ternary]
+   │  ├──FuncParametersNode
+   │  │  ├──FuncParameterNode [a]
+   │  │  │  └──PrimitiveTypeNode [I32Keyword]
+   │  │  ├──FuncParameterNode [b]
+   │  │  │  └──PrimitiveTypeNode [I32Keyword]
+   │  │  └──FuncParameterNode [c]
+   │  │     └──PrimitiveTypeNode [I32Keyword]
+   │  ├──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──ConditionalExprNode
+   │           ├──ComparisonExprNode [GreaterToken]
+   │           │  ├──PrimaryExprNode [a]
+   │           │  └──PrimaryExprNode [b]
+   │           ├──PrimaryExprNode
+   │           │  └──ConditionalExprNode
+   │           │     ├──ComparisonExprNode [GreaterToken]
+   │           │     │  ├──PrimaryExprNode [a]
+   │           │     │  └──PrimaryExprNode [c]
+   │           │     ├──PrimaryExprNode [a]
+   │           │     └──PrimaryExprNode [c]
+   │           └──PrimaryExprNode
+   │              └──ConditionalExprNode
+   │                 ├──ComparisonExprNode [GreaterToken]
+   │                 │  ├──PrimaryExprNode [b]
+   │                 │  └──PrimaryExprNode [c]
+   │                 ├──PrimaryExprNode [b]
+   │                 └──PrimaryExprNode [c]
+   ├──FunctionDeclNode [ternary_assign]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [flag]
+   │  │     └──PrimitiveTypeNode [BoolKeyword]
+   │  ├──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [result]
+   │     │  └──ConditionalExprNode
+   │     │     ├──PrimaryExprNode [flag]
+   │     │     ├──PrimaryExprNode
+   │     │     │  └──IntegerLiteralNode [100]
+   │     │     └──PrimaryExprNode
+   │     │        └──IntegerLiteralNode [200]
+   │     └──ReturnStmtNode
+   │        └──PrimaryExprNode [result]
+   ├──FunctionDeclNode [ternary_expr]
+   │  ├──FuncParametersNode
+   │  │  ├──FuncParameterNode [x]
+   │  │  │  └──PrimitiveTypeNode [I32Keyword]
+   │  │  └──FuncParameterNode [y]
+   │  │     └──PrimitiveTypeNode [I32Keyword]
+   │  ├──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──AddExprNode [PlusToken]
+   │           ├──PrimaryExprNode
+   │           │  └──ConditionalExprNode
+   │           │     ├──ComparisonExprNode [GreaterToken]
+   │           │     │  ├──PrimaryExprNode [x]
+   │           │     │  └──PrimaryExprNode [y]
+   │           │     ├──PrimaryExprNode [x]
+   │           │     └──PrimaryExprNode [y]
+   │           └──PrimaryExprNode
+   │              └──IntegerLiteralNode [10]
+   └──FunctionDeclNode [sign]
+      ├──FuncParametersNode
+      │  └──FuncParameterNode [x]
+      │     └──PrimitiveTypeNode [I32Keyword]
+      ├──PrimitiveTypeNode [I32Keyword]
+      └──BodyStmtNode
+         └──ReturnStmtNode
+            └──ConditionalExprNode
+               ├──ComparisonExprNode [GreaterToken]
+               │  ├──PrimaryExprNode [x]
+               │  └──PrimaryExprNode
+               │     └──IntegerLiteralNode [0]
+               ├──PrimaryExprNode
+               │  └──IntegerLiteralNode [1]
+               └──PrimaryExprNode
+                  └──ConditionalExprNode
+                     ├──ComparisonExprNode [LessToken]
+                     │  ├──PrimaryExprNode [x]
+                     │  └──PrimaryExprNode
+                     │     └──IntegerLiteralNode [0]
+                     ├──UnaryExprNode [MinusToken]
+                     │  └──PrimaryExprNode
+                     │     └──IntegerLiteralNode [1]
+                     └──PrimaryExprNode
+                        └──IntegerLiteralNode [0]

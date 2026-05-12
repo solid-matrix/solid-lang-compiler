@@ -1,0 +1,155 @@
+└──ProgramNode
+   ├──InterfaceDeclNode [IHashable]
+   │  ├──GenericParamsNode
+   │  │  └──GenericParamNode [T]
+   │  └──InterfaceFieldsNode
+   │     └──InterfaceFieldNode [hash]
+   │        ├──FuncParametersNode
+   │        │  └──FuncParameterNode [self]
+   │        │     └──NamedTypeNode [T]
+   │        └──PrimitiveTypeNode [U64Keyword]
+   ├──InterfaceDeclNode [IAdd]
+   │  ├──GenericParamsNode
+   │  │  ├──GenericParamNode [TLeft]
+   │  │  ├──GenericParamNode [TRight]
+   │  │  └──GenericParamNode [TResult]
+   │  └──InterfaceFieldsNode
+   │     └──InterfaceFieldNode [add]
+   │        ├──FuncParametersNode
+   │        │  ├──FuncParameterNode [left]
+   │        │  │  └──NamedTypeNode [TLeft]
+   │        │  └──FuncParameterNode [right]
+   │        │     └──NamedTypeNode [TRight]
+   │        └──NamedTypeNode [TResult]
+   ├──InterfaceDeclNode [ICast]
+   │  ├──GenericParamsNode
+   │  │  ├──GenericParamNode [TFrom]
+   │  │  └──GenericParamNode [TTo]
+   │  └──InterfaceFieldsNode
+   │     ├──InterfaceFieldNode [into]
+   │     │  ├──GenericParamsNode
+   │     │  │  └──GenericParamNode [TTo]
+   │     │  ├──FuncParametersNode
+   │     │  │  └──FuncParameterNode [from]
+   │     │  │     └──NamedTypeNode [TFrom]
+   │     │  └──NamedTypeNode [TTo]
+   │     └──InterfaceFieldNode [from]
+   │        ├──FuncParametersNode
+   │        │  └──FuncParameterNode [value]
+   │        │     └──NamedTypeNode [TFrom]
+   │        └──NamedTypeNode [TTo]
+   ├──InterfaceDeclNode [IDefault]
+   │  ├──GenericParamsNode
+   │  │  └──GenericParamNode [T]
+   │  └──InterfaceFieldsNode
+   │     └──InterfaceFieldNode [default_value]
+   │        └──NamedTypeNode [T]
+   ├──InterfaceDeclNode [IComparable]
+   │  ├──GenericParamsNode
+   │  │  └──GenericParamNode [T]
+   │  ├──WhereClausesNode
+   │  │  └──WhereClauseNode [T]
+   │  │     └──NamedTypeNode [IHashable]
+   │  │        └──TypeArgumentListNode
+   │  │           └──NamedTypeNode [T]
+   │  └──InterfaceFieldsNode
+   │     └──InterfaceFieldNode [compare]
+   │        ├──FuncParametersNode
+   │        │  ├──FuncParameterNode [self]
+   │        │  │  └──NamedTypeNode [T]
+   │        │  └──FuncParameterNode [other]
+   │        │     └──NamedTypeNode [T]
+   │        └──PrimitiveTypeNode [I32Keyword]
+   ├──StructDeclNode [Point]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [implements]
+   │  │     └──CtAnnotateArgsNode
+   │  │        ├──CtAnnotateArgNode
+   │  │        │  └──NamedTypeNode [IHashable]
+   │  │        │     └──TypeArgumentListNode
+   │  │        │        └──NamedTypeNode [Point]
+   │  │        └──CtAnnotateArgNode
+   │  │           └──NamedTypeNode [IDefault]
+   │  │              └──TypeArgumentListNode
+   │  │                 └──NamedTypeNode [Point]
+   │  └──StructFieldsNode
+   │     ├──StructFieldNode [x]
+   │     │  └──PrimitiveTypeNode [F32Keyword]
+   │     └──StructFieldNode [y]
+   │        └──PrimitiveTypeNode [F32Keyword]
+   ├──FunctionDeclNode [hash]
+   │  ├──NamedTypeSpacePrefixNode
+   │  │  └──NamedTypeNode [Point]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [self]
+   │  │     └──NamedTypeNode [Point]
+   │  ├──PrimitiveTypeNode [U64Keyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──PrimaryExprNode
+   │           └──IntegerLiteralNode [0]
+   ├──FunctionDeclNode [default_value]
+   │  ├──NamedTypeSpacePrefixNode
+   │  │  └──NamedTypeNode [Point]
+   │  ├──NamedTypeNode [Point]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──PrimaryExprNode
+   │           └──StructLiteralNode
+   │              ├──NamedTypeNode [Point]
+   │              ├──StructLiteralFieldNode [x]
+   │              │  └──PrimaryExprNode
+   │              │     └──FloatLiteralNode [0]
+   │              └──StructLiteralFieldNode [y]
+   │                 └──PrimaryExprNode
+   │                    └──FloatLiteralNode [0]
+   ├──StructDeclNode [Pair]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [implements]
+   │  │     └──CtAnnotateArgsNode
+   │  │        └──CtAnnotateArgNode
+   │  │           └──NamedTypeNode [IHashable]
+   │  │              └──TypeArgumentListNode
+   │  │                 └──NamedTypeNode [Pair]
+   │  │                    └──TypeArgumentListNode
+   │  │                       ├──NamedTypeNode [TKey]
+   │  │                       └──NamedTypeNode [TValue]
+   │  ├──GenericParamsNode
+   │  │  ├──GenericParamNode [TKey]
+   │  │  └──GenericParamNode [TValue]
+   │  ├──WhereClausesNode
+   │  │  └──WhereClauseNode [TKey]
+   │  │     └──NamedTypeNode [IHashable]
+   │  │        └──TypeArgumentListNode
+   │  │           └──NamedTypeNode [TKey]
+   │  └──StructFieldsNode
+   │     ├──StructFieldNode [key]
+   │     │  └──NamedTypeNode [TKey]
+   │     └──StructFieldNode [value]
+   │        └──NamedTypeNode [TValue]
+   ├──FunctionDeclNode [hash]
+   │  ├──NamedTypeSpacePrefixNode
+   │  │  └──NamedTypeNode [Pair]
+   │  │     └──TypeArgumentListNode
+   │  │        ├──NamedTypeNode [TKey]
+   │  │        └──NamedTypeNode [TValue]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [self]
+   │  │     └──NamedTypeNode [Pair]
+   │  │        └──TypeArgumentListNode
+   │  │           ├──NamedTypeNode [TKey]
+   │  │           └──NamedTypeNode [TValue]
+   │  ├──PrimitiveTypeNode [U64Keyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──PostfixExprNode
+   │           ├──PrimaryExprNode [self]
+   │           ├──DotAccessNode [key]
+   │           ├──DotAccessNode [hash]
+   │           └──CallExprNode
+   └──FunctionDeclNode [main]
+      ├──PrimitiveTypeNode [I32Keyword]
+      └──BodyStmtNode
+         └──ReturnStmtNode
+            └──PrimaryExprNode
+               └──IntegerLiteralNode [0]

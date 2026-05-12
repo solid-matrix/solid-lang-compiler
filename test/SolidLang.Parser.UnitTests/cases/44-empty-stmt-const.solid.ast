@@ -1,0 +1,40 @@
+└──ProgramNode
+   ├──FunctionDeclNode [test_empty_stmt]
+   │  └──BodyStmtNode
+   │     ├──EmptyStmtNode
+   │     ├──VarDeclNode [x]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [1]
+   │     ├──EmptyStmtNode
+   │     └──VarDeclNode [y]
+   │        └──PrimaryExprNode
+   │           └──IntegerLiteralNode [2]
+   ├──FunctionDeclNode [test_local_const]
+   │  └──BodyStmtNode
+   │     ├──ConstDeclNode [answer]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [42]
+   │     ├──ConstDeclNode [flag]
+   │     │  └──AndExprNode [AmpersandAmpersandToken]
+   │     │     ├──PrimaryExprNode
+   │     │     │  └──BoolLiteralNode [True]
+   │     │     └──UnaryExprNode [BangToken]
+   │     │        └──PrimaryExprNode
+   │     │           └──BoolLiteralNode [False]
+   │     └──VarDeclNode [result]
+   │        └──PrimaryExprNode [answer]
+   └──FunctionDeclNode [test_local_static]
+      └──BodyStmtNode
+         ├──StaticDeclNode [counter]
+         │  └──PrimaryExprNode
+         │     └──IntegerLiteralNode [0]
+         ├──AssignStmtNode
+         │  ├──PrimaryExprNode [counter]
+         │  └──PrimaryExprNode
+         │     └──IntegerLiteralNode [1]
+         ├──StaticDeclNode [total]
+         │  └──PrimaryExprNode
+         │     └──IntegerLiteralNode [100]
+         └──AssignStmtNode
+            ├──PrimaryExprNode [total]
+            └──PrimaryExprNode [counter]

@@ -1,0 +1,27 @@
+└──ProgramNode
+   ├──StructDeclNode [InternalData]
+   │  └──StructFieldsNode
+   │     ├──StructFieldNode [cached_value]
+   │     │  ├──CtAnnotatesNode
+   │     │  │  └──CtAnnotateNode [private]
+   │     │  └──PrimitiveTypeNode [I32Keyword]
+   │     └──StructFieldNode [x]
+   │        └──PrimitiveTypeNode [F32Keyword]
+   ├──FunctionDeclNode [internal_helper]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [internal]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [x]
+   │  │     └──PrimitiveTypeNode [I32Keyword]
+   │  ├──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──MulExprNode [StarToken]
+   │           ├──PrimaryExprNode [x]
+   │           └──PrimaryExprNode [x]
+   └──StructDeclNode [PublicType]
+      ├──CtAnnotatesNode
+      │  └──CtAnnotateNode [public]
+      └──StructFieldsNode
+         └──StructFieldNode [value]
+            └──PrimitiveTypeNode [I32Keyword]

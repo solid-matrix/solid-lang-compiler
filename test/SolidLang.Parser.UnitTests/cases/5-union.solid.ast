@@ -1,0 +1,38 @@
+└──ProgramNode
+   ├──UnionDeclNode [DynamicVariable]
+   │  ├──CtAnnotatesNode
+   │  │  ├──CtAnnotateNode [sealed]
+   │  │  └──CtAnnotateNode [packed]
+   │  └──UnionFieldsNode
+   │     ├──UnionFieldNode [as_i32]
+   │     │  └──PrimitiveTypeNode [I32Keyword]
+   │     └──UnionFieldNode [as_f32]
+   │        └──PrimitiveTypeNode [F32Keyword]
+   ├──UnionDeclNode [RawOptional]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [align]
+   │  │     └──CtAnnotateArgsNode
+   │  │        └──CtAnnotateArgNode
+   │  │           └──PrimaryExprNode
+   │  │              └──IntegerLiteralNode [16]
+   │  ├──GenericParamsNode
+   │  │  └──GenericParamNode [T]
+   │  └──UnionFieldsNode
+   │     ├──UnionFieldNode [value]
+   │     │  └──NamedTypeNode [T]
+   │     └──UnionFieldNode [none]
+   │        └──PointerTypeNode
+   │           └──NamedTypeNode [opaque]
+   └──FunctionDeclNode [main]
+      ├──PrimitiveTypeNode [I32Keyword]
+      └──BodyStmtNode
+         ├──VarDeclNode [v1]
+         │  └──PrimaryExprNode
+         │     └──StructLiteralNode
+         │        └──NamedTypeNode [DynamicVariable]
+         └──VarDeclNode [v2]
+            └──PrimaryExprNode
+               └──VariantLiteralNode [as_i32]
+                  ├──NamedTypeNode [DynamicVariable]
+                  └──PrimaryExprNode
+                     └──IntegerLiteralNode [10]

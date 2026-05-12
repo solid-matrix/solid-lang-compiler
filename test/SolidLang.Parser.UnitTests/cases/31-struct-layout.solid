@@ -1,0 +1,22 @@
+// Struct layout annotations (spec §Types > Struct Type > Layout Annotations)
+
+// @align annotation
+@align(16)
+struct AlignedStruct{
+    x: f32,
+    y: f32,
+}
+
+// @packed annotation
+@packed
+struct PackedStruct{
+    a: u8,
+    b: i32,
+}
+
+// @explicit annotation (fields need @offset)
+@explicit
+struct ExplicitStruct{
+    @offset(0) data: [8]u8,
+    @offset(0) point: AlignedStruct,
+}

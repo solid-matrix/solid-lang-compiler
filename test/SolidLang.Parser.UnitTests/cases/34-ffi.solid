@@ -1,0 +1,24 @@
+// FFI declarations (spec §FFI)
+
+struct RawPtr{}
+
+// @import with symbol name
+@import(malloc)
+func libc_malloc(size: usize)cdecl: RawPtr;
+
+// @import simple
+@import(free)
+func libc_free(ptr: RawPtr)cdecl;
+
+// @export function
+@export
+func add(a: i32, b: i32)cdecl: i32{
+    return a + b;
+}
+
+// @import with stdcall
+@import(VirtualAlloc)
+func win_alloc(addr: usize, size: usize, alloc_type: u32, protect: u32)stdcall: usize;
+
+// Forward declaration (no body)
+func forward_declared(x: i32): i32;

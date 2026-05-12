@@ -1,0 +1,73 @@
+└──ProgramNode
+   ├──FunctionDeclNode [float_underscore]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [a]
+   │     │  └──PrimaryExprNode
+   │     │     └──FloatLiteralNode [1]
+   │     └──VarDeclNode [b]
+   │        └──PrimaryExprNode
+   │           └──FloatLiteralNode [1.5]
+   ├──UnionDeclNode [AlignedUnion]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [align]
+   │  │     └──CtAnnotateArgsNode
+   │  │        └──CtAnnotateArgNode
+   │  │           └──PrimaryExprNode
+   │  │              └──IntegerLiteralNode [8]
+   │  └──UnionFieldsNode
+   │     ├──UnionFieldNode [as_i32]
+   │     │  └──PrimitiveTypeNode [I32Keyword]
+   │     └──UnionFieldNode [as_f32]
+   │        └──PrimitiveTypeNode [F32Keyword]
+   └──FunctionDeclNode [chained_index]
+      └──BodyStmtNode
+         ├──VarDeclNode [arr]
+         │  ├──ArrayTypeNode
+         │  │  ├──PrimaryExprNode
+         │  │  │  └──IntegerLiteralNode [2]
+         │  │  └──ArrayTypeNode
+         │  │     ├──PrimaryExprNode
+         │  │     │  └──IntegerLiteralNode [3]
+         │  │     └──PrimitiveTypeNode [I32Keyword]
+         │  └──PrimaryExprNode
+         │     └──ArrayLiteralNode
+         │        ├──ArrayTypeNode
+         │        │  ├──PrimaryExprNode
+         │        │  │  └──IntegerLiteralNode [2]
+         │        │  └──ArrayTypeNode
+         │        │     ├──PrimaryExprNode
+         │        │     │  └──IntegerLiteralNode [3]
+         │        │     └──PrimitiveTypeNode [I32Keyword]
+         │        ├──PrimaryExprNode
+         │        │  └──ArrayLiteralNode
+         │        │     ├──ArrayTypeNode
+         │        │     │  ├──PrimaryExprNode
+         │        │     │  │  └──IntegerLiteralNode [3]
+         │        │     │  └──PrimitiveTypeNode [I32Keyword]
+         │        │     ├──PrimaryExprNode
+         │        │     │  └──IntegerLiteralNode [1]
+         │        │     ├──PrimaryExprNode
+         │        │     │  └──IntegerLiteralNode [2]
+         │        │     └──PrimaryExprNode
+         │        │        └──IntegerLiteralNode [3]
+         │        └──PrimaryExprNode
+         │           └──ArrayLiteralNode
+         │              ├──ArrayTypeNode
+         │              │  ├──PrimaryExprNode
+         │              │  │  └──IntegerLiteralNode [3]
+         │              │  └──PrimitiveTypeNode [I32Keyword]
+         │              ├──PrimaryExprNode
+         │              │  └──IntegerLiteralNode [4]
+         │              ├──PrimaryExprNode
+         │              │  └──IntegerLiteralNode [5]
+         │              └──PrimaryExprNode
+         │                 └──IntegerLiteralNode [6]
+         └──VarDeclNode [x]
+            └──PostfixExprNode
+               ├──PrimaryExprNode [arr]
+               ├──IndexAccessNode
+               │  └──PrimaryExprNode
+               │     └──IntegerLiteralNode [0]
+               └──IndexAccessNode
+                  └──PrimaryExprNode
+                     └──IntegerLiteralNode [1]

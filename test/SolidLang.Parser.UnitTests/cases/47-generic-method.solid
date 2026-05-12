@@ -1,0 +1,26 @@
+// Generic methods (spec §Interface & Generics > Generic Method)
+
+struct Box<T>{
+    value: T,
+}
+
+func Box<T>::new(value: T): Box<T>{
+    return Box<T>{value = value};
+}
+
+func Box<T>::value(self: Box<T>): T{
+    return self.value;
+}
+
+func Box<T>::set(self: *Box<T>, value: T){
+    self*.value = value;
+}
+
+struct Slice<T>{
+    ptr: *T,
+    len: usize,
+}
+
+func Slice<T>::subslice(self: Slice<T>, start: usize, len: usize){
+    // subslice logic
+}

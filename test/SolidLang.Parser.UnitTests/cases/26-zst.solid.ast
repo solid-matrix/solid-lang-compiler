@@ -1,0 +1,35 @@
+└──ProgramNode
+   ├──StructDeclNode [Empty]
+   │  └──StructFieldsNode
+   ├──UnionDeclNode [None]
+   │  └──UnionFieldsNode
+   ├──VariantDeclNode [Void]
+   │  └──VariantFieldsNode
+   ├──FunctionDeclNode [make_zst]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [e]
+   │     │  └──PrimaryExprNode
+   │     │     └──StructLiteralNode
+   │     │        └──NamedTypeNode [Empty]
+   │     ├──VarDeclNode [n]
+   │     │  └──PrimaryExprNode
+   │     │     └──StructLiteralNode
+   │     │        └──NamedTypeNode [None]
+   │     └──VarDeclNode [v]
+   │        └──PrimaryExprNode
+   │           └──StructLiteralNode
+   │              └──NamedTypeNode [Void]
+   └──FunctionDeclNode [zst_ptr]
+      └──BodyStmtNode
+         ├──VarDeclNode [e]
+         │  └──PrimaryExprNode
+         │     └──StructLiteralNode
+         │        └──NamedTypeNode [Empty]
+         ├──VarDeclNode [p]
+         │  ├──PointerTypeNode
+         │  │  └──NamedTypeNode [Empty]
+         │  └──UnaryExprNode [AmpersandToken]
+         │     └──PrimaryExprNode [e]
+         └──VarDeclNode [e2]
+            └──UnaryExprNode [StarToken]
+               └──PrimaryExprNode [p]

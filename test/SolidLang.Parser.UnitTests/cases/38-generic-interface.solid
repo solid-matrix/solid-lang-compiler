@@ -1,0 +1,28 @@
+// Generic interfaces with where clauses (spec §Interface & Generics)
+
+interface ICopy<T> {
+    func copy(value: T): T;
+}
+
+interface IHash<T> {
+    func hash(value: T): u64;
+}
+
+// Interface with single where clause
+interface IComparable<T> where T: IEqual<T> {
+    func compare(left: T, right: T): i8;
+}
+
+// Interface with multiple where clauses (chain-style)
+interface IMap<TContainer, TKey, TValue>
+    where TKey: IEqual<TKey>
+    where TKey: IHash<TKey> {
+
+    func get(self: *TContainer, key: TKey): TValue;
+    func len(self: *TContainer): usize;
+}
+
+// Required by IComparable
+interface IEqual<T> {
+    func equal(left: T, right: T): bool;
+}

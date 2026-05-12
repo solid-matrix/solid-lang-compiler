@@ -1,0 +1,91 @@
+└──ProgramNode
+   ├──StructDeclNode [Vector2]
+   │  └──StructFieldsNode
+   │     ├──StructFieldNode [x]
+   │     │  └──PrimitiveTypeNode [F32Keyword]
+   │     └──StructFieldNode [y]
+   │        └──PrimitiveTypeNode [F32Keyword]
+   ├──FunctionDeclNode [length]
+   │  ├──NamedTypeSpacePrefixNode
+   │  │  └──NamedTypeNode [Vector2]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [self]
+   │  │     └──NamedTypeNode [Vector2]
+   │  ├──PrimitiveTypeNode [F32Keyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──PostfixExprNode
+   │           ├──PrimaryExprNode
+   │           │  └──AddExprNode [PlusToken]
+   │           │     ├──MulExprNode [StarToken]
+   │           │     │  ├──PostfixExprNode
+   │           │     │  │  ├──PrimaryExprNode [self]
+   │           │     │  │  └──DotAccessNode [x]
+   │           │     │  └──PostfixExprNode
+   │           │     │     ├──PrimaryExprNode [self]
+   │           │     │     └──DotAccessNode [x]
+   │           │     └──MulExprNode [StarToken]
+   │           │        ├──PostfixExprNode
+   │           │        │  ├──PrimaryExprNode [self]
+   │           │        │  └──DotAccessNode [y]
+   │           │        └──PostfixExprNode
+   │           │           ├──PrimaryExprNode [self]
+   │           │           └──DotAccessNode [y]
+   │           ├──DotAccessNode [sqrt]
+   │           └──CallExprNode
+   ├──FunctionDeclNode [new]
+   │  ├──NamedTypeSpacePrefixNode
+   │  │  └──NamedTypeNode [Vector2]
+   │  ├──FuncParametersNode
+   │  │  ├──FuncParameterNode [x]
+   │  │  │  └──PrimitiveTypeNode [F32Keyword]
+   │  │  └──FuncParameterNode [y]
+   │  │     └──PrimitiveTypeNode [F32Keyword]
+   │  ├──NamedTypeNode [Vector2]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──PrimaryExprNode
+   │           └──StructLiteralNode
+   │              ├──NamedTypeNode [Vector2]
+   │              ├──StructLiteralFieldNode [x]
+   │              │  └──PrimaryExprNode [x]
+   │              └──StructLiteralFieldNode [y]
+   │                 └──PrimaryExprNode [y]
+   └──FunctionDeclNode [normalize]
+      ├──NamedTypeSpacePrefixNode
+      │  └──NamedTypeNode [Vector2]
+      ├──FuncParametersNode
+      │  └──FuncParameterNode [self]
+      │     └──PointerTypeNode
+      │        └──NamedTypeNode [Vector2]
+      └──BodyStmtNode
+         ├──VarDeclNode [len]
+         │  └──PrimaryExprNode
+         │     └──VariantLiteralNode [length]
+         │        ├──NamedTypeNode [Vector2]
+         │        └──UnaryExprNode [StarToken]
+         │           └──PrimaryExprNode [self]
+         └──IfStmtNode
+            ├──ComparisonExprNode [GreaterToken]
+            │  ├──PrimaryExprNode [len]
+            │  └──PrimaryExprNode
+            │     └──FloatLiteralNode [0]
+            └──BodyStmtNode
+               ├──AssignStmtNode
+               │  ├──PostfixExprNode
+               │  │  ├──PrimaryExprNode [self]
+               │  │  └──PointerAccessNode [x]
+               │  └──MulExprNode [SlashToken]
+               │     ├──PostfixExprNode
+               │     │  ├──PrimaryExprNode [self]
+               │     │  └──PointerAccessNode [x]
+               │     └──PrimaryExprNode [len]
+               └──AssignStmtNode
+                  ├──PostfixExprNode
+                  │  ├──PrimaryExprNode [self]
+                  │  └──PointerAccessNode [y]
+                  └──MulExprNode [SlashToken]
+                     ├──PostfixExprNode
+                     │  ├──PrimaryExprNode [self]
+                     │  └──PointerAccessNode [y]
+                     └──PrimaryExprNode [len]

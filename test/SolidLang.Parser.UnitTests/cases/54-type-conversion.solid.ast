@@ -1,0 +1,20 @@
+└──ProgramNode
+   └──FunctionDeclNode [test_type_conversion]
+      ├──FuncParametersNode
+      │  └──FuncParameterNode [a]
+      │     └──PrimitiveTypeNode [I32Keyword]
+      └──BodyStmtNode
+         ├──VarDeclNode [b]
+         │  ├──PrimitiveTypeNode [I16Keyword]
+         │  └──PostfixExprNode
+         │     ├──PrimaryExprNode [a]
+         │     ├──DotAccessNode [into]
+         │     │  └──TypeArgumentListNode
+         │     │     └──PrimitiveTypeNode [I16Keyword]
+         │     └──CallExprNode
+         └──VarDeclNode [c]
+            ├──PrimitiveTypeNode [I16Keyword]
+            └──PrimaryExprNode
+               └──VariantLiteralNode [from]
+                  ├──NamedTypeNode [i16]
+                  └──PrimaryExprNode [a]

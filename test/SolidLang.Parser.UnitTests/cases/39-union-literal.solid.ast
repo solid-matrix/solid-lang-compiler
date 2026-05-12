@@ -1,0 +1,54 @@
+└──ProgramNode
+   ├──UnionDeclNode [Value]
+   │  └──UnionFieldsNode
+   │     ├──UnionFieldNode [as_i32]
+   │     │  └──PrimitiveTypeNode [I32Keyword]
+   │     ├──UnionFieldNode [as_f32]
+   │     │  └──PrimitiveTypeNode [F32Keyword]
+   │     └──UnionFieldNode [as_bytes]
+   │        └──ArrayTypeNode
+   │           ├──PrimaryExprNode
+   │           │  └──IntegerLiteralNode [4]
+   │           └──PrimitiveTypeNode [U8Keyword]
+   └──FunctionDeclNode [test_union_literal]
+      └──BodyStmtNode
+         ├──VarDeclNode [v1]
+         │  └──PrimaryExprNode
+         │     └──VariantLiteralNode [as_i32]
+         │        ├──NamedTypeNode [Value]
+         │        └──PrimaryExprNode
+         │           └──IntegerLiteralNode [12345]
+         ├──VarDeclNode [v2]
+         │  └──PrimaryExprNode
+         │     └──StructLiteralNode
+         │        └──NamedTypeNode [Value]
+         ├──AssignStmtNode
+         │  ├──PostfixExprNode
+         │  │  ├──PrimaryExprNode [v1]
+         │  │  └──DotAccessNode [as_f32]
+         │  └──PrimaryExprNode
+         │     └──FloatLiteralNode [1]
+         ├──AssignStmtNode
+         │  ├──PostfixExprNode
+         │  │  ├──PrimaryExprNode [v1]
+         │  │  └──DotAccessNode [as_i32]
+         │  └──PrimaryExprNode
+         │     └──IntegerLiteralNode [1]
+         └──AssignStmtNode
+            ├──PostfixExprNode
+            │  ├──PrimaryExprNode [v1]
+            │  └──DotAccessNode [as_bytes]
+            └──PrimaryExprNode
+               └──ArrayLiteralNode
+                  ├──ArrayTypeNode
+                  │  ├──PrimaryExprNode
+                  │  │  └──IntegerLiteralNode [4]
+                  │  └──PrimitiveTypeNode [U8Keyword]
+                  ├──PrimaryExprNode
+                  │  └──IntegerLiteralNode [2]
+                  ├──PrimaryExprNode
+                  │  └──IntegerLiteralNode [5]
+                  ├──PrimaryExprNode
+                  │  └──IntegerLiteralNode [6]
+                  └──PrimaryExprNode
+                     └──IntegerLiteralNode [8]

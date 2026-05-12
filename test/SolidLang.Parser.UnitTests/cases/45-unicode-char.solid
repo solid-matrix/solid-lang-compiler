@@ -1,0 +1,15 @@
+// Unicode chars, strings and char hex escapes (spec §Expressions > Literals)
+
+func test_unicode_char(){
+    var a = '中';
+    var b = '字';
+    var c = '\x41';    // hex escape = 'A'
+    var d = '\x7E';    // hex escape = '~'
+    var e = '\n';
+}
+
+func test_unicode_string(){
+    var s = "中文测试🎉";
+    var mixed = "Hello, 世界!";
+    var emoji = "🚀";
+}

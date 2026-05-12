@@ -1,0 +1,18 @@
+enum Color{
+    Red,
+    Green,
+    Blue,
+}
+
+@flags
+enum WindowFlags:u32{
+    Resizable = 0x0001,
+    Hidden = 0x0002,
+    Maximum = 0x0004,
+    Minimum = 0x0008,
+}
+
+func main():i32{
+    var color = Color::Red;
+    var flags = WindowFlags::Resizable;
+}

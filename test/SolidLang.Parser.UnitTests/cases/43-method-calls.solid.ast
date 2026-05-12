@@ -1,0 +1,57 @@
+└──ProgramNode
+   ├──StructDeclNode [Vector2]
+   │  └──StructFieldsNode
+   │     ├──StructFieldNode [x]
+   │     │  └──PrimitiveTypeNode [F32Keyword]
+   │     └──StructFieldNode [y]
+   │        └──PrimitiveTypeNode [F32Keyword]
+   ├──FunctionDeclNode [length]
+   │  ├──NamedTypeSpacePrefixNode
+   │  │  └──NamedTypeNode [Vector2]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [self]
+   │  │     └──NamedTypeNode [Vector2]
+   │  ├──PrimitiveTypeNode [F32Keyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──PostfixExprNode
+   │           ├──PrimaryExprNode
+   │           │  └──AddExprNode [PlusToken]
+   │           │     ├──MulExprNode [StarToken]
+   │           │     │  ├──PostfixExprNode
+   │           │     │  │  ├──PrimaryExprNode [self]
+   │           │     │  │  └──DotAccessNode [x]
+   │           │     │  └──PostfixExprNode
+   │           │     │     ├──PrimaryExprNode [self]
+   │           │     │     └──DotAccessNode [x]
+   │           │     └──MulExprNode [StarToken]
+   │           │        ├──PostfixExprNode
+   │           │        │  ├──PrimaryExprNode [self]
+   │           │        │  └──DotAccessNode [y]
+   │           │        └──PostfixExprNode
+   │           │           ├──PrimaryExprNode [self]
+   │           │           └──DotAccessNode [y]
+   │           ├──DotAccessNode [sqrt]
+   │           └──CallExprNode
+   └──FunctionDeclNode [test_method_calls]
+      └──BodyStmtNode
+         ├──VarDeclNode [v]
+         │  └──PrimaryExprNode
+         │     └──StructLiteralNode
+         │        ├──NamedTypeNode [Vector2]
+         │        ├──StructLiteralFieldNode [x]
+         │        │  └──PrimaryExprNode
+         │        │     └──FloatLiteralNode [1]
+         │        └──StructLiteralFieldNode [y]
+         │           └──PrimaryExprNode
+         │              └──FloatLiteralNode [2]
+         ├──VarDeclNode [len1]
+         │  └──PostfixExprNode
+         │     ├──PrimaryExprNode [v]
+         │     ├──DotAccessNode [length]
+         │     └──CallExprNode
+         └──VarDeclNode [len2]
+            └──PrimaryExprNode
+               └──VariantLiteralNode [length]
+                  ├──NamedTypeNode [Vector2]
+                  └──PrimaryExprNode [v]

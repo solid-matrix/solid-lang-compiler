@@ -1,0 +1,21 @@
+// Zero-Sized Types (spec §Types > Zero-Sized Types)
+
+struct Empty{}
+
+union None{}
+
+variant Void{}
+
+// ZST instantiation
+func make_zst(){
+    var e = Empty{};
+    var n = None{};
+    var v = Void{};
+}
+
+// ZST pointer
+func zst_ptr(){
+    var e = Empty{};
+    var p: *Empty = &e;
+    var e2 = *p;
+}

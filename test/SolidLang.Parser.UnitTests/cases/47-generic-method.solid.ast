@@ -1,0 +1,86 @@
+└──ProgramNode
+   ├──StructDeclNode [Box]
+   │  ├──GenericParamsNode
+   │  │  └──GenericParamNode [T]
+   │  └──StructFieldsNode
+   │     └──StructFieldNode [value]
+   │        └──NamedTypeNode [T]
+   ├──FunctionDeclNode [new]
+   │  ├──NamedTypeSpacePrefixNode
+   │  │  └──NamedTypeNode [Box]
+   │  │     └──TypeArgumentListNode
+   │  │        └──NamedTypeNode [T]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [value]
+   │  │     └──NamedTypeNode [T]
+   │  ├──NamedTypeNode [Box]
+   │  │  └──TypeArgumentListNode
+   │  │     └──NamedTypeNode [T]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──PrimaryExprNode
+   │           └──StructLiteralNode
+   │              ├──NamedTypeNode [Box]
+   │              │  └──TypeArgumentListNode
+   │              │     └──NamedTypeNode [T]
+   │              └──StructLiteralFieldNode [value]
+   │                 └──PrimaryExprNode [value]
+   ├──FunctionDeclNode [value]
+   │  ├──NamedTypeSpacePrefixNode
+   │  │  └──NamedTypeNode [Box]
+   │  │     └──TypeArgumentListNode
+   │  │        └──NamedTypeNode [T]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [self]
+   │  │     └──NamedTypeNode [Box]
+   │  │        └──TypeArgumentListNode
+   │  │           └──NamedTypeNode [T]
+   │  ├──NamedTypeNode [T]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──PostfixExprNode
+   │           ├──PrimaryExprNode [self]
+   │           └──DotAccessNode [value]
+   ├──FunctionDeclNode [set]
+   │  ├──NamedTypeSpacePrefixNode
+   │  │  └──NamedTypeNode [Box]
+   │  │     └──TypeArgumentListNode
+   │  │        └──NamedTypeNode [T]
+   │  ├──FuncParametersNode
+   │  │  ├──FuncParameterNode [self]
+   │  │  │  └──PointerTypeNode
+   │  │  │     └──NamedTypeNode [Box]
+   │  │  │        └──TypeArgumentListNode
+   │  │  │           └──NamedTypeNode [T]
+   │  │  └──FuncParameterNode [value]
+   │  │     └──NamedTypeNode [T]
+   │  └──BodyStmtNode
+   │     └──AssignStmtNode
+   │        ├──PostfixExprNode
+   │        │  ├──PrimaryExprNode [self]
+   │        │  └──PointerAccessNode [value]
+   │        └──PrimaryExprNode [value]
+   ├──StructDeclNode [Slice]
+   │  ├──GenericParamsNode
+   │  │  └──GenericParamNode [T]
+   │  └──StructFieldsNode
+   │     ├──StructFieldNode [ptr]
+   │     │  └──PointerTypeNode
+   │     │     └──NamedTypeNode [T]
+   │     └──StructFieldNode [len]
+   │        └──PrimitiveTypeNode [USizeKeyword]
+   └──FunctionDeclNode [subslice]
+      ├──NamedTypeSpacePrefixNode
+      │  └──NamedTypeNode [Slice]
+      │     └──TypeArgumentListNode
+      │        └──NamedTypeNode [T]
+      ├──FuncParametersNode
+      │  ├──FuncParameterNode [self]
+      │  │  └──NamedTypeNode [Slice]
+      │  │     └──TypeArgumentListNode
+      │  │        └──NamedTypeNode [T]
+      │  ├──FuncParameterNode [start]
+      │  │  └──PrimitiveTypeNode [USizeKeyword]
+      │  └──FuncParameterNode [len]
+      │     └──PrimitiveTypeNode [USizeKeyword]
+      └──BodyStmtNode

@@ -1,0 +1,20 @@
+// Field and declaration annotations (spec §Compile-Time)
+
+struct InternalData{
+    @private
+    cached_value: i32,
+
+    x: f32,
+}
+
+// @internal declaration
+@internal
+func internal_helper(x: i32): i32{
+    return x * x;
+}
+
+// @public declaration
+@public
+struct PublicType{
+    value: i32,
+}

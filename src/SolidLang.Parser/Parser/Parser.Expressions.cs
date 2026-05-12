@@ -452,7 +452,7 @@ public sealed partial class Parser
         {
             if (Peek() == '>' || Peek() == '=')
             {
-                // -> or -=, not unary minus
+                // -=, not unary minus
             }
             else
             {
@@ -558,10 +558,30 @@ public sealed partial class Parser
                 SkipWhitespaceAndComments();
 
                 var name = ScanIdentifier();
+                SkipWhitespaceAndComments();
+
+                // Check for generic type arguments: .method<T>
+                TypeArgumentListNode? typeArgs = null;
+                if (name.Length > 0 && Current == '<')
+                {
+                    var savedPos = _position;
+                    var savedDiag = _diagnostics.Count;
+
+                    typeArgs = ParseTypeArgumentList();
+                    SkipWhitespaceAndComments();
+
+                    // Only keep type args if ( follows (generic method call)
+                    if (Current != '(')
+                    {
+                        _position = savedPos;
+                        _diagnostics.TruncateTo(savedDiag);
+                        typeArgs = null;
+                    }
+                }
 
                 var span = GetSpanFrom(start);
                 var text = _source.GetText(span);
-                suffixes.Add(new DotAccessNode(name, span, text));
+                suffixes.Add(new DotAccessNode(name, typeArgs, span, text));
             }
             else if (Current == '[')
             {
@@ -595,6 +615,34 @@ public sealed partial class Parser
                 var span = GetSpanFrom(start);
                 var text = _source.GetText(span);
                 suffixes.Add(new CallExprNode(args, span, text));
+            }
+            else if (Current == '*' && Peek() == '.')
+            {
+                // *.member: sugar for (*expr).member
+                var start = _position;
+                Advance(); // consume *
+                Advance(); // consume .
+                SkipWhitespaceAndComments();
+
+                var name = ScanIdentifier();
+
+                var span = GetSpanFrom(start);
+                var text = _source.GetText(span);
+                suffixes.Add(new PointerAccessNode(name, span, text));
+            }
+            else if (Current == '&' && Peek() == '.')
+            {
+                // &.member: sugar for (&expr).member
+                var start = _position;
+                Advance(); // consume &
+                Advance(); // consume .
+                SkipWhitespaceAndComments();
+
+                var name = ScanIdentifier();
+
+                var span = GetSpanFrom(start);
+                var text = _source.GetText(span);
+                suffixes.Add(new AddressAccessNode(name, span, text));
             }
             else
             {
@@ -692,9 +740,44 @@ public sealed partial class Parser
         {
             // Simple identifier
             var name = ScanIdentifier();
-            var exprSpan = GetSpanFrom(start);
-            var exprText = _source.GetText(exprSpan);
-            return new PrimaryExprNode(PrimaryExprKind.Identifier, null, name, null, null, exprSpan, exprText);
+            SkipWhitespaceAndComments();
+
+            // Check for generic type arguments: identity<T>(args)
+            TypeArgumentListNode? typeArgs = null;
+            if (name.Length > 0 && Current == '<')
+            {
+                var savedPos = _position;
+                var savedDiag = _diagnostics.Count;
+
+                typeArgs = ParseTypeArgumentList();
+                SkipWhitespaceAndComments();
+
+                // Only valid as generic call if ( follows
+                if (Current == '(')
+                {
+                    Advance();
+                    SkipWhitespaceAndComments();
+
+                    CallArgsNode? callArgs = null;
+                    if (Current != ')')
+                        callArgs = ParseCallArgs();
+
+                    SkipWhitespaceAndComments();
+                    Expect(')');
+
+                    var exprSpan = GetSpanFrom(start);
+                    var exprText = _source.GetText(exprSpan);
+                    return new ScopedAccessExprNode(null, name, callArgs, typeArgs, exprSpan, exprText);
+                }
+
+                // Not a generic call — backtrack, treat < as comparison operator
+                _position = savedPos;
+                _diagnostics.TruncateTo(savedDiag);
+            }
+
+            var simpleSpan = GetSpanFrom(start);
+            var simpleText = _source.GetText(simpleSpan);
+            return new PrimaryExprNode(PrimaryExprKind.Identifier, null, name, null, null, simpleSpan, simpleText);
         }
 
         // Scoped access: prefix::member or prefix::member(args)
@@ -717,7 +800,7 @@ public sealed partial class Parser
 
         var exprSpan2 = GetSpanFrom(start);
         var exprText2 = _source.GetText(exprSpan2);
-        return new ScopedAccessExprNode(namedTypePrefix, memberName, args, exprSpan2, exprText2);
+        return new ScopedAccessExprNode(namedTypePrefix, memberName, args, null, exprSpan2, exprText2);
     }
 
     private CtOperatorExprNode ParseCtOperatorExpr()
@@ -912,33 +995,79 @@ public sealed partial class Parser
         var namedType = ParseSimpleNamedType();
         SkipWhitespaceAndComments();
 
-        var hasWhitespaceAfterName = namedType.Span.Length > 0
-            && namedType.Span.End > 0
-            && namedType.Span.End <= _source.Length
-            && char.IsWhiteSpace(_source[namedType.Span.End - 1]);
-
         // If type parsing produced errors, this is not a valid composite literal
         var hasTypeErrors = _diagnostics.Count > diagCount;
 
         // Check what follows
-        if (!hasTypeErrors && Current == '{' && !hasWhitespaceAfterName)
+        if (!hasTypeErrors && Current == '{')
         {
-            // Struct literal: Name{ field = value, ... }
-            return ParseStructLiteral(namedType, start);
+            // Struct literal candidate: Name{ ... } or Name { ... }
+            // Speculatively check that { contains field assignments (or is empty)
+            var specPos = _position;
+            Advance(); // skip {
+            SkipWhitespaceAndComments();
+            var isStructLiteral = Current == '}' || MatchStructLiteralFieldPattern();
+            _position = specPos;
+            if (isStructLiteral)
+                return ParseStructLiteral(namedType, start);
         }
-        else if (!hasTypeErrors && Current == ':' && Peek() == ':')
+
+        if (!hasTypeErrors && Current == ':' && Peek() == ':')
         {
             // Enum or variant literal: Name::member or Name::member(expr)
             return ParseEnumOrVariantLiteral(namedType, start);
         }
-        else
+
+        // Not a literal, backtrack — restore position, generic depth, and diagnostics
+        _position = savedPos;
+        _genericDepth = savedDepth;
+        _diagnostics.TruncateTo(diagCount);
+        return null;
+    }
+
+    /// <summary>
+    /// Speculatively checks if the current position starts with a struct literal field pattern
+    /// (identifier = or @annotate identifier =). Does not consume if no match.
+    /// Assumes whitespace has already been skipped.
+    /// </summary>
+    private bool MatchStructLiteralFieldPattern()
+    {
+        var savedPos = _position;
+        var savedDiag = _diagnostics.Count;
+
+        // Skip annotations
+        while (Current == '@')
         {
-            // Not a literal, backtrack — restore position, generic depth, and diagnostics
-            _position = savedPos;
-            _genericDepth = savedDepth;
-            _diagnostics.TruncateTo(diagCount);
-            return null;
+            Advance();
+            if (char.IsLetter(Current) || Current == '_')
+                ScanIdentifier();
+            if (Current == '(')
+            {
+                Advance();
+                var depth = 1;
+                while (depth > 0 && Current != '\0')
+                {
+                    if (Current == '(') depth++;
+                    else if (Current == ')') depth--;
+                    Advance();
+                }
+            }
+            SkipWhitespaceAndComments();
         }
+
+        if (char.IsLetter(Current) || Current == '_')
+        {
+            ScanIdentifier();
+            SkipWhitespaceAndComments();
+            var matches = Current == '=';
+            _position = savedPos;
+            _diagnostics.TruncateTo(savedDiag);
+            return matches;
+        }
+
+        _position = savedPos;
+        _diagnostics.TruncateTo(savedDiag);
+        return false;
     }
 
     private StructLiteralNode ParseStructLiteral(NamedTypeNode type, int start)

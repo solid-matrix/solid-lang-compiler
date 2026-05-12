@@ -1,0 +1,146 @@
+└──ProgramNode
+   ├──StructDeclNode [Vector2]
+   │  └──StructFieldsNode
+   │     ├──StructFieldNode [x]
+   │     │  └──PrimitiveTypeNode [F32Keyword]
+   │     └──StructFieldNode [y]
+   │        └──PrimitiveTypeNode [F32Keyword]
+   ├──StructDeclNode [Vector3]
+   │  └──StructFieldsNode
+   │     ├──StructFieldNode [x]
+   │     │  └──PrimitiveTypeNode [F32Keyword]
+   │     ├──StructFieldNode [y]
+   │     │  └──PrimitiveTypeNode [F32Keyword]
+   │     └──StructFieldNode [z]
+   │        └──PrimitiveTypeNode [F32Keyword]
+   ├──StructDeclNode [Slice]
+   │  ├──CtAnnotatesNode
+   │  │  ├──CtAnnotateNode [sealed]
+   │  │  ├──CtAnnotateNode [align]
+   │  │  │  └──CtAnnotateArgsNode
+   │  │  │     └──CtAnnotateArgNode
+   │  │  │        └──PrimaryExprNode
+   │  │  │           └──IntegerLiteralNode [16]
+   │  │  └──CtAnnotateNode [packed]
+   │  ├──GenericParamsNode
+   │  │  └──GenericParamNode [T]
+   │  └──StructFieldsNode
+   │     ├──StructFieldNode [ptr]
+   │     │  └──PointerTypeNode
+   │     │     └──NamedTypeNode [T]
+   │     └──StructFieldNode [len]
+   │        └──PrimitiveTypeNode [USizeKeyword]
+   ├──StructDeclNode [Pair]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [implements]
+   │  │     └──CtAnnotateArgsNode
+   │  │        └──CtAnnotateArgNode
+   │  │           └──NamedTypeNode [IHashable]
+   │  │              └──TypeArgumentListNode
+   │  │                 └──NamedTypeNode [Pair]
+   │  │                    └──TypeArgumentListNode
+   │  │                       ├──NamedTypeNode [TKey]
+   │  │                       └──NamedTypeNode [TValue]
+   │  ├──GenericParamsNode
+   │  │  ├──GenericParamNode [TKey]
+   │  │  └──GenericParamNode [TValue]
+   │  ├──WhereClausesNode
+   │  │  └──WhereClauseNode [TKey]
+   │  │     └──NamedTypeNode [IHashable]
+   │  │        └──TypeArgumentListNode
+   │  │           └──NamedTypeNode [TKey]
+   │  └──StructFieldsNode
+   │     ├──StructFieldNode [key]
+   │     │  └──NamedTypeNode [TKey]
+   │     └──StructFieldNode [value]
+   │        └──NamedTypeNode [TValue]
+   ├──StructDeclNode [Frame]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [explicit]
+   │  ├──GenericParamsNode
+   │  │  └──GenericParamNode [T]
+   │  └──StructFieldsNode
+   │     ├──StructFieldNode [header]
+   │     │  ├──CtAnnotatesNode
+   │     │  │  └──CtAnnotateNode [offset]
+   │     │  │     └──CtAnnotateArgsNode
+   │     │  │        └──CtAnnotateArgNode
+   │     │  │           └──PrimaryExprNode
+   │     │  │              └──IntegerLiteralNode [0]
+   │     │  └──PrimitiveTypeNode [U64Keyword]
+   │     └──StructFieldNode [payload]
+   │        ├──CtAnnotatesNode
+   │        │  └──CtAnnotateNode [offset]
+   │        │     └──CtAnnotateArgsNode
+   │        │        └──CtAnnotateArgNode
+   │        │           └──PrimaryExprNode
+   │        │              └──IntegerLiteralNode [128]
+   │        └──NamedTypeNode [T]
+   ├──StructDeclNode [None]
+   ├──StructDeclNode [Empty]
+   │  └──StructFieldsNode
+   └──FunctionDeclNode [main]
+      ├──PrimitiveTypeNode [I32Keyword]
+      └──BodyStmtNode
+         ├──VarDeclNode [vec2]
+         │  └──PrimaryExprNode
+         │     └──StructLiteralNode
+         │        └──NamedTypeNode [Vector2]
+         ├──VarDeclNode [vec3]
+         │  └──PrimaryExprNode
+         │     └──StructLiteralNode
+         │        ├──NamedTypeNode [Vector3]
+         │        └──StructLiteralFieldNode [x]
+         │           └──PrimaryExprNode
+         │              └──FloatLiteralNode [1]
+         ├──VarDeclNode [slice]
+         │  └──PrimaryExprNode
+         │     └──StructLiteralNode
+         │        ├──NamedTypeNode [Slice]
+         │        │  └──TypeArgumentListNode
+         │        │     └──PrimitiveTypeNode [I32Keyword]
+         │        ├──StructLiteralFieldNode [ptr]
+         │        │  └──PrimaryExprNode
+         │        │     └──NullLiteralNode
+         │        └──StructLiteralFieldNode [len]
+         │           └──PrimaryExprNode
+         │              └──IntegerLiteralNode [100]
+         ├──VarDeclNode [size]
+         │  └──CtOperatorExprNode [sizeof]
+         │     └──CtOperatorArgsNode
+         │        └──CtOperatorArgNode
+         │           └──NamedTypeNode [Frame]
+         │              └──TypeArgumentListNode
+         │                 └──NamedTypeNode [Vector2]
+         ├──VarDeclNode [frame]
+         │  └──PrimaryExprNode
+         │     └──StructLiteralNode
+         │        ├──NamedTypeNode [Frame]
+         │        │  └──TypeArgumentListNode
+         │        │     └──NamedTypeNode [Vector2]
+         │        └──StructLiteralFieldNode [payload]
+         │           └──PrimaryExprNode [vec2]
+         ├──VarDeclNode [p_frame]
+         │  ├──PointerTypeNode
+         │  │  └──NamedTypeNode [Frame]
+         │  │     └──TypeArgumentListNode
+         │  │        └──NamedTypeNode [Vector2]
+         │  └──UnaryExprNode [AmpersandToken]
+         │     └──PrimaryExprNode [frame]
+         ├──VarDeclNode [empty]
+         │  └──PrimaryExprNode
+         │     └──StructLiteralNode
+         │        └──NamedTypeNode [Empty]
+         ├──VarDeclNode [p_empty]
+         │  └──UnaryExprNode [AmpersandToken]
+         │     └──PrimaryExprNode [empty]
+         ├──VarDeclNode [none]
+         │  └──PrimaryExprNode
+         │     └──StructLiteralNode
+         │        └──NamedTypeNode [None]
+         ├──VarDeclNode [p_none]
+         │  └──UnaryExprNode [AmpersandToken]
+         │     └──PrimaryExprNode [none]
+         └──ReturnStmtNode
+            └──PrimaryExprNode
+               └──IntegerLiteralNode [0]

@@ -1,0 +1,23 @@
+// Compound assignment operators (spec §Statements > Assignment)
+
+func compound_assign(){
+    var a: i32 = 10;
+
+    a += 1;
+    a -= 2;
+    a *= 3;
+    a /= 4;
+    a %= 5;
+
+    a &= 0xFF;
+    a |= 0x100;
+    a ^= 0x0F;
+}
+
+// Shift-assign operators
+func shift_assign(){
+    var x: i32 = 1;
+
+    x <<= 2;
+    x >>= 1;
+}

@@ -1,0 +1,20 @@
+// Edge cases: float underscore, @align on union, chained index
+
+func float_underscore(){
+    var a = 1.0_f32;
+    var b = 1.5_f64;
+}
+
+@align(8)
+union AlignedUnion{
+    as_i32: i32,
+    as_f32: f32,
+}
+
+func chained_index(){
+    var arr: [2][3]i32 = [2][3]i32{
+        [3]i32{1, 2, 3},
+        [3]i32{4, 5, 6},
+    };
+    var x = arr[0][1];
+}

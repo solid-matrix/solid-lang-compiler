@@ -1,0 +1,75 @@
+└──ProgramNode
+   ├──InterfaceDeclNode [ICopy]
+   │  ├──GenericParamsNode
+   │  │  └──GenericParamNode [T]
+   │  └──InterfaceFieldsNode
+   │     └──InterfaceFieldNode [copy]
+   │        ├──FuncParametersNode
+   │        │  └──FuncParameterNode [value]
+   │        │     └──NamedTypeNode [T]
+   │        └──NamedTypeNode [T]
+   ├──InterfaceDeclNode [IHash]
+   │  ├──GenericParamsNode
+   │  │  └──GenericParamNode [T]
+   │  └──InterfaceFieldsNode
+   │     └──InterfaceFieldNode [hash]
+   │        ├──FuncParametersNode
+   │        │  └──FuncParameterNode [value]
+   │        │     └──NamedTypeNode [T]
+   │        └──PrimitiveTypeNode [U64Keyword]
+   ├──InterfaceDeclNode [IComparable]
+   │  ├──GenericParamsNode
+   │  │  └──GenericParamNode [T]
+   │  ├──WhereClausesNode
+   │  │  └──WhereClauseNode [T]
+   │  │     └──NamedTypeNode [IEqual]
+   │  │        └──TypeArgumentListNode
+   │  │           └──NamedTypeNode [T]
+   │  └──InterfaceFieldsNode
+   │     └──InterfaceFieldNode [compare]
+   │        ├──FuncParametersNode
+   │        │  ├──FuncParameterNode [left]
+   │        │  │  └──NamedTypeNode [T]
+   │        │  └──FuncParameterNode [right]
+   │        │     └──NamedTypeNode [T]
+   │        └──PrimitiveTypeNode [I8Keyword]
+   ├──InterfaceDeclNode [IMap]
+   │  ├──GenericParamsNode
+   │  │  ├──GenericParamNode [TContainer]
+   │  │  ├──GenericParamNode [TKey]
+   │  │  └──GenericParamNode [TValue]
+   │  ├──WhereClausesNode
+   │  │  ├──WhereClauseNode [TKey]
+   │  │  │  └──NamedTypeNode [IEqual]
+   │  │  │     └──TypeArgumentListNode
+   │  │  │        └──NamedTypeNode [TKey]
+   │  │  └──WhereClauseNode [TKey]
+   │  │     └──NamedTypeNode [IHash]
+   │  │        └──TypeArgumentListNode
+   │  │           └──NamedTypeNode [TKey]
+   │  └──InterfaceFieldsNode
+   │     ├──InterfaceFieldNode [get]
+   │     │  ├──FuncParametersNode
+   │     │  │  ├──FuncParameterNode [self]
+   │     │  │  │  └──PointerTypeNode
+   │     │  │  │     └──NamedTypeNode [TContainer]
+   │     │  │  └──FuncParameterNode [key]
+   │     │  │     └──NamedTypeNode [TKey]
+   │     │  └──NamedTypeNode [TValue]
+   │     └──InterfaceFieldNode [len]
+   │        ├──FuncParametersNode
+   │        │  └──FuncParameterNode [self]
+   │        │     └──PointerTypeNode
+   │        │        └──NamedTypeNode [TContainer]
+   │        └──PrimitiveTypeNode [USizeKeyword]
+   └──InterfaceDeclNode [IEqual]
+      ├──GenericParamsNode
+      │  └──GenericParamNode [T]
+      └──InterfaceFieldsNode
+         └──InterfaceFieldNode [equal]
+            ├──FuncParametersNode
+            │  ├──FuncParameterNode [left]
+            │  │  └──NamedTypeNode [T]
+            │  └──FuncParameterNode [right]
+            │     └──NamedTypeNode [T]
+            └──PrimitiveTypeNode [BoolKeyword]

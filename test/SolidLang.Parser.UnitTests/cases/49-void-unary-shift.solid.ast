@@ -1,0 +1,37 @@
+└──ProgramNode
+   ├──FunctionDeclNode [void_return]
+   │  └──BodyStmtNode
+   │     └──IfStmtNode
+   │        ├──PrimaryExprNode
+   │        │  └──BoolLiteralNode [True]
+   │        └──BodyStmtNode
+   │           └──ReturnStmtNode
+   ├──FunctionDeclNode [unary_ops]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [x]
+   │  │     └──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [a]
+   │     │  └──UnaryExprNode [TildeToken]
+   │     │     └──PrimaryExprNode [x]
+   │     ├──VarDeclNode [b]
+   │     │  └──UnaryExprNode [PlusToken]
+   │     │     └──PrimaryExprNode [x]
+   │     └──VarDeclNode [c]
+   │        └──UnaryExprNode [MinusToken]
+   │           └──PrimaryExprNode [x]
+   └──FunctionDeclNode [shift_ops]
+      ├──FuncParametersNode
+      │  └──FuncParameterNode [x]
+      │     └──PrimitiveTypeNode [I32Keyword]
+      └──BodyStmtNode
+         ├──VarDeclNode [a]
+         │  └──ShiftExprNode [LessLessToken]
+         │     ├──PrimaryExprNode [x]
+         │     └──PrimaryExprNode
+         │        └──IntegerLiteralNode [2]
+         └──VarDeclNode [b]
+            └──ShiftExprNode [GreaterGreaterToken]
+               ├──PrimaryExprNode [x]
+               └──PrimaryExprNode
+                  └──IntegerLiteralNode [1]

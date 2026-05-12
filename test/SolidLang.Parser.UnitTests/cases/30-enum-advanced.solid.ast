@@ -1,0 +1,47 @@
+└──ProgramNode
+   ├──EnumDeclNode [Color]
+   │  ├──PrimitiveTypeNode [U32Keyword]
+   │  └──EnumFieldsNode
+   │     ├──EnumFieldNode [Transparent]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [0]
+   │     ├──EnumFieldNode [Red]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [4278190335]
+   │     ├──EnumFieldNode [Green]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [4278255360]
+   │     └──EnumFieldNode [Blue]
+   │        └──PrimaryExprNode
+   │           └──IntegerLiteralNode [4294901760]
+   ├──EnumDeclNode [Permissions]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [flags]
+   │  ├──PrimitiveTypeNode [U32Keyword]
+   │  └──EnumFieldsNode
+   │     ├──EnumFieldNode [None]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [0]
+   │     ├──EnumFieldNode [Read]
+   │     │  └──ShiftExprNode [LessLessToken]
+   │     │     ├──PrimaryExprNode
+   │     │     │  └──IntegerLiteralNode [1]
+   │     │     └──PrimaryExprNode
+   │     │        └──IntegerLiteralNode [0]
+   │     ├──EnumFieldNode [Write]
+   │     │  └──ShiftExprNode [LessLessToken]
+   │     │     ├──PrimaryExprNode
+   │     │     │  └──IntegerLiteralNode [1]
+   │     │     └──PrimaryExprNode
+   │     │        └──IntegerLiteralNode [1]
+   │     └──EnumFieldNode [Execute]
+   │        └──ShiftExprNode [LessLessToken]
+   │           ├──PrimaryExprNode
+   │           │  └──IntegerLiteralNode [1]
+   │           └──PrimaryExprNode
+   │              └──IntegerLiteralNode [2]
+   └──EnumDeclNode [Status]
+      └──EnumFieldsNode
+         ├──EnumFieldNode [Idle]
+         ├──EnumFieldNode [Running]
+         └──EnumFieldNode [Stopped]

@@ -1,0 +1,54 @@
+└──ProgramNode
+   ├──StructDeclNode [SealedType]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [sealed]
+   │  └──StructFieldsNode
+   │     └──StructFieldNode [x]
+   │        └──PrimitiveTypeNode [F32Keyword]
+   ├──StructDeclNode [AtomicI32]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [intrinsic]
+   │  └──StructFieldsNode
+   │     └──StructFieldNode [value]
+   │        └──PrimitiveTypeNode [I32Keyword]
+   ├──FunctionDeclNode [small_helper]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [inline]
+   │  ├──FuncParametersNode
+   │  │  ├──FuncParameterNode [a]
+   │  │  │  └──PrimitiveTypeNode [I32Keyword]
+   │  │  └──FuncParameterNode [b]
+   │  │     └──PrimitiveTypeNode [I32Keyword]
+   │  ├──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──AddExprNode [PlusToken]
+   │           ├──PrimaryExprNode [a]
+   │           └──PrimaryExprNode [b]
+   ├──FunctionDeclNode [win_only]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [os]
+   │  │     └──CtAnnotateArgsNode
+   │  │        └──CtAnnotateArgNode
+   │  │           └──NamedTypeNode [windows]
+   │  └──BodyStmtNode
+   ├──FunctionDeclNode [linux_only]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [os]
+   │  │     └──CtAnnotateArgsNode
+   │  │        └──CtAnnotateArgNode
+   │  │           └──NamedTypeNode [linux]
+   │  └──BodyStmtNode
+   └──FunctionDeclNode [public_api]
+      ├──CtAnnotatesNode
+      │  └──CtAnnotateNode [public]
+      ├──FuncParametersNode
+      │  └──FuncParameterNode [x]
+      │     └──PrimitiveTypeNode [I32Keyword]
+      ├──PrimitiveTypeNode [I32Keyword]
+      └──BodyStmtNode
+         └──ReturnStmtNode
+            └──MulExprNode [StarToken]
+               ├──PrimaryExprNode [x]
+               └──PrimaryExprNode
+                  └──IntegerLiteralNode [2]

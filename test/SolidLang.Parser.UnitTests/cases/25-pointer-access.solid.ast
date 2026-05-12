@@ -1,0 +1,124 @@
+└──ProgramNode
+   ├──StructDeclNode [Point]
+   │  └──StructFieldsNode
+   │     ├──StructFieldNode [x]
+   │     │  └──PrimitiveTypeNode [F32Keyword]
+   │     └──StructFieldNode [y]
+   │        └──PrimitiveTypeNode [F32Keyword]
+   ├──StructDeclNode [Rect]
+   │  └──StructFieldsNode
+   │     ├──StructFieldNode [min]
+   │     │  └──NamedTypeNode [Point]
+   │     └──StructFieldNode [max]
+   │        └──NamedTypeNode [Point]
+   ├──FunctionDeclNode [test_pointer_access_basic]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [pt]
+   │     │  └──PrimaryExprNode
+   │     │     └──StructLiteralNode
+   │     │        ├──NamedTypeNode [Point]
+   │     │        ├──StructLiteralFieldNode [x]
+   │     │        │  └──PrimaryExprNode
+   │     │        │     └──FloatLiteralNode [1]
+   │     │        └──StructLiteralFieldNode [y]
+   │     │           └──PrimaryExprNode
+   │     │              └──FloatLiteralNode [2]
+   │     ├──VarDeclNode [p]
+   │     │  ├──PointerTypeNode
+   │     │  │  └──NamedTypeNode [Point]
+   │     │  └──UnaryExprNode [AmpersandToken]
+   │     │     └──PrimaryExprNode [pt]
+   │     ├──VarDeclNode [x]
+   │     │  ├──PrimitiveTypeNode [F32Keyword]
+   │     │  └──PostfixExprNode
+   │     │     ├──PrimaryExprNode [p]
+   │     │     └──PointerAccessNode [x]
+   │     └──VarDeclNode [y]
+   │        ├──PrimitiveTypeNode [F32Keyword]
+   │        └──PostfixExprNode
+   │           ├──PrimaryExprNode [p]
+   │           └──PointerAccessNode [y]
+   ├──FunctionDeclNode [test_address_access_basic]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [pt]
+   │     │  └──PrimaryExprNode
+   │     │     └──StructLiteralNode
+   │     │        ├──NamedTypeNode [Point]
+   │     │        ├──StructLiteralFieldNode [x]
+   │     │        │  └──PrimaryExprNode
+   │     │        │     └──FloatLiteralNode [3]
+   │     │        └──StructLiteralFieldNode [y]
+   │     │           └──PrimaryExprNode
+   │     │              └──FloatLiteralNode [4]
+   │     └──VarDeclNode [py]
+   │        ├──PointerTypeNode
+   │        │  └──PrimitiveTypeNode [F32Keyword]
+   │        └──UnaryExprNode [AmpersandToken]
+   │           └──PostfixExprNode
+   │              ├──PrimaryExprNode [pt]
+   │              └──AddressAccessNode [y]
+   ├──FunctionDeclNode [test_chained_pointer_access]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [r]
+   │     │  └──PrimaryExprNode
+   │     │     └──StructLiteralNode
+   │     │        ├──NamedTypeNode [Rect]
+   │     │        ├──StructLiteralFieldNode [min]
+   │     │        │  └──PrimaryExprNode
+   │     │        │     └──StructLiteralNode
+   │     │        │        ├──NamedTypeNode [Point]
+   │     │        │        ├──StructLiteralFieldNode [x]
+   │     │        │        │  └──PrimaryExprNode
+   │     │        │        │     └──FloatLiteralNode [0]
+   │     │        │        └──StructLiteralFieldNode [y]
+   │     │        │           └──PrimaryExprNode
+   │     │        │              └──FloatLiteralNode [0]
+   │     │        └──StructLiteralFieldNode [max]
+   │     │           └──PrimaryExprNode
+   │     │              └──StructLiteralNode
+   │     │                 ├──NamedTypeNode [Point]
+   │     │                 ├──StructLiteralFieldNode [x]
+   │     │                 │  └──PrimaryExprNode
+   │     │                 │     └──FloatLiteralNode [10]
+   │     │                 └──StructLiteralFieldNode [y]
+   │     │                    └──PrimaryExprNode
+   │     │                       └──FloatLiteralNode [10]
+   │     ├──VarDeclNode [p]
+   │     │  ├──PointerTypeNode
+   │     │  │  └──NamedTypeNode [Rect]
+   │     │  └──UnaryExprNode [AmpersandToken]
+   │     │     └──PrimaryExprNode [r]
+   │     └──VarDeclNode [x]
+   │        ├──PrimitiveTypeNode [F32Keyword]
+   │        └──PostfixExprNode
+   │           ├──PrimaryExprNode [p]
+   │           ├──PointerAccessNode [min]
+   │           └──PointerAccessNode [x]
+   ├──FunctionDeclNode [test_pointer_access_with_call]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [pt]
+   │     │  └──PrimaryExprNode
+   │     │     └──StructLiteralNode
+   │     │        ├──NamedTypeNode [Point]
+   │     │        ├──StructLiteralFieldNode [x]
+   │     │        │  └──PrimaryExprNode
+   │     │        │     └──FloatLiteralNode [5]
+   │     │        └──StructLiteralFieldNode [y]
+   │     │           └──PrimaryExprNode
+   │     │              └──FloatLiteralNode [6]
+   │     ├──VarDeclNode [p]
+   │     │  ├──PointerTypeNode
+   │     │  │  └──NamedTypeNode [Point]
+   │     │  └──UnaryExprNode [AmpersandToken]
+   │     │     └──PrimaryExprNode [pt]
+   │     └──VarDeclNode [val]
+   │        ├──PrimitiveTypeNode [F32Keyword]
+   │        └──PostfixExprNode
+   │           ├──PrimaryExprNode [p]
+   │           └──PointerAccessNode [x]
+   └──FunctionDeclNode [main]
+      ├──PrimitiveTypeNode [I32Keyword]
+      └──BodyStmtNode
+         └──ReturnStmtNode
+            └──PrimaryExprNode
+               └──IntegerLiteralNode [0]

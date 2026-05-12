@@ -1,0 +1,20 @@
+// Generic function calls (spec §Expressions > Postfix > Function Call)
+
+func identity<T>(value: T): T{
+    return value;
+}
+
+func max<T>(a: T, b: T): T where T: IComparable<T>{
+    if a.compare(b) >= 0 { return a; }
+    return b;
+}
+
+func test_generic_call(){
+    var x = identity<i32>(42);
+    var y = identity<bool>(true);
+    var result = identity<f64>(1.5);
+}
+
+interface IComparable<T>{
+    func compare(left: T, right: T): i8;
+}

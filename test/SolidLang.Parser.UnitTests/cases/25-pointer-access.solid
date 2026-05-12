@@ -1,0 +1,45 @@
+// *. and &. postfix operators — syntactic sugar
+// p*.field    = (*p).field    (dereference then member access)
+// expr&.field = (&expr).field  (address-of then member access)
+
+struct Point{
+    x: f32,
+    y: f32,
+}
+
+struct Rect{
+    min: Point,
+    max: Point,
+}
+
+func test_pointer_access_basic(){
+    var pt = Point{x = 1.0, y = 2.0};
+    var p: *Point = &pt;
+    var x: f32 = p*.x;      // sugar for (*p).x
+    var y: f32 = p*.y;      // sugar for (*p).y
+}
+
+func test_address_access_basic(){
+    var pt = Point{x = 3.0, y = 4.0};
+    var py: *f32 = &pt&.y;  // sugar for &((&pt).y) — pointer to pt.y
+}
+
+func test_chained_pointer_access(){
+    var r = Rect{
+        min = Point{x = 0.0, y = 0.0},
+        max = Point{x = 10.0, y = 10.0},
+    };
+    var p: *Rect = &r;
+    var x: f32 = p*.min*.x; // sugar for (*(*p).min).x
+}
+
+func test_pointer_access_with_call(){
+    var pt = Point{x = 5.0, y = 6.0};
+    var p: *Point = &pt;
+    // *. chains with () naturally — call would follow if member were callable
+    var val: f32 = p*.x;
+}
+
+func main(): i32{
+    return 0;
+}

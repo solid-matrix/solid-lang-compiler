@@ -1,0 +1,36 @@
+// Various annotations (spec §Compile-Time > Annotations)
+
+// @sealed prevents direct struct literal construction
+@sealed
+struct SealedType{
+    x: f32,
+}
+
+// @intrinsic marks compiler-implemented
+@intrinsic
+struct AtomicI32{
+    value: i32,
+}
+
+// @inline suggests inlining
+@inline
+func small_helper(a: i32, b: i32): i32{
+    return a + b;
+}
+
+// @os for platform-specific code
+@os(windows)
+func win_only(){
+    // Windows-only implementation
+}
+
+@os(linux)
+func linux_only(){
+    // Linux-only implementation
+}
+
+// @public for cross-project visibility
+@public
+func public_api(x: i32): i32{
+    return x * 2;
+}

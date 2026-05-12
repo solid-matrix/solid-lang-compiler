@@ -1,0 +1,78 @@
+└──ProgramNode
+   ├──FunctionDeclNode [test_while_infinite]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [count]
+   │     │  ├──PrimitiveTypeNode [I32Keyword]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [0]
+   │     └──ForStmtNode
+   │        └──ForInfiniteNode
+   │           └──BodyStmtNode
+   │              ├──IfStmtNode
+   │              │  ├──ComparisonExprNode [GreaterEqualsToken]
+   │              │  │  ├──PrimaryExprNode [count]
+   │              │  │  └──PrimaryExprNode
+   │              │  │     └──IntegerLiteralNode [5]
+   │              │  └──BodyStmtNode
+   │              │     └──BreakStmtNode
+   │              └──AssignStmtNode
+   │                 ├──PrimaryExprNode [count]
+   │                 └──PrimaryExprNode
+   │                    └──IntegerLiteralNode [1]
+   ├──FunctionDeclNode [test_while_conditional]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [limit]
+   │  │     └──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [i]
+   │     │  ├──PrimitiveTypeNode [I32Keyword]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [0]
+   │     └──ForStmtNode
+   │        └──ForCondNode
+   │           ├──ComparisonExprNode [LessToken]
+   │           │  ├──PrimaryExprNode [i]
+   │           │  └──PrimaryExprNode [limit]
+   │           └──BodyStmtNode
+   │              └──AssignStmtNode
+   │                 ├──PrimaryExprNode [i]
+   │                 └──PrimaryExprNode
+   │                    └──IntegerLiteralNode [1]
+   └──FunctionDeclNode [test_while_early_exit]
+      └──BodyStmtNode
+         ├──VarDeclNode [x]
+         │  ├──PrimitiveTypeNode [I32Keyword]
+         │  └──PrimaryExprNode
+         │     └──IntegerLiteralNode [0]
+         └──ForStmtNode
+            └──ForCondNode
+               ├──ComparisonExprNode [LessToken]
+               │  ├──PrimaryExprNode [x]
+               │  └──PrimaryExprNode
+               │     └──IntegerLiteralNode [100]
+               └──BodyStmtNode
+                  ├──IfStmtNode
+                  │  ├──EqualityExprNode [EqualsEqualsToken]
+                  │  │  ├──PrimaryExprNode [x]
+                  │  │  └──PrimaryExprNode
+                  │  │     └──IntegerLiteralNode [42]
+                  │  └──BodyStmtNode
+                  │     └──BreakStmtNode
+                  ├──IfStmtNode
+                  │  ├──EqualityExprNode [EqualsEqualsToken]
+                  │  │  ├──MulExprNode [PercentToken]
+                  │  │  │  ├──PrimaryExprNode [x]
+                  │  │  │  └──PrimaryExprNode
+                  │  │  │     └──IntegerLiteralNode [2]
+                  │  │  └──PrimaryExprNode
+                  │  │     └──IntegerLiteralNode [0]
+                  │  └──BodyStmtNode
+                  │     ├──AssignStmtNode
+                  │     │  ├──PrimaryExprNode [x]
+                  │     │  └──PrimaryExprNode
+                  │     │     └──IntegerLiteralNode [2]
+                  │     └──ContinueStmtNode
+                  └──AssignStmtNode
+                     ├──PrimaryExprNode [x]
+                     └──PrimaryExprNode
+                        └──IntegerLiteralNode [1]

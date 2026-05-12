@@ -1,0 +1,89 @@
+func multiply(a: u64, b: u64): u64{
+    return a * b;
+}
+
+@import
+func malloc(size: usize)cdecl:*opaque;
+
+@import
+func create_window(size: usize)stdcall:*opaque;
+
+@export
+func add(a: i32, b: i32)cdecl:i32{
+    return a+b;
+}
+
+func get_size<T>(value: T):usize{
+    return @sizeof(T);
+}
+
+func flat<T>(value: List<List<T>>):List<T>{
+    return List<T>::new();
+}
+
+func flat(value: List<List<i32>>):List<i32>{
+    return List<i32>::new();
+}
+
+
+struct Vector2{
+    x: f32,
+    y: f32,
+}
+
+// struct method
+func Vector2::add(left: Vector2, right: Vector2):Vector2{
+    return Vector2{x = left.x + right.x, y = left.y + right.y };
+}
+
+struct Vector2<T>{
+    x: T,
+    y: T,
+}
+
+// generic struct method
+func Vector2<T>::add(left: Vector2<T>, right: Vector2<T>): Vector2<T> where T:IAdd<T,T,T>{
+    return Vector2<T>{x = left.x + right.x, y = left.y + right.y };
+}
+
+// enum method
+func WindowFlags::Set(self: *WindowFlags, flags: WindowFlags){
+    *self |= flags;
+}
+
+// union static method
+func RawOptional<T>::Value(value: T):RawOptional<T>{
+    return RawOptional::value(value);
+}
+
+// union method
+func RawOptional<T>::is_none(self: RawOptional<T>):bool{
+    return self.none == null;
+}
+
+// variant static method
+func Option<T>::new():Option<T>{
+    return Option<T>::None;
+}
+
+// variant method
+func Option<T>::to_result(self: Option<T>):Result<T,u64>{
+    switch self{
+        Option<T>::None => {
+            return Result<T,u64>::Fault(100);
+        }
+        Option<T>::Value(value) => {
+            return Result<T,u64>::Okay(value);
+        }
+    }
+}
+
+
+func resursive(n: i32):i32{
+    if n <= 0 {return 1;}
+    return resursive(i-1) + resursive(i-2);
+}
+
+func main(args: Slice<String>):i32{
+    return 0;
+}

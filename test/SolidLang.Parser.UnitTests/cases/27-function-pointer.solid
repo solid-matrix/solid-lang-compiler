@@ -1,0 +1,23 @@
+// Function pointer types (spec §Types > Function Pointer)
+
+func add(a: i32, b: i32):i32{
+    return a + b;
+}
+
+// Function pointer var
+func demo_fp(){
+    var callback: *func(i32, i32):i32 = &add;
+    var nullfunc: *func(i32, i32):i32 = null;
+    if callback != null {
+        var result = (*callback)(1, 2);
+    }
+}
+
+// Function pointer as parameter
+func apply(op: *func(i32, i32):i32, x: i32, y: i32):i32{
+    return (*op)(x, y);
+}
+
+// Function pointer with calling convention
+@import
+func ext_cb(cb: *func(i32)cdecl:void);

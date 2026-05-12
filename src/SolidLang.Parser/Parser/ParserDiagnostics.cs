@@ -149,6 +149,11 @@ public sealed class DiagnosticBag
         Report(span, "Excessive recursion depth; possible stack overflow prevented", DiagnosticSeverity.Error, "SS014");
     }
 
+    public void DuplicateNamespace(TextSpan span)
+    {
+        Report(span, "Duplicate namespace declaration", DiagnosticSeverity.Error, "SS015");
+    }
+
     // ========================================
     // Semantic Errors (placeholder for future)
     // ========================================

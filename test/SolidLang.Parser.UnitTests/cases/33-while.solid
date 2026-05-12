@@ -1,0 +1,25 @@
+// While loop statements (spec §Statements > While)
+
+func test_while_infinite(){
+    var count: i32 = 0;
+    while {
+        if count >= 5 { break; }
+        count += 1;
+    }
+}
+
+func test_while_conditional(limit: i32){
+    var i: i32 = 0;
+    while i < limit {
+        i += 1;
+    }
+}
+
+func test_while_early_exit(){
+    var x: i32 = 0;
+    while x < 100 {
+        if x == 42 { break; }
+        if x % 2 == 0 { x += 2; continue; }
+        x += 1;
+    }
+}

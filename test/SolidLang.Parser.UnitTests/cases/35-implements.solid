@@ -1,0 +1,25 @@
+// @implements annotation for interface implementation (spec §Interface > Implementation)
+
+interface IEqual<T> {
+    func equal(left: T, right: T): bool;
+}
+
+interface IAdd<TLeft, TRight, TResult> {
+    func add(left: TLeft, right: TRight): TResult;
+}
+
+// Multiple @implements on a struct
+@implements(IEqual<Point>)
+@implements(IAdd<Point, Point, Point>)
+struct Point{
+    x: f32,
+    y: f32,
+}
+
+func Point::equal(left: Point, right: Point): bool{
+    return left.x == right.x && left.y == right.y;
+}
+
+func Point::add(left: Point, right: Point): Point{
+    return Point{x = left.x + right.x, y = left.y + right.y};
+}

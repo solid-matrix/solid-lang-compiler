@@ -1,0 +1,9 @@
+// Type conversion calls (spec §Types > Type Conversion)
+
+func test_type_conversion(a: i32){
+    // Generic method call on value
+    var b: i16 = a.into<i16>();
+
+    // Static from method
+    var c: i16 = i16::from(a);
+}

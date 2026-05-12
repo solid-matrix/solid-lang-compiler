@@ -100,10 +100,18 @@ public sealed partial class Parser
 
         while (Current != '}' && Current != '\0')
         {
+            var savedPos = _position;
             var stmt = ParseStatement();
             if (stmt is not BadStmtNode)
                 statements.Add(stmt);
             SkipWhitespaceAndComments();
+
+            // Safety: ensure progress to avoid infinite loop on stuck tokens
+            if (_position == savedPos && Current != '}' && Current != '\0')
+            {
+                Advance();
+                SkipWhitespaceAndComments();
+            }
         }
 
         Expect('}');
@@ -353,8 +361,14 @@ public sealed partial class Parser
 
         while (Current != '}' && Current != '\0')
         {
+            var savedPos = _position;
             arms.Add(ParseSwitchArm());
             SkipWhitespaceAndComments();
+            if (_position == savedPos)
+            {
+                Advance();
+                SkipWhitespaceAndComments();
+            }
         }
 
         Expect('}');
@@ -596,6 +610,19 @@ public sealed partial class Parser
     private StmtNode ParseExprOrAssignStmt(int start)
     {
         var expr = ParseExpression();
+
+        // BadExprNode means position didn't advance — skip to avoid infinite loop
+        if (expr is BadExprNode)
+        {
+            // Advance past the problematic character so the caller can make progress
+            if (Current != '\0' && Current != '}')
+            {
+                Advance();
+                SkipWhitespaceAndComments();
+            }
+            return new BadStmtNode(GetSpanFrom(start));
+        }
+
         SkipWhitespaceAndComments();
 
         // Check for assignment operator

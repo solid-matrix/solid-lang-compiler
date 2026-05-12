@@ -581,12 +581,12 @@ internal sealed class BoundTreeBuilder
             StringLiteralNode s => new BoundLiteralExpr(null, s.Value),        // string type TBD
             CharLiteralNode c => new BoundLiteralExpr(null, c.Value),          // char type TBD
             BoolLiteralNode b => new BoundLiteralExpr(PrimitiveType.Bool, b.Value),
-            NullLiteralNode => new BoundLiteralExpr(NullType.Instance, null!),
+            NullLiteralNode => new BoundLiteralExpr(null, null!),          // null has no inherent type — target-typed
             StructLiteralNode sl => BuildStructLiteral(sl),
             UnionLiteralNode ul => BuildUnionLiteral(ul),
             EnumLiteralNode el => BuildEnumLiteral(el),
             VariantLiteralNode vl => BuildVariantLiteral(vl),
-            _ => new BoundLiteralExpr(ErrorType.Instance, null!),
+            _ => new BoundLiteralExpr(null, null!),
         };
     }
 
@@ -600,6 +600,8 @@ internal sealed class BoundTreeBuilder
             {
                 CallExprNode call => BuildCall(result, call),
                 DotAccessNode dot => BuildDotAccess(result, dot),
+                PointerAccessNode pa => BuildPointerAccess(result, pa),
+                AddressAccessNode aa => BuildAddressAccess(result, aa),
                 IndexAccessNode index => new BoundIndexAccessExpr(result, BuildExpression(index.Index)),
                 _ => result,
             };
@@ -638,6 +640,20 @@ internal sealed class BoundTreeBuilder
     {
         // Simple case: receiver is a variable with a known type
         return new BoundMemberAccessExpr(receiver, null!); // Member resolution deferred to Phase 2
+    }
+
+    private BoundExpression BuildPointerAccess(BoundExpression receiver, PointerAccessNode pa)
+    {
+        // Desugar *.member to (*receiver).member
+        var dereferenced = new BoundUnaryExpr(SyntaxKind.StarToken, receiver);
+        return new BoundMemberAccessExpr(dereferenced, null!);
+    }
+
+    private BoundExpression BuildAddressAccess(BoundExpression receiver, AddressAccessNode aa)
+    {
+        // Desugar &.member to (&receiver).member
+        var addressed = new BoundUnaryExpr(SyntaxKind.AmpersandToken, receiver);
+        return new BoundMemberAccessExpr(addressed, null!);
     }
 
     private BoundExpression BuildScopedAccess(ScopedAccessExprNode node)

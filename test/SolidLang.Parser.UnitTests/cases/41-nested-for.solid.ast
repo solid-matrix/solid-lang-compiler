@@ -1,0 +1,106 @@
+└──ProgramNode
+   ├──FunctionDeclNode [test_nested_array]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [nested]
+   │     │  └──PrimaryExprNode
+   │     │     └──ArrayLiteralNode
+   │     │        ├──ArrayTypeNode
+   │     │        │  ├──PrimaryExprNode
+   │     │        │  │  └──IntegerLiteralNode [2]
+   │     │        │  └──ArrayTypeNode
+   │     │        │     ├──PrimaryExprNode
+   │     │        │     │  └──IntegerLiteralNode [3]
+   │     │        │     └──PrimitiveTypeNode [I32Keyword]
+   │     │        ├──PrimaryExprNode
+   │     │        │  └──ArrayLiteralNode
+   │     │        │     ├──ArrayTypeNode
+   │     │        │     │  ├──PrimaryExprNode
+   │     │        │     │  │  └──IntegerLiteralNode [3]
+   │     │        │     │  └──PrimitiveTypeNode [I32Keyword]
+   │     │        │     ├──PrimaryExprNode
+   │     │        │     │  └──IntegerLiteralNode [1]
+   │     │        │     ├──PrimaryExprNode
+   │     │        │     │  └──IntegerLiteralNode [2]
+   │     │        │     └──PrimaryExprNode
+   │     │        │        └──IntegerLiteralNode [3]
+   │     │        └──PrimaryExprNode
+   │     │           └──ArrayLiteralNode
+   │     │              ├──ArrayTypeNode
+   │     │              │  ├──PrimaryExprNode
+   │     │              │  │  └──IntegerLiteralNode [3]
+   │     │              │  └──PrimitiveTypeNode [I32Keyword]
+   │     │              ├──PrimaryExprNode
+   │     │              │  └──IntegerLiteralNode [4]
+   │     │              ├──PrimaryExprNode
+   │     │              │  └──IntegerLiteralNode [5]
+   │     │              └──PrimaryExprNode
+   │     │                 └──IntegerLiteralNode [6]
+   │     └──VarDeclNode [zeroed]
+   │        ├──ArrayTypeNode
+   │        │  ├──PrimaryExprNode
+   │        │  │  └──IntegerLiteralNode [2]
+   │        │  └──ArrayTypeNode
+   │        │     ├──PrimaryExprNode
+   │        │     │  └──IntegerLiteralNode [3]
+   │        │     └──PrimitiveTypeNode [I32Keyword]
+   │        └──PrimaryExprNode
+   │           └──ArrayLiteralNode
+   │              └──ArrayTypeNode
+   │                 ├──PrimaryExprNode
+   │                 │  └──IntegerLiteralNode [2]
+   │                 └──ArrayTypeNode
+   │                    ├──PrimaryExprNode
+   │                    │  └──IntegerLiteralNode [3]
+   │                    └──PrimitiveTypeNode [I32Keyword]
+   ├──FunctionDeclNode [test_for_no_cond]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [limit]
+   │  │     └──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     └──ForStmtNode
+   │        └──ForCStyleNode
+   │           ├──ForVarDeclNode
+   │           │  └──PrimaryExprNode
+   │           │     └──IntegerLiteralNode [0]
+   │           ├──AssignExprNode [PlusEqualsToken]
+   │           │  ├──PrimaryExprNode [i]
+   │           │  └──PrimaryExprNode
+   │           │     └──IntegerLiteralNode [1]
+   │           └──BodyStmtNode
+   │              └──IfStmtNode
+   │                 ├──ComparisonExprNode [GreaterEqualsToken]
+   │                 │  ├──PrimaryExprNode [i]
+   │                 │  └──PrimaryExprNode [limit]
+   │                 └──BodyStmtNode
+   │                    └──BreakStmtNode
+   ├──FunctionDeclNode [test_for_infinite]
+   │  └──BodyStmtNode
+   │     └──ForStmtNode
+   │        └──ForCStyleNode
+   │           └──BodyStmtNode
+   │              └──IfStmtNode
+   │                 ├──PrimaryExprNode
+   │                 │  └──BoolLiteralNode [True]
+   │                 └──BodyStmtNode
+   │                    └──BreakStmtNode
+   └──FunctionDeclNode [test_for_assign_init]
+      └──BodyStmtNode
+         ├──VarDeclNode [x]
+         │  ├──PrimitiveTypeNode [I32Keyword]
+         │  └──PrimaryExprNode
+         │     └──IntegerLiteralNode [0]
+         └──ForStmtNode
+            └──ForCStyleNode
+               ├──ForAssignNode
+               │  ├──PrimaryExprNode [x]
+               │  └──PrimaryExprNode
+               │     └──IntegerLiteralNode [0]
+               ├──ComparisonExprNode [LessToken]
+               │  ├──PrimaryExprNode [x]
+               │  └──PrimaryExprNode
+               │     └──IntegerLiteralNode [10]
+               ├──AssignExprNode [PlusEqualsToken]
+               │  ├──PrimaryExprNode [x]
+               │  └──PrimaryExprNode
+               │     └──IntegerLiteralNode [1]
+               └──BodyStmtNode

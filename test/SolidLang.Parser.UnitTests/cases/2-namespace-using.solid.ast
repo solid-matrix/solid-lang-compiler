@@ -1,0 +1,7 @@
+└──ProgramNode
+   ├──NamespaceDeclNode
+   │  └──NamespacePathNode [main]
+   ├──UsingDeclNode
+   │  └──NamespacePathNode [std::math]
+   └──UsingDeclNode
+      └──NamespacePathNode [std]

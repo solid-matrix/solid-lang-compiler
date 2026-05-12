@@ -1,0 +1,8 @@
+// Pointer to pointer (spec §Types > Pointer Type)
+
+func ptr_to_ptr(){
+    var x: i32 = 42;
+    var p: *i32 = &x;
+    var pp: **i32 = &p;
+    var val = **pp;
+}

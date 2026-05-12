@@ -1,0 +1,22 @@
+└──ProgramNode
+   └──FunctionDeclNode [ptr_to_ptr]
+      └──BodyStmtNode
+         ├──VarDeclNode [x]
+         │  ├──PrimitiveTypeNode [I32Keyword]
+         │  └──PrimaryExprNode
+         │     └──IntegerLiteralNode [42]
+         ├──VarDeclNode [p]
+         │  ├──PointerTypeNode
+         │  │  └──PrimitiveTypeNode [I32Keyword]
+         │  └──UnaryExprNode [AmpersandToken]
+         │     └──PrimaryExprNode [x]
+         ├──VarDeclNode [pp]
+         │  ├──PointerTypeNode
+         │  │  └──PointerTypeNode
+         │  │     └──PrimitiveTypeNode [I32Keyword]
+         │  └──UnaryExprNode [AmpersandToken]
+         │     └──PrimaryExprNode [p]
+         └──VarDeclNode [val]
+            └──UnaryExprNode [StarToken]
+               └──UnaryExprNode [StarToken]
+                  └──PrimaryExprNode [pp]

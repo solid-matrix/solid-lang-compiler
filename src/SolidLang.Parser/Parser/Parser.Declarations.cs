@@ -41,6 +41,14 @@ public sealed partial class Parser
             SkipWhitespaceAndComments();
         }
 
+        // Duplicate/misplaced namespace
+        if (LookAheadKeyword("namespace"))
+        {
+            _diagnostics.DuplicateNamespace(GetCurrentSpan());
+            ParseNamespaceDecl(); // consume for error recovery
+            SkipWhitespaceAndComments();
+        }
+
         // declarations*
         var declarations = new List<DeclNode>();
         while (Current != '\0')
@@ -49,6 +57,7 @@ public sealed partial class Parser
             if (Current == '\0')
                 break;
 
+            var savedPos = _position;
             var decl = ParseDeclaration();
             if (decl is not BadDeclNode)
                 declarations.Add(decl);
@@ -56,6 +65,9 @@ public sealed partial class Parser
             {
                 // Error recovery: skip to next declaration
                 SyncToNextDeclaration();
+                // Safety: ensure progress to avoid infinite loop
+                if (_position == savedPos)
+                    Advance();
             }
         }
 
@@ -209,12 +221,13 @@ public sealed partial class Parser
         CtAnnotateArgsNode? args = null;
         if (Current == '(')
         {
+            var argsStart = _position;
             Advance();
             SkipWhitespaceAndComments();
 
+            var argList = new List<CtAnnotateArgNode>();
             if (Current != ')')
             {
-                var argList = new List<CtAnnotateArgNode>();
                 argList.Add(ParseAnnotateArg());
 
                 while (Current == ',')
@@ -227,6 +240,8 @@ public sealed partial class Parser
 
             SkipWhitespaceAndComments();
             Expect(')');
+            var argsSpan = GetSpanFrom(argsStart);
+            args = new CtAnnotateArgsNode(argList, argsSpan, _source.GetText(argsSpan));
         }
 
         var span = GetSpanFrom(start);
@@ -907,10 +922,16 @@ public sealed partial class Parser
         var fields = new List<InterfaceFieldNode>();
         while (Current != '}' && Current != '\0')
         {
+            var savedPos = _position;
             fields.Add(ParseInterfaceField());
             SkipWhitespaceAndComments();
             Expect(';');
             SkipWhitespaceAndComments();
+            if (_position == savedPos)
+            {
+                Advance();
+                SkipWhitespaceAndComments();
+            }
         }
 
         Expect('}');

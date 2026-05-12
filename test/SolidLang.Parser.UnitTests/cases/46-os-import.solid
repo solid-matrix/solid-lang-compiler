@@ -1,0 +1,9 @@
+// @os combined with @import on FFI functions (spec §FFI > Importing)
+
+@import(VirtualAlloc)
+@os(windows)
+func win_alloc(addr: usize, size: usize, alloc_type: u32, protect: u32)stdcall: usize;
+
+@import(mmap)
+@os(linux)
+func linux_mmap(addr: usize, len: usize, prot: i32, flags: i32, fd: i32, offset: isize)cdecl: usize;

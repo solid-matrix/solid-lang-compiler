@@ -1,0 +1,20 @@
+variant Result<TValue, TError>{
+    Okay: TValue,
+    Fault: TError,
+}
+
+variant Option<T>{
+    None,
+    Value: T,
+}
+
+
+func main():i32{
+    var o1 = Option<i32>::Value(10);
+    var o2 = Option<i32>::None;
+
+    var r1 = Result<i32, u64>::Okay(32);
+    var r2 = Result<i32, u64>::Fault(0);
+    
+    return 0;
+}

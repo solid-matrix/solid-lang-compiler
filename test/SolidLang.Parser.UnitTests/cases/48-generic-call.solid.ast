@@ -1,0 +1,79 @@
+└──ProgramNode
+   ├──FunctionDeclNode [identity]
+   │  ├──GenericParamsNode
+   │  │  └──GenericParamNode [T]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [value]
+   │  │     └──NamedTypeNode [T]
+   │  ├──NamedTypeNode [T]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──PrimaryExprNode [value]
+   ├──FunctionDeclNode [max]
+   │  ├──GenericParamsNode
+   │  │  └──GenericParamNode [T]
+   │  ├──FuncParametersNode
+   │  │  ├──FuncParameterNode [a]
+   │  │  │  └──NamedTypeNode [T]
+   │  │  └──FuncParameterNode [b]
+   │  │     └──NamedTypeNode [T]
+   │  ├──NamedTypeNode [T]
+   │  ├──WhereClausesNode
+   │  │  └──WhereClauseNode [T]
+   │  │     └──NamedTypeNode [IComparable]
+   │  │        └──TypeArgumentListNode
+   │  │           └──NamedTypeNode [T]
+   │  └──BodyStmtNode
+   │     ├──IfStmtNode
+   │     │  ├──ComparisonExprNode [GreaterEqualsToken]
+   │     │  │  ├──PostfixExprNode
+   │     │  │  │  ├──PrimaryExprNode [a]
+   │     │  │  │  ├──DotAccessNode [compare]
+   │     │  │  │  └──CallExprNode
+   │     │  │  │     └──CallArgsNode
+   │     │  │  │        └──CallArgNode
+   │     │  │  │           └──PrimaryExprNode [b]
+   │     │  │  └──PrimaryExprNode
+   │     │  │     └──IntegerLiteralNode [0]
+   │     │  └──BodyStmtNode
+   │     │     └──ReturnStmtNode
+   │     │        └──PrimaryExprNode [a]
+   │     └──ReturnStmtNode
+   │        └──PrimaryExprNode [b]
+   ├──FunctionDeclNode [test_generic_call]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [x]
+   │     │  └──ScopedAccessExprNode [identity]
+   │     │     ├──TypeArgumentListNode
+   │     │     │  └──PrimitiveTypeNode [I32Keyword]
+   │     │     └──CallArgsNode
+   │     │        └──CallArgNode
+   │     │           └──PrimaryExprNode
+   │     │              └──IntegerLiteralNode [42]
+   │     ├──VarDeclNode [y]
+   │     │  └──ScopedAccessExprNode [identity]
+   │     │     ├──TypeArgumentListNode
+   │     │     │  └──PrimitiveTypeNode [BoolKeyword]
+   │     │     └──CallArgsNode
+   │     │        └──CallArgNode
+   │     │           └──PrimaryExprNode
+   │     │              └──BoolLiteralNode [True]
+   │     └──VarDeclNode [result]
+   │        └──ScopedAccessExprNode [identity]
+   │           ├──TypeArgumentListNode
+   │           │  └──PrimitiveTypeNode [F64Keyword]
+   │           └──CallArgsNode
+   │              └──CallArgNode
+   │                 └──PrimaryExprNode
+   │                    └──FloatLiteralNode [1.5]
+   └──InterfaceDeclNode [IComparable]
+      ├──GenericParamsNode
+      │  └──GenericParamNode [T]
+      └──InterfaceFieldsNode
+         └──InterfaceFieldNode [compare]
+            ├──FuncParametersNode
+            │  ├──FuncParameterNode [left]
+            │  │  └──NamedTypeNode [T]
+            │  └──FuncParameterNode [right]
+            │     └──NamedTypeNode [T]
+            └──PrimitiveTypeNode [I8Keyword]

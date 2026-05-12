@@ -1,0 +1,35 @@
+// Compile-time operators (spec §Compile-Time)
+
+struct Vector3{
+    x: f32,
+    y: f32,
+    z: f32,
+}
+
+// Type introspection operators
+const VEC3_SIZE = @sizeof(Vector3);
+const VEC3_ALIGN = @alignof(Vector3);
+const VEC3_Y_OFFSET = @offsetof(Vector3, y);
+
+// Build configuration operators
+func check_build_config(){
+    if @is_debug {
+        // debug mode
+    }
+
+    if @is_release {
+        // release mode
+    }
+
+    if @is_os(linux) {
+        // linux-specific
+    }
+
+    if @is_arch(x86_64) {
+        // x86_64-specific
+    }
+
+    if @is_endian(little) {
+        // little-endian
+    }
+}

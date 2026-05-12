@@ -19,9 +19,13 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="../../example/**/*.solid">
+        <Content Include="cases/**/*.solid">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-            <Link>example/%(RecursiveDir)%(Filename)%(Extension)</Link>
+            <Link>cases/%(RecursiveDir)%(Filename)%(Extension)</Link>
+        </Content>
+        <Content Include="cases/**/*.solid.ast">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Link>cases/%(RecursiveDir)%(Filename)%(Extension)</Link>
         </Content>
     </ItemGroup>
 

@@ -1,0 +1,53 @@
+└──ProgramNode
+   ├──FunctionDeclNode [compound_assign]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [a]
+   │     │  ├──PrimitiveTypeNode [I32Keyword]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [10]
+   │     ├──AssignStmtNode
+   │     │  ├──PrimaryExprNode [a]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [1]
+   │     ├──AssignStmtNode
+   │     │  ├──PrimaryExprNode [a]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [2]
+   │     ├──AssignStmtNode
+   │     │  ├──PrimaryExprNode [a]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [3]
+   │     ├──AssignStmtNode
+   │     │  ├──PrimaryExprNode [a]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [4]
+   │     ├──AssignStmtNode
+   │     │  ├──PrimaryExprNode [a]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [5]
+   │     ├──AssignStmtNode
+   │     │  ├──PrimaryExprNode [a]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [255]
+   │     ├──AssignStmtNode
+   │     │  ├──PrimaryExprNode [a]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [256]
+   │     └──AssignStmtNode
+   │        ├──PrimaryExprNode [a]
+   │        └──PrimaryExprNode
+   │           └──IntegerLiteralNode [15]
+   └──FunctionDeclNode [shift_assign]
+      └──BodyStmtNode
+         ├──VarDeclNode [x]
+         │  ├──PrimitiveTypeNode [I32Keyword]
+         │  └──PrimaryExprNode
+         │     └──IntegerLiteralNode [1]
+         ├──AssignStmtNode
+         │  ├──PrimaryExprNode [x]
+         │  └──PrimaryExprNode
+         │     └──IntegerLiteralNode [2]
+         └──AssignStmtNode
+            ├──PrimaryExprNode [x]
+            └──PrimaryExprNode
+               └──IntegerLiteralNode [1]

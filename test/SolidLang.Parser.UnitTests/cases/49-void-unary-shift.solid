@@ -1,0 +1,16 @@
+// Return without value, unary operators, shift operators
+
+func void_return(){
+    if true { return; }
+}
+
+func unary_ops(x: i32){
+    var a = ~x;     // bitwise NOT
+    var b = +x;     // unary plus
+    var c = -x;     // unary minus
+}
+
+func shift_ops(x: i32){
+    var a = x << 2;
+    var b = x >> 1;
+}

@@ -1,0 +1,21 @@
+// Empty statement, local const and local static (spec §Statements)
+
+func test_empty_stmt(){
+    ;
+    var x = 1;
+    ;
+    var y = 2;
+}
+
+func test_local_const(){
+    const answer = 42;
+    const flag = true && !false;
+    var result = answer;
+}
+
+func test_local_static(){
+    static counter = 0;
+    counter += 1;
+    static total = 100;
+    total += counter;
+}

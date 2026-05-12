@@ -1,0 +1,3 @@
+namespace main;
+using std::math;
+using std;

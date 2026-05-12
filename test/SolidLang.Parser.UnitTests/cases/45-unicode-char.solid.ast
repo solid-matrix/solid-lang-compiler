@@ -1,0 +1,30 @@
+└──ProgramNode
+   ├──FunctionDeclNode [test_unicode_char]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [a]
+   │     │  └──PrimaryExprNode
+   │     │     └──CharLiteralNode ['中']
+   │     ├──VarDeclNode [b]
+   │     │  └──PrimaryExprNode
+   │     │     └──CharLiteralNode ['字']
+   │     ├──VarDeclNode [c]
+   │     │  └──PrimaryExprNode
+   │     │     └──CharLiteralNode ['A']
+   │     ├──VarDeclNode [d]
+   │     │  └──PrimaryExprNode
+   │     │     └──CharLiteralNode ['~']
+   │     └──VarDeclNode [e]
+   │        └──PrimaryExprNode
+   │           └──CharLiteralNode ['
+']
+   └──FunctionDeclNode [test_unicode_string]
+      └──BodyStmtNode
+         ├──VarDeclNode [s]
+         │  └──PrimaryExprNode
+         │     └──StringLiteralNode ["中文测试🎉"]
+         ├──VarDeclNode [mixed]
+         │  └──PrimaryExprNode
+         │     └──StringLiteralNode ["Hello, 世界!"]
+         └──VarDeclNode [emoji]
+            └──PrimaryExprNode
+               └──StringLiteralNode ["🚀"]

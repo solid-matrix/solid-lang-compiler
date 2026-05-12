@@ -1,0 +1,15 @@
+// Integer literal edge cases (spec §Expressions > Literals)
+
+func int_literal_edge_cases(){
+    // Underscore separators
+    var large = 1_000_000_000;
+    var hex_under = 0xFF_FF_FF_FF;
+    var bin_under = 0b1010_0101;
+
+    // Shorthand for pointer-width types
+    var idx = 0u;       // usize
+    var sgn = 0i;       // isize
+
+    // Explicit decimal prefix
+    var dec = 0d13579;
+}

@@ -9,7 +9,7 @@ if (file == null)
     return 1;
 }
 
-var baseDir = "/workspace/solid-lang-compiler/example";
+var baseDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "test", "SolidLang.Parser.UnitTests", "cases"));
 var path = Path.Combine(baseDir, file);
 
 if (!File.Exists(path))

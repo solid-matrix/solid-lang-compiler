@@ -1,0 +1,61 @@
+└──ProgramNode
+   ├──StructDeclNode [RawPtr]
+   │  └──StructFieldsNode
+   ├──FunctionDeclNode [libc_malloc]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [import]
+   │  │     └──CtAnnotateArgsNode
+   │  │        └──CtAnnotateArgNode
+   │  │           └──NamedTypeNode [malloc]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [size]
+   │  │     └──PrimitiveTypeNode [USizeKeyword]
+   │  ├──CallConventionNode [CDeclKeyword]
+   │  └──NamedTypeNode [RawPtr]
+   ├──FunctionDeclNode [libc_free]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [import]
+   │  │     └──CtAnnotateArgsNode
+   │  │        └──CtAnnotateArgNode
+   │  │           └──NamedTypeNode [free]
+   │  ├──FuncParametersNode
+   │  │  └──FuncParameterNode [ptr]
+   │  │     └──NamedTypeNode [RawPtr]
+   │  └──CallConventionNode [CDeclKeyword]
+   ├──FunctionDeclNode [add]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [export]
+   │  ├──FuncParametersNode
+   │  │  ├──FuncParameterNode [a]
+   │  │  │  └──PrimitiveTypeNode [I32Keyword]
+   │  │  └──FuncParameterNode [b]
+   │  │     └──PrimitiveTypeNode [I32Keyword]
+   │  ├──CallConventionNode [CDeclKeyword]
+   │  ├──PrimitiveTypeNode [I32Keyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──AddExprNode [PlusToken]
+   │           ├──PrimaryExprNode [a]
+   │           └──PrimaryExprNode [b]
+   ├──FunctionDeclNode [win_alloc]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [import]
+   │  │     └──CtAnnotateArgsNode
+   │  │        └──CtAnnotateArgNode
+   │  │           └──NamedTypeNode [VirtualAlloc]
+   │  ├──FuncParametersNode
+   │  │  ├──FuncParameterNode [addr]
+   │  │  │  └──PrimitiveTypeNode [USizeKeyword]
+   │  │  ├──FuncParameterNode [size]
+   │  │  │  └──PrimitiveTypeNode [USizeKeyword]
+   │  │  ├──FuncParameterNode [alloc_type]
+   │  │  │  └──PrimitiveTypeNode [U32Keyword]
+   │  │  └──FuncParameterNode [protect]
+   │  │     └──PrimitiveTypeNode [U32Keyword]
+   │  ├──CallConventionNode [StdCallKeyword]
+   │  └──PrimitiveTypeNode [USizeKeyword]
+   └──FunctionDeclNode [forward_declared]
+      ├──FuncParametersNode
+      │  └──FuncParameterNode [x]
+      │     └──PrimitiveTypeNode [I32Keyword]
+      └──PrimitiveTypeNode [I32Keyword]

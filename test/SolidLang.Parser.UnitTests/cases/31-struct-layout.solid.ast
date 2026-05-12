@@ -1,0 +1,44 @@
+└──ProgramNode
+   ├──StructDeclNode [AlignedStruct]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [align]
+   │  │     └──CtAnnotateArgsNode
+   │  │        └──CtAnnotateArgNode
+   │  │           └──PrimaryExprNode
+   │  │              └──IntegerLiteralNode [16]
+   │  └──StructFieldsNode
+   │     ├──StructFieldNode [x]
+   │     │  └──PrimitiveTypeNode [F32Keyword]
+   │     └──StructFieldNode [y]
+   │        └──PrimitiveTypeNode [F32Keyword]
+   ├──StructDeclNode [PackedStruct]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [packed]
+   │  └──StructFieldsNode
+   │     ├──StructFieldNode [a]
+   │     │  └──PrimitiveTypeNode [U8Keyword]
+   │     └──StructFieldNode [b]
+   │        └──PrimitiveTypeNode [I32Keyword]
+   └──StructDeclNode [ExplicitStruct]
+      ├──CtAnnotatesNode
+      │  └──CtAnnotateNode [explicit]
+      └──StructFieldsNode
+         ├──StructFieldNode [data]
+         │  ├──CtAnnotatesNode
+         │  │  └──CtAnnotateNode [offset]
+         │  │     └──CtAnnotateArgsNode
+         │  │        └──CtAnnotateArgNode
+         │  │           └──PrimaryExprNode
+         │  │              └──IntegerLiteralNode [0]
+         │  └──ArrayTypeNode
+         │     ├──PrimaryExprNode
+         │     │  └──IntegerLiteralNode [8]
+         │     └──PrimitiveTypeNode [U8Keyword]
+         └──StructFieldNode [point]
+            ├──CtAnnotatesNode
+            │  └──CtAnnotateNode [offset]
+            │     └──CtAnnotateArgsNode
+            │        └──CtAnnotateArgNode
+            │           └──PrimaryExprNode
+            │              └──IntegerLiteralNode [0]
+            └──NamedTypeNode [AlignedStruct]

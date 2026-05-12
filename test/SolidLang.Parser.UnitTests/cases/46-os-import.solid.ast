@@ -1,0 +1,47 @@
+└──ProgramNode
+   ├──FunctionDeclNode [win_alloc]
+   │  ├──CtAnnotatesNode
+   │  │  ├──CtAnnotateNode [import]
+   │  │  │  └──CtAnnotateArgsNode
+   │  │  │     └──CtAnnotateArgNode
+   │  │  │        └──NamedTypeNode [VirtualAlloc]
+   │  │  └──CtAnnotateNode [os]
+   │  │     └──CtAnnotateArgsNode
+   │  │        └──CtAnnotateArgNode
+   │  │           └──NamedTypeNode [windows]
+   │  ├──FuncParametersNode
+   │  │  ├──FuncParameterNode [addr]
+   │  │  │  └──PrimitiveTypeNode [USizeKeyword]
+   │  │  ├──FuncParameterNode [size]
+   │  │  │  └──PrimitiveTypeNode [USizeKeyword]
+   │  │  ├──FuncParameterNode [alloc_type]
+   │  │  │  └──PrimitiveTypeNode [U32Keyword]
+   │  │  └──FuncParameterNode [protect]
+   │  │     └──PrimitiveTypeNode [U32Keyword]
+   │  ├──CallConventionNode [StdCallKeyword]
+   │  └──PrimitiveTypeNode [USizeKeyword]
+   └──FunctionDeclNode [linux_mmap]
+      ├──CtAnnotatesNode
+      │  ├──CtAnnotateNode [import]
+      │  │  └──CtAnnotateArgsNode
+      │  │     └──CtAnnotateArgNode
+      │  │        └──NamedTypeNode [mmap]
+      │  └──CtAnnotateNode [os]
+      │     └──CtAnnotateArgsNode
+      │        └──CtAnnotateArgNode
+      │           └──NamedTypeNode [linux]
+      ├──FuncParametersNode
+      │  ├──FuncParameterNode [addr]
+      │  │  └──PrimitiveTypeNode [USizeKeyword]
+      │  ├──FuncParameterNode [len]
+      │  │  └──PrimitiveTypeNode [USizeKeyword]
+      │  ├──FuncParameterNode [prot]
+      │  │  └──PrimitiveTypeNode [I32Keyword]
+      │  ├──FuncParameterNode [flags]
+      │  │  └──PrimitiveTypeNode [I32Keyword]
+      │  ├──FuncParameterNode [fd]
+      │  │  └──PrimitiveTypeNode [I32Keyword]
+      │  └──FuncParameterNode [offset]
+      │     └──PrimitiveTypeNode [ISizeKeyword]
+      ├──CallConventionNode [CDeclKeyword]
+      └──PrimitiveTypeNode [USizeKeyword]

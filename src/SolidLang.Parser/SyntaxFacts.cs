@@ -217,7 +217,6 @@ public static class SyntaxFacts
             SyntaxKind.AtToken => "@",
             SyntaxKind.ColonColonToken => "::",
             SyntaxKind.EqualsArrowToken => "=>",
-            SyntaxKind.MinusArrowToken => "->",
             SyntaxKind.EqualsToken => "=",
             SyntaxKind.PlusEqualsToken => "+=",
             SyntaxKind.MinusEqualsToken => "-=",

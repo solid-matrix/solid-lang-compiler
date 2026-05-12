@@ -72,7 +72,6 @@ public enum SyntaxKind
     // Two-Character Operators/Punctuation (双字符运算符/标点)
     ColonColonToken,       // ::
     EqualsArrowToken,      // =>
-    MinusArrowToken,       // ->
 
     // Assignment Operators (赋值运算符)
     EqualsToken,           // =
@@ -236,6 +235,8 @@ public enum SyntaxKind
     IndexAccessNode,
     CallExprNode,
     ScopeAccessNode,
+    PointerAccessNode,       // *.member  (sugar for (*expr).member)
+    AddressAccessNode,       // &.member  (sugar for (&expr).member)
     ScopedAccessExprNode,
     CallArgsNode,
     CallArgNode,

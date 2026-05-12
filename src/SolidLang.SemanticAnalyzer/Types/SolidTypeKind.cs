@@ -8,6 +8,4 @@ public enum SolidTypeKind
     Array,
     FuncPointer,
     TypeParameter,
-    Null,
-    Error,
 }

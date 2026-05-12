@@ -1,0 +1,20 @@
+@sealed
+@packed
+union DynamicVariable{
+    as_i32: i32,
+    as_f32: f32,
+}
+
+@align(16)
+union RawOptional<T>{
+    value: T,
+    none: *opaque,
+}
+
+
+func main():i32{
+    // zero initialize
+    var v1 = DynamicVariable{};
+    
+    var v2 = DynamicVariable::as_i32(10);
+}

@@ -1,0 +1,20 @@
+// Method call syntax (spec §Functions > Calling)
+
+struct Vector2{
+    x: f32,
+    y: f32,
+}
+
+func Vector2::length(self: Vector2): f32{
+    return (self.x * self.x + self.y * self.y).sqrt();
+}
+
+func test_method_calls(){
+    var v = Vector2{x = 1.0, y = 2.0};
+
+    // Method call via dot syntax
+    var len1 = v.length();
+
+    // Method call via fully qualified syntax
+    var len2 = Vector2::length(v);
+}

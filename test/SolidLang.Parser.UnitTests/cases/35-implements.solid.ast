@@ -1,0 +1,102 @@
+└──ProgramNode
+   ├──InterfaceDeclNode [IEqual]
+   │  ├──GenericParamsNode
+   │  │  └──GenericParamNode [T]
+   │  └──InterfaceFieldsNode
+   │     └──InterfaceFieldNode [equal]
+   │        ├──FuncParametersNode
+   │        │  ├──FuncParameterNode [left]
+   │        │  │  └──NamedTypeNode [T]
+   │        │  └──FuncParameterNode [right]
+   │        │     └──NamedTypeNode [T]
+   │        └──PrimitiveTypeNode [BoolKeyword]
+   ├──InterfaceDeclNode [IAdd]
+   │  ├──GenericParamsNode
+   │  │  ├──GenericParamNode [TLeft]
+   │  │  ├──GenericParamNode [TRight]
+   │  │  └──GenericParamNode [TResult]
+   │  └──InterfaceFieldsNode
+   │     └──InterfaceFieldNode [add]
+   │        ├──FuncParametersNode
+   │        │  ├──FuncParameterNode [left]
+   │        │  │  └──NamedTypeNode [TLeft]
+   │        │  └──FuncParameterNode [right]
+   │        │     └──NamedTypeNode [TRight]
+   │        └──NamedTypeNode [TResult]
+   ├──StructDeclNode [Point]
+   │  ├──CtAnnotatesNode
+   │  │  ├──CtAnnotateNode [implements]
+   │  │  │  └──CtAnnotateArgsNode
+   │  │  │     └──CtAnnotateArgNode
+   │  │  │        └──NamedTypeNode [IEqual]
+   │  │  │           └──TypeArgumentListNode
+   │  │  │              └──NamedTypeNode [Point]
+   │  │  └──CtAnnotateNode [implements]
+   │  │     └──CtAnnotateArgsNode
+   │  │        └──CtAnnotateArgNode
+   │  │           └──NamedTypeNode [IAdd]
+   │  │              └──TypeArgumentListNode
+   │  │                 ├──NamedTypeNode [Point]
+   │  │                 ├──NamedTypeNode [Point]
+   │  │                 └──NamedTypeNode [Point]
+   │  └──StructFieldsNode
+   │     ├──StructFieldNode [x]
+   │     │  └──PrimitiveTypeNode [F32Keyword]
+   │     └──StructFieldNode [y]
+   │        └──PrimitiveTypeNode [F32Keyword]
+   ├──FunctionDeclNode [equal]
+   │  ├──NamedTypeSpacePrefixNode
+   │  │  └──NamedTypeNode [Point]
+   │  ├──FuncParametersNode
+   │  │  ├──FuncParameterNode [left]
+   │  │  │  └──NamedTypeNode [Point]
+   │  │  └──FuncParameterNode [right]
+   │  │     └──NamedTypeNode [Point]
+   │  ├──PrimitiveTypeNode [BoolKeyword]
+   │  └──BodyStmtNode
+   │     └──ReturnStmtNode
+   │        └──AndExprNode [AmpersandAmpersandToken]
+   │           ├──EqualityExprNode [EqualsEqualsToken]
+   │           │  ├──PostfixExprNode
+   │           │  │  ├──PrimaryExprNode [left]
+   │           │  │  └──DotAccessNode [x]
+   │           │  └──PostfixExprNode
+   │           │     ├──PrimaryExprNode [right]
+   │           │     └──DotAccessNode [x]
+   │           └──EqualityExprNode [EqualsEqualsToken]
+   │              ├──PostfixExprNode
+   │              │  ├──PrimaryExprNode [left]
+   │              │  └──DotAccessNode [y]
+   │              └──PostfixExprNode
+   │                 ├──PrimaryExprNode [right]
+   │                 └──DotAccessNode [y]
+   └──FunctionDeclNode [add]
+      ├──NamedTypeSpacePrefixNode
+      │  └──NamedTypeNode [Point]
+      ├──FuncParametersNode
+      │  ├──FuncParameterNode [left]
+      │  │  └──NamedTypeNode [Point]
+      │  └──FuncParameterNode [right]
+      │     └──NamedTypeNode [Point]
+      ├──NamedTypeNode [Point]
+      └──BodyStmtNode
+         └──ReturnStmtNode
+            └──PrimaryExprNode
+               └──StructLiteralNode
+                  ├──NamedTypeNode [Point]
+                  ├──StructLiteralFieldNode [x]
+                  │  └──AddExprNode [PlusToken]
+                  │     ├──PostfixExprNode
+                  │     │  ├──PrimaryExprNode [left]
+                  │     │  └──DotAccessNode [x]
+                  │     └──PostfixExprNode
+                  │        ├──PrimaryExprNode [right]
+                  │        └──DotAccessNode [x]
+                  └──StructLiteralFieldNode [y]
+                     └──AddExprNode [PlusToken]
+                        ├──PostfixExprNode
+                        │  ├──PrimaryExprNode [left]
+                        │  └──DotAccessNode [y]
+                        └──PostfixExprNode
+                           ├──PrimaryExprNode [right]
+                           └──DotAccessNode [y]

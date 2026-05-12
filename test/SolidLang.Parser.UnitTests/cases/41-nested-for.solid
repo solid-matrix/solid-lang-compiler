@@ -1,0 +1,35 @@
+// Nested arrays and for-loop edge cases (spec §Array, §For)
+
+// Nested array type
+func test_nested_array(){
+    // Two-dimensional array
+    var nested = [2][3]i32{
+        [3]i32{1, 2, 3},
+        [3]i32{4, 5, 6},
+    };
+
+    // Zero-initialized nested array
+    var zeroed: [2][3]i32 = [2][3]i32{};
+}
+
+// For loop without condition (infinite with init)
+func test_for_no_cond(limit: i32){
+    for var i = 0; ; i += 1 {
+        if i >= limit { break; }
+    }
+}
+
+// For loop minimal (all clauses omitted)
+func test_for_infinite(){
+    for ;; {
+        if true { break; }
+    }
+}
+
+// For loop with assignment init
+func test_for_assign_init(){
+    var x: i32 = 0;
+    for x = 0; x < 10; x += 1 {
+        // assignment init
+    }
+}

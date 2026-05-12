@@ -36,14 +36,19 @@ public sealed partial class Parser
 
         // Function pointer type: *func(...) call_conv: type
         // Must be checked before plain pointer since both start with '*'
-        if (Current == '*' && LookAheadKeyword("func", 1))
-        {
-            return ParseFuncPointerType();
-        }
-
-        // Pointer type: * type or *! type
         if (Current == '*')
         {
+            var savedPos = _position;
+            Advance(); // skip *
+            SkipWhitespaceAndComments();
+            if (LookAheadKeyword("func"))
+            {
+                _position = savedPos;
+                return ParseFuncPointerType();
+            }
+            _position = savedPos;
+
+            // Pointer type: * type or *! type
             return ParsePointerType();
         }
 
@@ -120,6 +125,7 @@ public sealed partial class Parser
         var start = _position;
 
         Expect('*');
+        SkipWhitespaceAndComments();
         Match("func");
         SkipWhitespaceAndComments();
 
@@ -153,7 +159,6 @@ public sealed partial class Parser
 
         SkipWhitespaceAndComments();
         var name = ScanIdentifier();
-        SkipWhitespaceAndComments();
 
         // Generic arguments: <T1, T2, ...>
         TypeArgumentListNode? typeArgs = null;

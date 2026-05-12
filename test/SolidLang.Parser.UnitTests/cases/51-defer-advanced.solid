@@ -1,0 +1,14 @@
+// Defer with block and defer with if (spec §Statements > Defer)
+
+func defer_block(){
+    var a = 1;
+    defer {
+        a += 1;
+    }
+}
+
+func defer_if(flag: bool){
+    defer if flag {
+        var b = 2;
+    }
+}

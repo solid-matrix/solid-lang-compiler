@@ -7,15 +7,12 @@ namespace SolidLang.Parser.UnitTests;
 
 public class ParserTests
 {
-    private static string GetExamplePath(string filename)
-    {
-        var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-        return Path.Combine(baseDir, "example", filename);
-    }
+    private static string CasesDir =>
+        Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cases");
 
     private static (ProgramNode program, bool hasErrors, IReadOnlyList<Diagnostic> diagnostics) ParseFile(string filename)
     {
-        var path = GetExamplePath(filename);
+        var path = Path.Combine(CasesDir, filename);
         var source = SourceText.From(File.ReadAllText(path));
         var parser = new SolidParser(source);
         var program = parser.ParseProgram();
@@ -29,6 +26,44 @@ public class ParserTests
         var program = parser.ParseProgram();
         return (program, parser.HasErrors, parser.Diagnostics);
     }
+
+    // ========================================
+    // Snapshot tests — every .solid case file
+    // ========================================
+
+    public static IEnumerable<object[]> AllSolidFiles =>
+        Directory.GetFiles(CasesDir, "*.solid")
+            .Select(Path.GetFileName)
+            .OrderBy(f => int.TryParse(f!.Split('-')[0], out var n) ? n : int.MaxValue)
+            .ThenBy(f => f)
+            .Select(f => new object[] { f! });
+
+    [Theory]
+    [MemberData(nameof(AllSolidFiles))]
+    public void CaseFile_ParsesWithZeroErrorsAndMatchesSnapshot(string filename)
+    {
+        var (program, hasErrors, diagnostics) = ParseFile(filename);
+
+        if (hasErrors)
+        {
+            foreach (var d in diagnostics)
+                Console.WriteLine($"  ERROR: {d}");
+        }
+
+        Assert.False(hasErrors, $"{filename}: {diagnostics.FirstOrDefault()?.ToString() ?? "Unknown error"}");
+        Assert.NotNull(program);
+
+        // Snapshot match
+        var astPath = Path.Combine(CasesDir, Path.ChangeExtension(filename, ".solid.ast"));
+        Assert.True(File.Exists(astPath), $"Missing .ast snapshot for {filename}");
+        var expectedAst = File.ReadAllText(astPath);
+        var actualAst = program.ToString();
+        Assert.Equal(expectedAst, actualAst);
+    }
+
+    // ========================================
+    // Detailed assertions for key cases
+    // ========================================
 
     [Fact]
     public void Parse_1_Main_ShouldSucceed()
@@ -60,7 +95,6 @@ public class ParserTests
     {
         var (program, hasErrors, diagnostics) = ParseFile("3-struct.solid");
 
-        // Report all diagnostics for debugging
         if (hasErrors)
         {
             foreach (var d in diagnostics)
@@ -148,54 +182,6 @@ public class ParserTests
         Assert.NotNull(program);
     }
 
-    // Generic nested type test - the key test case for >> ambiguity
-    [Fact]
-    public void Parse_NestedGenerics_ShouldSucceed()
-    {
-        var code = """
-            func test() {
-                var nested = List<Vector<f32>>{};
-            }
-            """;
-
-        var (program, hasErrors, diagnostics) = ParseCode(code);
-
-        Assert.False(hasErrors, diagnostics.FirstOrDefault()?.ToString() ?? "Unknown error");
-        Assert.NotNull(program);
-    }
-
-    // Deeply nested generics
-    [Fact]
-    public void Parse_DeeplyNestedGenerics_ShouldSucceed()
-    {
-        var code = """
-            func test() {
-                var deep = Map<String, List<Vector<f32>>>{};
-            }
-            """;
-
-        var (program, hasErrors, diagnostics) = ParseCode(code);
-
-        Assert.False(hasErrors, diagnostics.FirstOrDefault()?.ToString() ?? "Unknown error");
-        Assert.NotNull(program);
-    }
-
-    // Right shift in expression (not generic)
-    [Fact]
-    public void Parse_RightShiftExpression_ShouldSucceed()
-    {
-        var code = """
-            func test(): i32 {
-                return 8 >> 2;
-            }
-            """;
-
-        var (program, hasErrors, diagnostics) = ParseCode(code);
-
-        Assert.False(hasErrors, diagnostics.FirstOrDefault()?.ToString() ?? "Unknown error");
-        Assert.NotNull(program);
-    }
-
     [Fact]
     public void Parse_9_Function_ShouldSucceed()
     {
@@ -216,7 +202,6 @@ public class ParserTests
         Assert.True(funcs.Count >= 8, $"Should have at least 8 functions, got {funcs.Count}");
         Assert.Equal(2, structs.Count);
 
-        // Verify key function names are present
         var names = funcs.Select(f => f.Name).ToHashSet();
         Assert.Contains("malloc", names);
         Assert.Contains("create_window", names);
@@ -235,52 +220,43 @@ public class ParserTests
 
         var funcs = program.Declarations.OfType<FunctionDeclNode>().ToList();
 
-        // @import func malloc(size: usize)cdecl:*opaque;
         var malloc = funcs.First(f => f.Name == "malloc");
         Assert.True(malloc.IsForwardDecl);
         Assert.NotNull(malloc.Annotations);
         Assert.NotNull(malloc.CallingConvention);
         Assert.Equal(SyntaxKind.CDeclKeyword, malloc.CallingConvention!.Convention);
 
-        // @import func create_window(size: usize)stdcall:*opaque;
         var createWindow = funcs.First(f => f.Name == "create_window");
         Assert.True(createWindow.IsForwardDecl);
         Assert.NotNull(createWindow.CallingConvention);
         Assert.Equal(SyntaxKind.StdCallKeyword, createWindow.CallingConvention!.Convention);
 
-        // @export func add(a: i32, b: i32)cdecl:i32{ return a+b; }
         var add = funcs.First(f => f.Name == "add" && f.NamedTypePrefix == null && f.WhereClauses == null);
         Assert.False(add.IsForwardDecl);
         Assert.NotNull(add.Body);
         Assert.NotNull(add.Parameters);
         Assert.Equal(2, add.Parameters!.Parameters.Count);
 
-        // func get_size<T>(value: T):usize{ ... }
         var getSize = funcs.First(f => f.Name == "get_size");
         Assert.NotNull(getSize.GenericParams);
         Assert.Single(getSize.GenericParams!.Parameters);
 
-        // func flat<T>(value: List<List<T>>):List<T>{ ... }
         var flat = funcs.First(f => f.Name == "flat" && f.GenericParams != null);
         Assert.NotNull(flat.Parameters);
         Assert.Single(flat.Parameters!.Parameters);
 
-        // func main(args: Slice<String>):i32{ return 0; }
         var main = funcs.Last(f => f.Name == "main");
         Assert.NotNull(main.Parameters);
         Assert.Single(main.Parameters!.Parameters);
         Assert.Equal("args", main.Parameters.Parameters[0].Name);
 
-        // func resursive(n: i32):i32{ if n <= 0 {return 1;} ... }
         var recursive = funcs.First(f => f.Name == "resursive");
         Assert.NotNull(recursive.Body);
 
-        // func Vector2::add — extension method with namespace prefix
         var vecAdd2 = funcs.FirstOrDefault(f => f.Name == "add" && f.NamedTypePrefix != null);
         Assert.NotNull(vecAdd2);
         Assert.NotNull(vecAdd2.Body);
 
-        // func Vector2<T>::add — generic extension method with where clause
         var vecAddT = funcs.FirstOrDefault(f => f.Name == "add" && f.NamedTypePrefix != null && f.WhereClauses != null);
         Assert.NotNull(vecAddT);
         Assert.NotNull(vecAddT.NamedTypePrefix);
@@ -289,24 +265,55 @@ public class ParserTests
         Assert.Equal("T", vecAddT.WhereClauses.Clauses[0].TypeParamName);
     }
 
-    // Quick verification: parse all new example files
+    // ========================================
+    // Generic / right-shift ambiguity tests
+    // ========================================
+
     [Fact]
-    public void Parse_NewExamples_Verify()
+    public void Parse_NestedGenerics_ShouldSucceed()
     {
-        foreach (var f in new[] { "10-operators.solid", "11-for.solid", "12-if.solid", "13-switch.solid", "14-array.solid", "15-generics-edge.solid", "16-pointers.solid", "17-interface.solid" })
-        {
-            var (program, hasErrors, diagnostics) = ParseFile(f);
-            Console.WriteLine($"\n=== {f} ===");
-            if (hasErrors)
-            {
-                foreach (var d in diagnostics)
-                    Console.WriteLine($"  ERROR: {d}");
+        var code = """
+            func test() {
+                var nested = List<Vector<f32>>{};
             }
-            Console.WriteLine($"  Declarations: {program.Declarations.Count}, HasErrors: {hasErrors}");
-        }
+            """;
+
+        var (program, hasErrors, diagnostics) = ParseCode(code);
+
+        Assert.False(hasErrors, diagnostics.FirstOrDefault()?.ToString() ?? "Unknown error");
+        Assert.NotNull(program);
     }
 
-    // Mixed: generic and right shift
+    [Fact]
+    public void Parse_DeeplyNestedGenerics_ShouldSucceed()
+    {
+        var code = """
+            func test() {
+                var deep = Map<String, List<Vector<f32>>>{};
+            }
+            """;
+
+        var (program, hasErrors, diagnostics) = ParseCode(code);
+
+        Assert.False(hasErrors, diagnostics.FirstOrDefault()?.ToString() ?? "Unknown error");
+        Assert.NotNull(program);
+    }
+
+    [Fact]
+    public void Parse_RightShiftExpression_ShouldSucceed()
+    {
+        var code = """
+            func test(): i32 {
+                return 8 >> 2;
+            }
+            """;
+
+        var (program, hasErrors, diagnostics) = ParseCode(code);
+
+        Assert.False(hasErrors, diagnostics.FirstOrDefault()?.ToString() ?? "Unknown error");
+        Assert.NotNull(program);
+    }
+
     [Fact]
     public void Parse_GenericAndRightShift_ShouldSucceed()
     {

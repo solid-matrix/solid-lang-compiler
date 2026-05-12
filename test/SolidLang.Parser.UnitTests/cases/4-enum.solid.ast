@@ -1,0 +1,34 @@
+└──ProgramNode
+   ├──EnumDeclNode [Color]
+   │  └──EnumFieldsNode
+   │     ├──EnumFieldNode [Red]
+   │     ├──EnumFieldNode [Green]
+   │     └──EnumFieldNode [Blue]
+   ├──EnumDeclNode [WindowFlags]
+   │  ├──CtAnnotatesNode
+   │  │  └──CtAnnotateNode [flags]
+   │  ├──PrimitiveTypeNode [U32Keyword]
+   │  └──EnumFieldsNode
+   │     ├──EnumFieldNode [Resizable]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [1]
+   │     ├──EnumFieldNode [Hidden]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [2]
+   │     ├──EnumFieldNode [Maximum]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [4]
+   │     └──EnumFieldNode [Minimum]
+   │        └──PrimaryExprNode
+   │           └──IntegerLiteralNode [8]
+   └──FunctionDeclNode [main]
+      ├──PrimitiveTypeNode [I32Keyword]
+      └──BodyStmtNode
+         ├──VarDeclNode [color]
+         │  └──PrimaryExprNode
+         │     └──EnumLiteralNode [Red]
+         │        └──NamedTypeNode [Color]
+         └──VarDeclNode [flags]
+            └──PrimaryExprNode
+               └──EnumLiteralNode [Resizable]
+                  └──NamedTypeNode [WindowFlags]

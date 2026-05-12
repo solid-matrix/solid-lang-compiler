@@ -1,0 +1,24 @@
+└──ProgramNode
+   ├──FunctionDeclNode [defer_block]
+   │  └──BodyStmtNode
+   │     ├──VarDeclNode [a]
+   │     │  └──PrimaryExprNode
+   │     │     └──IntegerLiteralNode [1]
+   │     └──DeferStmtNode
+   │        └──BodyStmtNode
+   │           └──AssignStmtNode
+   │              ├──PrimaryExprNode [a]
+   │              └──PrimaryExprNode
+   │                 └──IntegerLiteralNode [1]
+   └──FunctionDeclNode [defer_if]
+      ├──FuncParametersNode
+      │  └──FuncParameterNode [flag]
+      │     └──PrimitiveTypeNode [BoolKeyword]
+      └──BodyStmtNode
+         └──DeferStmtNode
+            └──IfStmtNode
+               ├──PrimaryExprNode [flag]
+               └──BodyStmtNode
+                  └──VarDeclNode [b]
+                     └──PrimaryExprNode
+                        └──IntegerLiteralNode [2]

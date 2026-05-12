@@ -1,0 +1,54 @@
+struct Vector2{
+    x: f32,
+    y: f32,
+}
+
+struct Vector3{
+    x: f32,
+    y: f32,
+    z: f32
+}
+
+@sealed
+@align(16)
+@packed
+struct Slice<T>{
+    ptr: *T,
+    len: usize,
+}
+
+@implements(IHashable<Pair<TKey, TValue>>)
+struct Pair<TKey, TValue> where TKey: IHashable<TKey>{
+    key: TKey,
+    value: TValue,
+}
+
+@explicit
+struct Frame<T>{
+    @offset(0) header: u64,
+    @offset(128) payload: T,
+}
+
+struct None;
+
+struct Empty{
+}
+
+func main():i32{
+    var vec2 = Vector2{};
+    var vec3 = Vector3{x=1.0};
+    var slice = Slice<i32>{ptr = null, len = 100};
+    var size = @sizeof(Frame<Vector2>);
+    var frame = Frame<Vector2>{ payload = vec2 };
+
+    var p_frame: *Frame<Vector2> = &frame;
+    
+    // ZST
+    var empty = Empty{};
+    var p_empty = &empty;
+
+    var none = None{};
+    var p_none = &none;
+
+    return 0;
+}

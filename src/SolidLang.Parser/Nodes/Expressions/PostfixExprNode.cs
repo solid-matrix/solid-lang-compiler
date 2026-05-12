@@ -41,17 +41,19 @@ public abstract class PostfixSuffixNode : SyntaxNode
 }
 
 /// <summary>
-/// Represents a dot access: .name
+/// Represents a dot access: .name with optional generic type arguments (.name&lt;T&gt;)
 /// </summary>
 public sealed class DotAccessNode : PostfixSuffixNode
 {
     public string Name { get; }
+    public TypeArgumentListNode? TypeArguments { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
-    public DotAccessNode(string name, TextSpan span, string fullText)
+    public DotAccessNode(string name, TypeArgumentListNode? typeArguments, TextSpan span, string fullText)
     {
         Name = name;
+        TypeArguments = typeArguments;
         _span = span;
         _fullText = fullText;
     }
@@ -59,7 +61,11 @@ public sealed class DotAccessNode : PostfixSuffixNode
     public override SyntaxKind Kind => SyntaxKind.DotAccessNode;
     public override TextSpan Span => _span;
 
-    public override IEnumerable<SyntaxNode> GetChildren() => Enumerable.Empty<SyntaxNode>();
+    public override IEnumerable<SyntaxNode> GetChildren()
+    {
+        if (TypeArguments != null)
+            yield return TypeArguments;
+    }
 
     public override string GetFullText() => _fullText;
 
@@ -150,6 +156,64 @@ public sealed class ScopeAccessNode : PostfixSuffixNode
         if (Arguments != null)
             yield return Arguments;
     }
+
+    public override string GetFullText() => _fullText;
+
+    protected override void WriteAdditionalInfo(TextWriter writer)
+    {
+        writer.Write($" [{Name}]");
+    }
+}
+
+/// <summary>
+/// Represents a pointer dereference member access: *.name (sugar for (*expr).name)
+/// </summary>
+public sealed class PointerAccessNode : PostfixSuffixNode
+{
+    public string Name { get; }
+    private readonly TextSpan _span;
+    private readonly string _fullText;
+
+    public PointerAccessNode(string name, TextSpan span, string fullText)
+    {
+        Name = name;
+        _span = span;
+        _fullText = fullText;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.PointerAccessNode;
+    public override TextSpan Span => _span;
+
+    public override IEnumerable<SyntaxNode> GetChildren() => Enumerable.Empty<SyntaxNode>();
+
+    public override string GetFullText() => _fullText;
+
+    protected override void WriteAdditionalInfo(TextWriter writer)
+    {
+        writer.Write($" [{Name}]");
+    }
+}
+
+/// <summary>
+/// Represents an address-of member access: &.name (sugar for (&expr).name)
+/// </summary>
+public sealed class AddressAccessNode : PostfixSuffixNode
+{
+    public string Name { get; }
+    private readonly TextSpan _span;
+    private readonly string _fullText;
+
+    public AddressAccessNode(string name, TextSpan span, string fullText)
+    {
+        Name = name;
+        _span = span;
+        _fullText = fullText;
+    }
+
+    public override SyntaxKind Kind => SyntaxKind.AddressAccessNode;
+    public override TextSpan Span => _span;
+
+    public override IEnumerable<SyntaxNode> GetChildren() => Enumerable.Empty<SyntaxNode>();
 
     public override string GetFullText() => _fullText;
 

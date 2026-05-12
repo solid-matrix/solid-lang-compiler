@@ -1,0 +1,25 @@
+// Enum advanced features: explicit values, @flags, underlying types
+
+// Enum with explicit values
+enum Color: u32{
+    Transparent = 0x00000000,
+    Red = 0xFF0000FF,
+    Green = 0xFF00FF00,
+    Blue = 0xFFFF0000,
+}
+
+// @flags annotation for bit flags
+@flags
+enum Permissions: u32{
+    None = 0,
+    Read = 1 << 0,
+    Write = 1 << 1,
+    Execute = 1 << 2,
+}
+
+// Enum with auto-increment (spec: first defaults to 0)
+enum Status{
+    Idle,
+    Running,
+    Stopped,
+}

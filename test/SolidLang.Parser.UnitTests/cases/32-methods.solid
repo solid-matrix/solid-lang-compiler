@@ -1,0 +1,25 @@
+// Method declarations (spec §Functions > Methods)
+
+struct Vector2{
+    x: f32,
+    y: f32,
+}
+
+// Instance method with self parameter
+func Vector2::length(self: Vector2): f32{
+    return (self.x * self.x + self.y * self.y).sqrt();
+}
+
+// Static method (no self parameter)
+func Vector2::new(x: f32, y: f32): Vector2{
+    return Vector2{x = x, y = y};
+}
+
+// Method with mutable self
+func Vector2::normalize(self: *Vector2){
+    var len = Vector2::length(*self);
+    if len > 0.0 {
+        self*.x = self*.x / len;
+        self*.y = self*.y / len;
+    }
+}
