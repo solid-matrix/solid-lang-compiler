@@ -53,11 +53,13 @@
    │  ├──PrimitiveTypeNode [I32Keyword]
    │  └──BodyStmtNode
    │     └──ReturnStmtNode
-   │        └──PrimaryExprNode
-   │           └──VariantLiteralNode [Set]
-   │              ├──NamedTypeNode [Color]
-   │              └──PrimaryExprNode
-   │                 └──IntegerLiteralNode [1]
+   │        └──ScopedAccessExprNode [Set]
+   │           ├──NamedTypeSpacePrefixNode
+   │           │  └──NamedTypeNode [Color]
+   │           └──CallArgsNode
+   │              └──CallArgNode
+   │                 └──PrimaryExprNode
+   │                    └──IntegerLiteralNode [1]
    ├──FunctionDeclNode [chained_arg_call]
    │  ├──PrimitiveTypeNode [I32Keyword]
    │  └──BodyStmtNode

@@ -1,0 +1,25 @@
+// Test @intrinsic type conversions: from() and into_*()
+
+func main(): i32 {
+    // Test 1: from() — static "constructor" style
+    var a: i32 = i32::from(100_i8);       // i8→i32: sext → 100
+    var b: i32 = i32::from(200_u8);       // u8→i32: zext → 200
+    var c: i32 = i32::from(300_i16);      // i16→i32: sext → 300
+
+    // Test 2: into_* methods
+    var x: i32 = 42;
+    var e: i64 = x.into_i64();            // i32→i64: sext → 42
+    var e32: i32 = e.into_i32();          // i64→i32: trunc → 42
+
+    // Test 3: float conversions via from()
+    var f: f64 = f64::from(x);            // i32→f64: sitofp → 42.0
+    var g: i32 = i32::from(f);            // f64→i32: fptosi → 42
+
+    // Test 4: signed/unsigned same-width
+    var h: u32 = u32::from(-1_i32);       // i32→u32: bitcast → 0xFFFFFFFF
+    var i: i32 = i32::from(h);            // u32→i32: bitcast → -1
+
+    // a=100, b=200, c=300, e32=42, g=42, i=-1
+    // Sum: 100+200+300+42+42+(-1) = 683
+    return a + b + c + e32 + g + i;       // 683
+}

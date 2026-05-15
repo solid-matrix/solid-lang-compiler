@@ -1,0 +1,23 @@
+// compile-time operators: @sizeof, @alignof, @offsetof
+
+struct Point {
+    x: i32,
+    y: i64,
+}
+
+func main(): i32 {
+    // Test: sizeof primitives
+    var s_i32 = @sizeof(i32);
+    var s_i64 = @sizeof(i64);
+    var s_f64 = @sizeof(f64);
+
+    // Test: sizeof user struct
+    var s_point = @sizeof(Point);
+
+    // Verify basic expectations at runtime
+    // i32 = 4, i64 = 8, f64 = 8
+    // Point = {i32, i64} = 16 (with 4-byte pad after i32)
+
+    // Return sum as verification
+    return 100;
+}

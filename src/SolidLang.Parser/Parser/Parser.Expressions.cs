@@ -691,7 +691,8 @@ public sealed partial class Parser
         // Check for compile-time operator expression: @name(...)
         if (Current == '@')
         {
-            return ParseCtOperatorExpr();
+            var ctOp = ParseCtOperatorExpr();
+            return new PrimaryExprNode(PrimaryExprKind.CtOperator, null, null, null, ctOp, ctOp.Span, ctOp.GetFullText());
         }
 
         // Parenthesized expression
@@ -1014,8 +1015,28 @@ public sealed partial class Parser
 
         if (!hasTypeErrors && Current == ':' && Peek() == ':')
         {
-            // Enum or variant literal: Name::member or Name::member(expr)
-            return ParseEnumOrVariantLiteral(namedType, start);
+            // May be enum literal: Name::member (without args)
+            // Name::member(args) could be a variant literal OR a scoped access call —
+            // let ParseIdentifierOrScopedAccess handle the ambiguity.
+            var specPos = _position;
+            Advance(); Advance(); // skip ::
+            SkipWhitespaceAndComments();
+            if (char.IsLetter(Current) || Current == '_')
+            {
+                ScanIdentifier();
+                SkipWhitespaceAndComments();
+                // Only treat as enum literal if there's NO (args) and NO further :: (scoped access)
+                if (Current != '(' && !(Current == ':' && Peek() == ':'))
+                {
+                    _position = specPos;
+                    return ParseEnumOrVariantLiteral(namedType, start);
+                }
+            }
+            // Backtrack — let scoped access or other handling take over
+            _position = savedPos;
+            _genericDepth = savedDepth;
+            _diagnostics.TruncateTo(diagCount);
+            return null;
         }
 
         // Not a literal, backtrack — restore position, generic depth, and diagnostics

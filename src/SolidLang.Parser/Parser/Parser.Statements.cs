@@ -451,17 +451,9 @@ public sealed partial class Parser
     {
         var start = _position;
 
-        // Try to parse as literal first
-        var literal = TryParseLiteral();
-        if (literal != null)
-        {
-            var span = GetSpanFrom(start);
-            var text = _source.GetText(span);
-            return new SwitchPatternNode(SwitchPatternKind.Literal, literal, null, null, null, null, span, text);
-        }
-
-        // Try to parse as named type with member.
-        // Use ParseSimpleNamedType because in this context :: separates type from member.
+        // Try named-type member patterns first (Color::Red, WindowFlags::Maximum).
+        // This must come before literal parsing because TryParseLiteral() would
+        // capture Type::member as an enum literal instead of a pattern.
         if (char.IsLetter(Current) || Current == '_')
         {
             var namedType = ParseSimpleNamedType();
@@ -504,9 +496,18 @@ public sealed partial class Parser
             }
             else
             {
-                // Just an identifier — backtrack to let the identifier pattern handle it
-                _position = namedType.Span.Start;
+                // Just an identifier — backtrack to let the literal handler try it
+                _position = start;
             }
+        }
+
+        // Try to parse as literal (integer, string, bool, null, etc.)
+        var literal = TryParseLiteral();
+        if (literal != null)
+        {
+            var span = GetSpanFrom(start);
+            var text = _source.GetText(span);
+            return new SwitchPatternNode(SwitchPatternKind.Literal, literal, null, null, null, null, span, text);
         }
 
         // Identifier pattern

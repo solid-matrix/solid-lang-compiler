@@ -31,8 +31,10 @@
          │     └──StructLiteralNode
          │        └──NamedTypeNode [DynamicVariable]
          └──VarDeclNode [v2]
-            └──PrimaryExprNode
-               └──VariantLiteralNode [as_i32]
-                  ├──NamedTypeNode [DynamicVariable]
-                  └──PrimaryExprNode
-                     └──IntegerLiteralNode [10]
+            └──ScopedAccessExprNode [as_i32]
+               ├──NamedTypeSpacePrefixNode
+               │  └──NamedTypeNode [DynamicVariable]
+               └──CallArgsNode
+                  └──CallArgNode
+                     └──PrimaryExprNode
+                        └──IntegerLiteralNode [10]

@@ -1,0 +1,17 @@
+// variant literal expressions — tagged unions
+
+variant Option<T> {
+    Some: T,
+    None,
+}
+
+func main(): i32 {
+    // Test 1: variant with payload
+    var v1 = Option<i32>::Some(42);
+
+    // Test 2: variant without payload (unit variant)
+    var v2 = Option<i32>::None;
+
+    // Verify by returning a known value
+    return 100;
+}

@@ -1,0 +1,10 @@
+// Scoped access test: namespace-qualified function call
+
+func Math::add(a: i32, b: i32): i32 {
+    return a + b;
+}
+
+func main(): i32 {
+    var result = Math::add(10, 32);
+    return result;  // expect 42
+}

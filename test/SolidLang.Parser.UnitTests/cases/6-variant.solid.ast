@@ -19,13 +19,15 @@
       ├──PrimitiveTypeNode [I32Keyword]
       └──BodyStmtNode
          ├──VarDeclNode [o1]
-         │  └──PrimaryExprNode
-         │     └──VariantLiteralNode [Value]
-         │        ├──NamedTypeNode [Option]
-         │        │  └──TypeArgumentListNode
-         │        │     └──PrimitiveTypeNode [I32Keyword]
-         │        └──PrimaryExprNode
-         │           └──IntegerLiteralNode [10]
+         │  └──ScopedAccessExprNode [Value]
+         │     ├──NamedTypeSpacePrefixNode
+         │     │  └──NamedTypeNode [Option]
+         │     │     └──TypeArgumentListNode
+         │     │        └──PrimitiveTypeNode [I32Keyword]
+         │     └──CallArgsNode
+         │        └──CallArgNode
+         │           └──PrimaryExprNode
+         │              └──IntegerLiteralNode [10]
          ├──VarDeclNode [o2]
          │  └──PrimaryExprNode
          │     └──EnumLiteralNode [None]
@@ -33,23 +35,27 @@
          │           └──TypeArgumentListNode
          │              └──PrimitiveTypeNode [I32Keyword]
          ├──VarDeclNode [r1]
-         │  └──PrimaryExprNode
-         │     └──VariantLiteralNode [Okay]
-         │        ├──NamedTypeNode [Result]
-         │        │  └──TypeArgumentListNode
-         │        │     ├──PrimitiveTypeNode [I32Keyword]
-         │        │     └──PrimitiveTypeNode [U64Keyword]
-         │        └──PrimaryExprNode
-         │           └──IntegerLiteralNode [32]
+         │  └──ScopedAccessExprNode [Okay]
+         │     ├──NamedTypeSpacePrefixNode
+         │     │  └──NamedTypeNode [Result]
+         │     │     └──TypeArgumentListNode
+         │     │        ├──PrimitiveTypeNode [I32Keyword]
+         │     │        └──PrimitiveTypeNode [U64Keyword]
+         │     └──CallArgsNode
+         │        └──CallArgNode
+         │           └──PrimaryExprNode
+         │              └──IntegerLiteralNode [32]
          ├──VarDeclNode [r2]
-         │  └──PrimaryExprNode
-         │     └──VariantLiteralNode [Fault]
-         │        ├──NamedTypeNode [Result]
-         │        │  └──TypeArgumentListNode
-         │        │     ├──PrimitiveTypeNode [I32Keyword]
-         │        │     └──PrimitiveTypeNode [U64Keyword]
-         │        └──PrimaryExprNode
-         │           └──IntegerLiteralNode [0]
+         │  └──ScopedAccessExprNode [Fault]
+         │     ├──NamedTypeSpacePrefixNode
+         │     │  └──NamedTypeNode [Result]
+         │     │     └──TypeArgumentListNode
+         │     │        ├──PrimitiveTypeNode [I32Keyword]
+         │     │        └──PrimitiveTypeNode [U64Keyword]
+         │     └──CallArgsNode
+         │        └──CallArgNode
+         │           └──PrimaryExprNode
+         │              └──IntegerLiteralNode [0]
          └──ReturnStmtNode
             └──PrimaryExprNode
                └──IntegerLiteralNode [0]

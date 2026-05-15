@@ -1,0 +1,19 @@
+// @flags enum — bit flag enumeration with auto power-of-2 values
+
+@flags enum Permissions {
+    Read,      // auto = 1
+    Write,     // auto = 2
+    Execute,   // auto = 4
+    Admin,     // auto = 8
+}
+
+func main(): i32 {
+    // Use as integer values and sum them
+    var r = Permissions::Read;       // 1
+    var w = Permissions::Write;      // 2
+    var x = Permissions::Execute;    // 4
+    var a = Permissions::Admin;      // 8
+
+    // Sum should be 1 + 2 + 4 + 8 = 15
+    return r + w + x + a;
+}

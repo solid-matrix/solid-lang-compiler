@@ -1,0 +1,40 @@
+// enum literal expressions and switch with enum patterns
+
+enum Color {
+    Red,
+    Green,
+    Blue,
+}
+
+@flags
+enum WindowFlags:u32 {
+    Resizable = 0x0001,
+    Hidden = 0x0002,
+    Maximum = 0x0004,
+    Minimum = 0x0008,
+}
+
+func main(): i32 {
+    var result = 0;
+
+    // Test 1: auto-assigned enum (Red=0, Green=1, Blue=2)
+    var c = Color::Green;
+    switch c {
+        Color::Red => result = 10;
+        Color::Green => result = 20;
+        Color::Blue => result = 30;
+        else => result = 99;
+    }
+
+    // Test 2: explicit-valued enum
+    var f = WindowFlags::Maximum;
+    switch f {
+        WindowFlags::Resizable => result += 1;  // not this one
+        WindowFlags::Hidden => result += 2;     // not this one
+        WindowFlags::Maximum => result += 4;    // this one: 20 + 4 = 24
+        WindowFlags::Minimum => result += 8;    // not this one
+        else => result += 0;
+    }
+
+    return result;  // 24
+}

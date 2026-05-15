@@ -14,7 +14,9 @@
          │     └──CallExprNode
          └──VarDeclNode [c]
             ├──PrimitiveTypeNode [I16Keyword]
-            └──PrimaryExprNode
-               └──VariantLiteralNode [from]
-                  ├──NamedTypeNode [i16]
-                  └──PrimaryExprNode [a]
+            └──ScopedAccessExprNode [from]
+               ├──NamedTypeSpacePrefixNode
+               │  └──NamedTypeNode [i16]
+               └──CallArgsNode
+                  └──CallArgNode
+                     └──PrimaryExprNode [a]

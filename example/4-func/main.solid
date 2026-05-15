@@ -1,0 +1,27 @@
+const N: usize = 12u;
+
+func main(args: Slice<String>): i32{
+     for var i = 0u; i < args.len; i+=1{
+        std::io::println(args[i]);
+    }
+    
+    var arr = [N]i32{};
+
+   
+
+    var ptr: *i32 = arr.to_pointer();
+
+    for var i = 0u; i < N; i+=1{
+        *(ptr + i) = i.into<i32>();
+    }
+
+    var slice: Slice = arr.to_slice();
+
+    var sum = 0;
+
+    for var i = 0u; i < N; i+=1{
+        sum += slice[i];
+    }
+
+    return sum;
+}

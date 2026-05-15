@@ -53,10 +53,11 @@
    │  ├──PrimitiveTypeNode [USizeKeyword]
    │  └──BodyStmtNode
    │     └──ReturnStmtNode
-   │        └──CtOperatorExprNode [sizeof]
-   │           └──CtOperatorArgsNode
-   │              └──CtOperatorArgNode
-   │                 └──NamedTypeNode [T]
+   │        └──PrimaryExprNode
+   │           └──CtOperatorExprNode [sizeof]
+   │              └──CtOperatorArgsNode
+   │                 └──CtOperatorArgNode
+   │                    └──NamedTypeNode [T]
    ├──FunctionDeclNode [flat]
    │  ├──GenericParamsNode
    │  │  └──GenericParamNode [T]
@@ -72,8 +73,8 @@
    │  │     └──NamedTypeNode [T]
    │  └──BodyStmtNode
    │     └──ReturnStmtNode
-   │        └──PrimaryExprNode
-   │           └──VariantLiteralNode [new]
+   │        └──ScopedAccessExprNode [new]
+   │           └──NamedTypeSpacePrefixNode
    │              └──NamedTypeNode [List]
    │                 └──TypeArgumentListNode
    │                    └──NamedTypeNode [T]
@@ -90,8 +91,8 @@
    │  │     └──PrimitiveTypeNode [I32Keyword]
    │  └──BodyStmtNode
    │     └──ReturnStmtNode
-   │        └──PrimaryExprNode
-   │           └──VariantLiteralNode [new]
+   │        └──ScopedAccessExprNode [new]
+   │           └──NamedTypeSpacePrefixNode
    │              └──NamedTypeNode [List]
    │                 └──TypeArgumentListNode
    │                    └──PrimitiveTypeNode [I32Keyword]
@@ -213,10 +214,12 @@
    │  │     └──NamedTypeNode [T]
    │  └──BodyStmtNode
    │     └──ReturnStmtNode
-   │        └──PrimaryExprNode
-   │           └──VariantLiteralNode [value]
-   │              ├──NamedTypeNode [RawOptional]
-   │              └──PrimaryExprNode [value]
+   │        └──ScopedAccessExprNode [value]
+   │           ├──NamedTypeSpacePrefixNode
+   │           │  └──NamedTypeNode [RawOptional]
+   │           └──CallArgsNode
+   │              └──CallArgNode
+   │                 └──PrimaryExprNode [value]
    ├──FunctionDeclNode [is_none]
    │  ├──NamedTypeSpacePrefixNode
    │  │  └──NamedTypeNode [RawOptional]
@@ -270,36 +273,38 @@
    │        ├──PrimaryExprNode [self]
    │        ├──SwitchArmNode
    │        │  ├──SwitchPatternNode
-   │        │  │  └──EnumLiteralNode [None]
-   │        │  │     └──NamedTypeNode [Option]
-   │        │  │        └──TypeArgumentListNode
-   │        │  │           └──NamedTypeNode [T]
+   │        │  │  └──NamedTypeNode [Option]
+   │        │  │     └──TypeArgumentListNode
+   │        │  │        └──NamedTypeNode [T]
    │        │  └──BodyStmtNode
    │        │     └──ReturnStmtNode
-   │        │        └──PrimaryExprNode
-   │        │           └──VariantLiteralNode [Fault]
-   │        │              ├──NamedTypeNode [Result]
-   │        │              │  └──TypeArgumentListNode
-   │        │              │     ├──NamedTypeNode [T]
-   │        │              │     └──PrimitiveTypeNode [U64Keyword]
-   │        │              └──PrimaryExprNode
-   │        │                 └──IntegerLiteralNode [100]
+   │        │        └──ScopedAccessExprNode [Fault]
+   │        │           ├──NamedTypeSpacePrefixNode
+   │        │           │  └──NamedTypeNode [Result]
+   │        │           │     └──TypeArgumentListNode
+   │        │           │        ├──NamedTypeNode [T]
+   │        │           │        └──PrimitiveTypeNode [U64Keyword]
+   │        │           └──CallArgsNode
+   │        │              └──CallArgNode
+   │        │                 └──PrimaryExprNode
+   │        │                    └──IntegerLiteralNode [100]
    │        └──SwitchArmNode
    │           ├──SwitchPatternNode
-   │           │  └──VariantLiteralNode [Value]
-   │           │     ├──NamedTypeNode [Option]
-   │           │     │  └──TypeArgumentListNode
-   │           │     │     └──NamedTypeNode [T]
-   │           │     └──PrimaryExprNode [value]
+   │           │  ├──NamedTypeNode [Option]
+   │           │  │  └──TypeArgumentListNode
+   │           │  │     └──NamedTypeNode [T]
+   │           │  └──PrimaryExprNode [value]
    │           └──BodyStmtNode
    │              └──ReturnStmtNode
-   │                 └──PrimaryExprNode
-   │                    └──VariantLiteralNode [Okay]
-   │                       ├──NamedTypeNode [Result]
-   │                       │  └──TypeArgumentListNode
-   │                       │     ├──NamedTypeNode [T]
-   │                       │     └──PrimitiveTypeNode [U64Keyword]
-   │                       └──PrimaryExprNode [value]
+   │                 └──ScopedAccessExprNode [Okay]
+   │                    ├──NamedTypeSpacePrefixNode
+   │                    │  └──NamedTypeNode [Result]
+   │                    │     └──TypeArgumentListNode
+   │                    │        ├──NamedTypeNode [T]
+   │                    │        └──PrimitiveTypeNode [U64Keyword]
+   │                    └──CallArgsNode
+   │                       └──CallArgNode
+   │                          └──PrimaryExprNode [value]
    ├──FunctionDeclNode [resursive]
    │  ├──FuncParametersNode
    │  │  └──FuncParameterNode [n]

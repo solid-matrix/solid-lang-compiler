@@ -40,13 +40,15 @@
    │  │  └──NamedTypeNode [RawOptional]
    │  │     └──TypeArgumentListNode
    │  │        └──NamedTypeNode [T]
-   │  └──PrimaryExprNode
-   │     └──VariantLiteralNode [none]
-   │        ├──NamedTypeNode [RawOptional]
-   │        │  └──TypeArgumentListNode
-   │        │     └──NamedTypeNode [T]
-   │        └──PrimaryExprNode
-   │           └──NullLiteralNode
+   │  └──ScopedAccessExprNode [none]
+   │     ├──NamedTypeSpacePrefixNode
+   │     │  └──NamedTypeNode [RawOptional]
+   │     │     └──TypeArgumentListNode
+   │     │        └──NamedTypeNode [T]
+   │     └──CallArgsNode
+   │        └──CallArgNode
+   │           └──PrimaryExprNode
+   │              └──NullLiteralNode
    └──FunctionDeclNode [main]
       ├──PrimitiveTypeNode [I32Keyword]
       └──BodyStmtNode

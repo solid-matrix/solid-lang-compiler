@@ -51,7 +51,9 @@
          │     ├──DotAccessNode [length]
          │     └──CallExprNode
          └──VarDeclNode [len2]
-            └──PrimaryExprNode
-               └──VariantLiteralNode [length]
-                  ├──NamedTypeNode [Vector2]
-                  └──PrimaryExprNode [v]
+            └──ScopedAccessExprNode [length]
+               ├──NamedTypeSpacePrefixNode
+               │  └──NamedTypeNode [Vector2]
+               └──CallArgsNode
+                  └──CallArgNode
+                     └──PrimaryExprNode [v]

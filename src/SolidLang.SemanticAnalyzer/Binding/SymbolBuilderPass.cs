@@ -164,45 +164,73 @@ internal sealed class SymbolBuilderPass
 
     private void WalkFunction(FunctionDeclNode node)
     {
-        // Handle out-of-line member: Struct<T>::method()
+        // Handle out-of-line member: Struct<T>::method() or NS::function()
         Scope? targetScope = null;
         if (node.NamedTypePrefix != null)
         {
-            // Resolve the prefix type to find its type scope
-            var typeName = node.NamedTypePrefix.NamedType.Name;
-            var typeSymbol = _currentScope.LookupRecursive(typeName) as TypeSymbol;
-            if (typeSymbol?.TypeScope == null)
+            var namedType = node.NamedTypePrefix.NamedType;
+
+            // First, try as type (for Struct::method out-of-line members)
+            var typeSymbol = _currentScope.LookupRecursive(namedType.Name) as TypeSymbol;
+            if (typeSymbol?.TypeScope != null)
             {
-                _diagnostics.UndefinedName(typeName, node.NamedTypePrefix.NamedType.Span);
-                return;
+                targetScope = typeSymbol.TypeScope;
             }
-            targetScope = typeSymbol.TypeScope;
+            else
+            {
+                // Not a type — try as namespace (NS::function or NS::NS::function)
+                var nsSegments = namedType.NamespacePrefix != null
+                    ? namedType.NamespacePrefix.Path.Segments.ToList()
+                    : new List<string>();
+                nsSegments.Add(namedType.Name);
+
+                var nsPath = new NamespacePathNode(nsSegments, namedType.Span, string.Join("::", nsSegments));
+                var nsSymbol = GetOrCreateNamespace(nsPath);
+                targetScope = nsSymbol.NamespaceScope;
+            }
         }
 
         var actualScope = targetScope ?? _currentScope;
+        var isIntrinsic = IsIntrinsicFunction(node.Annotations);
 
         // Create or merge forward declaration
         var existing = actualScope.Lookup(node.Name);
         FunctionSymbol funcSymbol;
+        var skipRegistration = false;
 
         if (existing is FunctionSymbol fs && fs.IsForwardDecl)
         {
             fs.IsForwardDecl = false;
             fs.ImportName ??= ExtractImportName(node.Annotations);
+            fs.IsIntrinsic = isIntrinsic || fs.IsIntrinsic;
             funcSymbol = fs;
         }
         else if (existing != null)
         {
-            _diagnostics.DuplicateName(node.Name, "function", node.Span, existing.Declaration?.Span ?? node.Span);
-            return;
+            // Allow duplicate names for @intrinsic functions (overloading by param type)
+            if (isIntrinsic && existing is FunctionSymbol existingFs && existingFs.IsIntrinsic)
+            {
+                funcSymbol = new FunctionSymbol(node.Name, node, node.IsForwardDecl, isIntrinsic: true);
+                skipRegistration = true;
+            }
+            else
+            {
+                _diagnostics.DuplicateName(node.Name, "function", node.Span, existing.Declaration?.Span ?? node.Span);
+                return;
+            }
         }
         else
         {
-            funcSymbol = new FunctionSymbol(node.Name, node, node.IsForwardDecl);
+            funcSymbol = new FunctionSymbol(node.Name, node, node.IsForwardDecl, isIntrinsic: isIntrinsic);
             actualScope.Declare(funcSymbol);
         }
 
-        // Extract @import(name) linker symbol
+        // For intrinsic overloads (duplicate name), only set import name and return
+        if (skipRegistration)
+        {
+            funcSymbol.ImportName = ExtractImportName(node.Annotations);
+            return;
+        }
         funcSymbol.ImportName = ExtractImportName(node.Annotations);
 
         // Enter function scope
@@ -222,14 +250,17 @@ internal sealed class SymbolBuilderPass
         }
 
         // Register parameters in function scope
+        var paramSymbols = new List<VariableSymbol>();
         if (node.Parameters != null)
         {
             foreach (var param in node.Parameters.Parameters)
             {
                 var paramSymbol = new VariableSymbol(SymbolKind.Parameter, param.Name, param);
                 _currentScope.Declare(paramSymbol);
+                paramSymbols.Add(paramSymbol);
             }
         }
+        funcSymbol.Parameters = paramSymbols;
 
         // Walk body (which may contain nested scopes)
         if (node.Body != null)
@@ -562,6 +593,14 @@ internal sealed class SymbolBuilderPass
     // ========================================
 
     /// <summary>
+    /// Returns true if the function has the @intrinsic annotation.
+    /// </summary>
+    private static bool IsIntrinsicFunction(CtAnnotatesNode? annotations)
+    {
+        return annotations?.Annotations.Any(a => a.Name == "intrinsic") == true;
+    }
+
+    /// <summary>
     /// Extracts the linker symbol name from @import(name) annotation.
     /// Returns null if @import has no argument (use the declared name).
     /// </summary>
@@ -570,23 +609,26 @@ internal sealed class SymbolBuilderPass
         if (annotations == null) return null;
         var importAnnot = annotations.Annotations.FirstOrDefault(a => a.Name == "import");
         var firstArg = importAnnot?.Arguments?.Arguments.FirstOrDefault();
-        if (firstArg?.Expression != null)
-            return firstArg.GetFullText();
-        return null;
+        return firstArg?.GetFullText();
     }
 
     /// <summary>
-    /// Returns true if the declaration should be skipped due to @if_msvc / @if_not_msvc.
+    /// Returns true if the declaration should be skipped due to platform annotations.
+    /// Supported: @os(windows) / @windows (skip on non-Windows), @os(unix) / @unix (skip on Windows),
+    /// @if_msvc / @if_not_msvc (legacy aliases).
     /// </summary>
     private static bool ShouldSkipPlatform(DeclNode decl)
     {
         var annotations = GetDeclAnnotations(decl);
         if (annotations == null) return false;
-        var isMsvc = OperatingSystem.IsWindows();
+        var isWindows = OperatingSystem.IsWindows();
         foreach (var a in annotations.Annotations)
         {
-            if (a.Name == "if_msvc" && !isMsvc) return true;
-            if (a.Name == "if_not_msvc" && isMsvc) return true;
+            var name = a.Name == "os"
+                ? a.Arguments?.Arguments.FirstOrDefault()?.GetFullText()
+                : a.Name;
+            if ((name == "windows" || a.Name == "if_msvc") && !isWindows) return true;
+            if ((name == "unix" || a.Name == "if_not_msvc") && isWindows) return true;
         }
         return false;
     }

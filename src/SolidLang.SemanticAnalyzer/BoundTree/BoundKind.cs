@@ -44,4 +44,6 @@ public enum BoundKind
     EnumLiteralExpr,
     VariantLiteralExpr,
     SwitchPattern,
+    BuiltinCallExpr,
+    CtOperatorExpr,
 }

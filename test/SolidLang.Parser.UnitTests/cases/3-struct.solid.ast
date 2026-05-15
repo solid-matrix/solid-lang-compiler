@@ -106,12 +106,13 @@
          │           └──PrimaryExprNode
          │              └──IntegerLiteralNode [100]
          ├──VarDeclNode [size]
-         │  └──CtOperatorExprNode [sizeof]
-         │     └──CtOperatorArgsNode
-         │        └──CtOperatorArgNode
-         │           └──NamedTypeNode [Frame]
-         │              └──TypeArgumentListNode
-         │                 └──NamedTypeNode [Vector2]
+         │  └──PrimaryExprNode
+         │     └──CtOperatorExprNode [sizeof]
+         │        └──CtOperatorArgsNode
+         │           └──CtOperatorArgNode
+         │              └──NamedTypeNode [Frame]
+         │                 └──TypeArgumentListNode
+         │                    └──NamedTypeNode [Vector2]
          ├──VarDeclNode [frame]
          │  └──PrimaryExprNode
          │     └──StructLiteralNode

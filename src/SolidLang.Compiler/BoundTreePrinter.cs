@@ -78,6 +78,8 @@ internal static class BoundTreePrinter
         BoundEnumLiteralExpr e => $"EnumLiteral [{e.EnumType.Name}::{e.Member.Name}]",
         BoundVariantLiteralExpr v => $"VariantLiteral [{v.VariantType.Name}::{v.Member.Name}]",
         BoundSwitchPattern p => $"SwitchPattern [{p.PatternKind}]",
+        BoundBuiltinCallExpr b => $"BuiltinCall [{b.MethodKind}] -> {TypeName(b.Type)}",
+        BoundCtOperatorExpr c => $"CtOperator [{c.OperatorKind}] -> {TypeName(c.Type)}",
         _ => node.Kind.ToString()
     };
 
@@ -167,6 +169,7 @@ internal static class BoundTreePrinter
             BoundVariantLiteralExpr v => v.Value != null
                 ? MakeChildren(("value", new[] { v.Value }))
                 : new(),
+            BoundBuiltinCallExpr b => MakeChildren(("receiver", new[] { b.Receiver })),
             _ => new()
         };
     }

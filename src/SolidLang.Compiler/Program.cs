@@ -121,6 +121,8 @@ if (!hasParseErrors)
         // Link with clang
         var clang = "clang";
         var linkArgs = $"\"{objPath}\" -o \"{outputExe}\"";
+        if (OperatingSystem.IsWindows())
+            linkArgs += " -Xlinker /FORCE:MULTIPLE -Xlinker /DEFAULTLIB:kernel32.lib";
         var psi = new ProcessStartInfo(clang, linkArgs)
         {
             RedirectStandardOutput = true,

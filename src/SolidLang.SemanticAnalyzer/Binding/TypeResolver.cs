@@ -62,6 +62,9 @@ internal sealed class TypeResolver
         // Look up the type name in the current scope
         var symbol = _currentScope.LookupRecursive(node.Name);
 
+        if (symbol is GenericParamSymbol)
+            return new TypeParameterType(node.Name);
+
         if (symbol is not TypeSymbol typeSymbol)
         {
             if (symbol != null)
@@ -109,16 +112,35 @@ internal sealed class TypeResolver
 
     /// <summary>
     /// Tries to evaluate a constant integer size expression.
-    /// Phase 1 handles only integer literals; complex expressions return null.
     /// </summary>
-    private static int? TryEvaluateConstantSize(SolidLang.Parser.Nodes.Expressions.ExprNode expr)
+    private int? TryEvaluateConstantSize(SolidLang.Parser.Nodes.Expressions.ExprNode expr)
     {
-        // Simplest case: the expression is a primary → literal → integer literal
-        if (expr is SolidLang.Parser.Nodes.Expressions.PrimaryExprNode primary
-            && primary.PrimaryKind == SolidLang.Parser.Nodes.Expressions.PrimaryExprKind.Literal
-            && primary.Literal is SolidLang.Parser.Nodes.Literals.IntegerLiteralNode intLit)
+        if (expr is SolidLang.Parser.Nodes.Expressions.PrimaryExprNode primary)
         {
-            return (int)Convert.ToInt64(intLit.Value);
+            // Integer literal: 12, 0u, etc.
+            if (primary.PrimaryKind == SolidLang.Parser.Nodes.Expressions.PrimaryExprKind.Literal
+                && primary.Literal is SolidLang.Parser.Nodes.Literals.IntegerLiteralNode intLit)
+            {
+                return (int)Convert.ToInt64(intLit.Value);
+            }
+
+            // Identifier reference to const: N where const N: usize = 12u
+            if (primary.PrimaryKind == SolidLang.Parser.Nodes.Expressions.PrimaryExprKind.Identifier
+                && primary.Identifier != null)
+            {
+                var symbol = _currentScope.LookupRecursive(primary.Identifier);
+                if (symbol is VariableSymbol vs
+                    && vs.Kind == SymbolKind.ConstVariable
+                    && vs.Declaration != null)
+                {
+                    // Try to evaluate the const initializer
+                    if (vs.Declaration is SolidLang.Parser.Nodes.Declarations.ConstDeclNode constDecl
+                        && constDecl.Initializer != null)
+                    {
+                        return TryEvaluateConstantSize(constDecl.Initializer);
+                    }
+                }
+            }
         }
 
         return null;

@@ -89,11 +89,14 @@ internal sealed class BoundTreeBuilder
     {
         var annotations = GetDeclAnnotations(decl);
         if (annotations == null) return false;
-        var isMsvc = OperatingSystem.IsWindows();
+        var isWindows = OperatingSystem.IsWindows();
         foreach (var a in annotations.Annotations)
         {
-            if (a.Name == "if_msvc" && !isMsvc) return true;
-            if (a.Name == "if_not_msvc" && isMsvc) return true;
+            var name = a.Name == "os"
+                ? a.Arguments?.Arguments.FirstOrDefault()?.GetFullText()
+                : a.Name;
+            if ((name == "windows" || a.Name == "if_msvc") && !isWindows) return true;
+            if ((name == "unix" || a.Name == "if_not_msvc") && isWindows) return true;
         }
         return false;
     }
@@ -114,12 +117,26 @@ internal sealed class BoundTreeBuilder
 
     private BoundFunctionDecl BuildFunction(FunctionDeclNode node)
     {
+        // Determine lookup scope: for NS::func, look in namespace scope
+        var lookupScope = _currentScope;
+        if (node.NamedTypePrefix != null)
+        {
+            var namedType = node.NamedTypePrefix.NamedType;
+            var nsSegments = namedType.NamespacePrefix != null
+                ? namedType.NamespacePrefix.Path.Segments.ToList()
+                : new List<string>();
+            nsSegments.Add(namedType.Name);
+            var fullPath = string.Join("::", nsSegments);
+            if (_namespaces.TryGetValue(fullPath, out var nsSymbol))
+                lookupScope = nsSymbol.NamespaceScope;
+        }
+
         // Resolve function symbol
-        var symbol = _currentScope.LookupRecursive(node.Name) as FunctionSymbol;
+        var symbol = lookupScope.LookupRecursive(node.Name) as FunctionSymbol;
         if (symbol == null) return null!;
 
         // Determine the correct scope for the function (handle out-of-line)
-        var funcScope = symbol.BodyScope ?? _currentScope;
+        var funcScope = symbol.BodyScope ?? lookupScope;
         var savedScope = _currentScope;
         _currentScope = funcScope ?? _currentScope;
 
@@ -309,9 +326,14 @@ internal sealed class BoundTreeBuilder
         if (node.Type != null)
             declaredType = typeResolver.ResolveType(node.Type);
 
+        var initializer = BuildExpression(node.Initializer);
+
+        // Type inference: if no explicit type, infer from initializer
+        if (declaredType == null && initializer != null)
+            declaredType = initializer.Type;
+
         symbol.DeclaredType = declaredType;
 
-        var initializer = BuildExpression(node.Initializer);
         return new BoundVariableDecl(symbol, declaredType, initializer);
     }
 
@@ -420,7 +442,7 @@ internal sealed class BoundTreeBuilder
         {
             ForInfiniteNode inf => BuildWhile(inf),
             ForCondNode cond => BuildWhileCond(cond),
-            ForCStyleNode cs => BuildForCStyle(cs),
+            ForCStyleNode cs => BuildForCStyle(cs, forStmt),
             _ => null!,
         };
     }
@@ -438,10 +460,10 @@ internal sealed class BoundTreeBuilder
         return new BoundWhileStmt(condition, body);
     }
 
-    private BoundForCStyleStmt BuildForCStyle(ForCStyleNode node)
+    private BoundForCStyleStmt BuildForCStyle(ForCStyleNode node, ForStmtNode forStmt)
     {
         // Enter loop scope
-        var loopScope = FindChildScope(_currentScope, node.Body);
+        var loopScope = FindChildScope(_currentScope, forStmt);
         var savedScope = _currentScope;
         _currentScope = loopScope ?? _currentScope;
 
@@ -452,12 +474,15 @@ internal sealed class BoundTreeBuilder
         {
             var symbol = _currentScope.Lookup(varDecl.Name) as VariableSymbol;
             var initializer = BuildExpression(varDecl.Initializer);
-            initVar = new BoundVariableDecl(symbol!, null, initializer);
+            var inferredType = initializer?.Type;
+            if (symbol != null) symbol.DeclaredType = inferredType;
+            initVar = new BoundVariableDecl(symbol!, inferredType, initializer);
         }
         else if (node.Init is ForAssignNode assign)
         {
-            initExpr = BuildExpression(assign.Target);
-            // wrap assignment
+            var target = BuildExpression(assign.Target);
+            var value = BuildExpression(assign.Value);
+            initExpr = new BoundBinaryExpr(target, assign.Operator, value);
         }
 
         BoundExpression? condition = null;
@@ -567,7 +592,7 @@ internal sealed class BoundTreeBuilder
         return expr switch
         {
             PrimaryExprNode p => BuildPrimaryExpr(p),
-            UnaryExprNode u => new BoundUnaryExpr(u.Operator, BuildExpression(u.Operand)),
+            UnaryExprNode u => BuildUnaryExpr(u),
             BinaryExprNode b => new BoundBinaryExpr(BuildExpression(b.Left), b.Operator, BuildExpression(b.Right)),
             ConditionalExprNode c => new BoundConditionalExpr(BuildExpression(c.Condition),
                 BuildExpression(c.ThenExpr), BuildExpression(c.ElseExpr)),
@@ -575,6 +600,25 @@ internal sealed class BoundTreeBuilder
             ScopedAccessExprNode sa => BuildScopedAccess(sa),
             _ => null!,
         };
+    }
+
+    private BoundExpression BuildUnaryExpr(UnaryExprNode u)
+    {
+        var operand = BuildExpression(u.Operand);
+
+        // When & is applied to an expression that has already been sugared
+        // with &. (e.g. &pt&.y is parsed as &(pt&.y)), the outer & is
+        // redundant and would cause codegen to crash because the inner &
+        // produces a temporary GEP value with no memory address.
+        if (u.Operator == SyntaxKind.AmpersandToken &&
+            operand is BoundUnaryExpr innerUn &&
+            innerUn.Operator == SyntaxKind.AmpersandToken &&
+            innerUn.Operand is BoundMemberAccessExpr)
+        {
+            return operand;
+        }
+
+        return new BoundUnaryExpr(u.Operator, operand);
     }
 
     private BoundExpression BuildPrimaryExpr(PrimaryExprNode primary)
@@ -605,7 +649,8 @@ internal sealed class BoundTreeBuilder
                 break;
 
             case PrimaryExprKind.CtOperator:
-                // Compile-time operators: skip for now, handled in Phase 2
+                if (primary.CtOperator != null)
+                    return BuildCtOperator(primary.CtOperator);
                 break;
         }
 
@@ -622,6 +667,7 @@ internal sealed class BoundTreeBuilder
             CharLiteralNode c => new BoundLiteralExpr(null, c.Value),          // char type TBD
             BoolLiteralNode b => new BoundLiteralExpr(PrimitiveType.Bool, b.Value),
             NullLiteralNode => new BoundLiteralExpr(null, null!),          // null has no inherent type — target-typed
+            ArrayLiteralNode al => BuildArrayLiteral(al),
             StructLiteralNode sl => BuildStructLiteral(sl),
             UnionLiteralNode ul => BuildUnionLiteral(ul),
             EnumLiteralNode el => BuildEnumLiteral(el),
@@ -658,8 +704,12 @@ internal sealed class BoundTreeBuilder
         return result;
     }
 
-    private BoundCallExpr BuildCall(BoundExpression receiver, CallExprNode call)
+    private BoundExpression BuildCall(BoundExpression receiver, CallExprNode call)
     {
+        // Pass through already-resolved built-in calls
+        if (receiver is BoundBuiltinCallExpr)
+            return receiver;
+
         // Resolve the function name from the receiver's symbol name
         string? funcName = null;
         if (receiver is BoundVarExpr varExpr)
@@ -676,6 +726,21 @@ internal sealed class BoundTreeBuilder
                     foreach (var arg in call.Arguments.Arguments)
                         args.Add(BuildExpression(arg.Expression));
                 }
+
+                // Target-type null literals from function parameters.
+                // Resolve parameter types if not already set (may happen when the called
+                // function is declared in a file processed after the caller).
+                for (int i = 0; i < args.Count && i < fs.Parameters.Count; i++)
+                {
+                    if (args[i] is BoundLiteralExpr { Type: null, Value: null })
+                    {
+                        var paramType = fs.Parameters[i].DeclaredType;
+                        if (paramType == null && fs.Parameters[i].Declaration is FuncParameterNode fp)
+                            paramType = new TypeResolver(_currentScope, _diagnostics).ResolveType(fp.Type);
+                        args[i] = new BoundLiteralExpr(paramType, null!);
+                    }
+                }
+
                 return new BoundCallExpr(fs, args);
             }
         }
@@ -686,6 +751,10 @@ internal sealed class BoundTreeBuilder
 
     private BoundExpression BuildDotAccess(BoundExpression receiver, DotAccessNode dot)
     {
+        // Check for compiler built-in methods
+        var builtin = TryBuildBuiltinCall(receiver, dot);
+        if (builtin != null) return builtin;
+
         if (receiver.Type is NamedType nt && nt.TypeSymbol.TypeScope != null)
         {
             var member = nt.TypeSymbol.TypeScope.Lookup(dot.Name) as MemberSymbol;
@@ -697,32 +766,166 @@ internal sealed class BoundTreeBuilder
 
     private BoundExpression BuildPointerAccess(BoundExpression receiver, PointerAccessNode pa)
     {
-        // Desugar *.member to (*receiver).member
-        var dereferenced = new BoundUnaryExpr(SyntaxKind.StarToken, receiver);
-        return new BoundMemberAccessExpr(dereferenced, null!);
+        // Desugar *.member: (*receiver).member for pointer receivers,
+        // or receiver.member for struct receivers (chained *. after deref).
+        TypeSymbol? typeSym = null;
+        if (receiver.Type is NamedType nt)
+            typeSym = nt.TypeSymbol;
+        else if (receiver.Type is PointerType pt && pt.PointeeType is NamedType ptNt)
+            typeSym = ptNt.TypeSymbol;
+
+        if (typeSym?.TypeScope != null)
+        {
+            var member = typeSym.TypeScope.Lookup(pa.Name) as MemberSymbol;
+            if (member != null)
+            {
+                var inner = receiver.Type is PointerType
+                    ? new BoundUnaryExpr(SyntaxKind.StarToken, receiver)
+                    : receiver;
+                return new BoundMemberAccessExpr(inner, member);
+            }
+        }
+
+        var inner2 = receiver.Type is PointerType
+            ? new BoundUnaryExpr(SyntaxKind.StarToken, receiver)
+            : receiver;
+        return new BoundMemberAccessExpr(inner2, null!);
+    }
+
+    private BoundExpression? TryBuildBuiltinCall(BoundExpression receiver, DotAccessNode dot)
+    {
+        var typeResolver = new TypeResolver(_currentScope, _diagnostics);
+
+        // array.to_pointer()
+        if (receiver.Type is ArrayType at && dot.Name == "to_pointer")
+        {
+            var ptrType = new PointerType(at.ElementType, true);
+            return new BoundBuiltinCallExpr(BuiltinMethodKind.ToPointer, receiver, null, ptrType);
+        }
+
+        // array.to_slice()
+        if (receiver.Type is ArrayType at2 && dot.Name == "to_slice")
+        {
+            var sliceTypeSym = _currentScope.LookupRecursive("Slice") as TypeSymbol;
+            if (sliceTypeSym != null)
+            {
+                var elementTypeArg = at2.ElementType;
+                var sliceType = new NamedType(sliceTypeSym, new List<SolidType> { elementTypeArg });
+                return new BoundBuiltinCallExpr(BuiltinMethodKind.ToSlice, receiver, elementTypeArg, sliceType);
+            }
+        }
+
+        // value.into<T>()
+        if (dot.Name == "into" && dot.TypeArguments?.Arguments.Count > 0)
+        {
+            var targetType = typeResolver.ResolveType(dot.TypeArguments.Arguments[0]);
+            return new BoundBuiltinCallExpr(BuiltinMethodKind.TypeCast, receiver, targetType, targetType);
+        }
+
+        // value.into_TARGET() for primitive types
+        if (dot.Name.StartsWith("into_") && receiver.Type is PrimitiveType)
+        {
+            var targetName = dot.Name.Substring("into_".Length);
+            var targetType = ResolveIntrinsicTypeName(targetName);
+            if (targetType != null)
+                return new BoundBuiltinCallExpr(BuiltinMethodKind.TypeCast, receiver, targetType, targetType);
+        }
+
+        return null;
+    }
+
+    private BoundExpression BuildArrayLiteral(ArrayLiteralNode node)
+    {
+        var typeResolver = new TypeResolver(_currentScope, _diagnostics);
+        var arrayType = typeResolver.ResolveType(node.ArrayType);
+        return new BoundLiteralExpr(arrayType, null!);
     }
 
     private BoundExpression BuildAddressAccess(BoundExpression receiver, AddressAccessNode aa)
     {
-        // Desugar &.member to (&receiver).member
-        var addressed = new BoundUnaryExpr(SyntaxKind.AmpersandToken, receiver);
-        return new BoundMemberAccessExpr(addressed, null!);
+        // &.member desugars to (&receiver).member per spec.
+        // Resolve the member in the receiver's struct scope.
+        MemberSymbol? member = null;
+        if (receiver.Type is NamedType nt && nt.TypeSymbol.TypeScope != null)
+            member = nt.TypeSymbol.TypeScope.Lookup(aa.Name) as MemberSymbol;
+        else if (receiver.Type is PointerType pt && pt.PointeeType is NamedType ptNt && ptNt.TypeSymbol.TypeScope != null)
+            member = ptNt.TypeSymbol.TypeScope.Lookup(aa.Name) as MemberSymbol;
+
+        var addrOf = new BoundUnaryExpr(SyntaxKind.AmpersandToken, receiver);
+        return new BoundMemberAccessExpr(addrOf, member!);
     }
 
     private BoundExpression BuildScopedAccess(ScopedAccessExprNode node)
     {
-        // Simple case: NS::Type::member
         if (node.Prefix != null)
         {
             var namedType = node.Prefix.NamedType;
+
+            // Build full namespace path from prefix segments + type name
+            var nsSegments = namedType.NamespacePrefix != null
+                ? namedType.NamespacePrefix.Path.Segments.ToList()
+                : new List<string>();
+            nsSegments.Add(namedType.Name);
+            var fullPath = string.Join("::", nsSegments);
+
+            // Case 1: Namespace-qualified access: NS::name or NS::NS::name
+            if (_namespaces.TryGetValue(fullPath, out var nsSymbol))
+            {
+                var symbol = nsSymbol.NamespaceScope.Lookup(node.Name);
+                if (symbol is FunctionSymbol funcSym)
+                {
+                    var args = node.Arguments != null
+                        ? node.Arguments.Arguments.Select(a => BuildExpression(a.Expression)).ToList()
+                        : new List<BoundExpression>();
+
+                    // Target-type null literals from function parameters.
+                    // Resolve parameter types if not already set (may happen when the called
+                    // function is declared in a file processed after the caller).
+                    for (int i = 0; i < args.Count && i < funcSym.Parameters.Count; i++)
+                    {
+                        if (args[i] is BoundLiteralExpr { Type: null, Value: null })
+                        {
+                            var paramType = funcSym.Parameters[i].DeclaredType;
+                            if (paramType == null && funcSym.Parameters[i].Declaration is FuncParameterNode fp)
+                                paramType = new TypeResolver(_currentScope, _diagnostics).ResolveType(fp.Type);
+                            args[i] = new BoundLiteralExpr(paramType, null!);
+                        }
+                    }
+
+                    // @intrinsic functions: generate builtin call (e.g., i8::from(value))
+                    if (funcSym.IsIntrinsic)
+                    {
+                        var targetType = ResolveIntrinsicTypeName(fullPath);
+                        if (targetType != null && args.Count >= 1)
+                        {
+                            var srcExpr = args[0];
+                            return new BoundBuiltinCallExpr(BuiltinMethodKind.TypeCast, srcExpr, targetType, targetType);
+                        }
+                    }
+
+                    return new BoundCallExpr(funcSym, args);
+                }
+                if (symbol is VariableSymbol varSym)
+                    return new BoundVarExpr(varSym);
+            }
+
+            // Case 2: Type::member — variant literal, enum literal, or struct member
             var typeSymbol = _currentScope.LookupRecursive(namedType.Name) as TypeSymbol;
             if (typeSymbol?.TypeScope != null)
             {
                 var memberSymbol = typeSymbol.TypeScope.Lookup(node.Name) as MemberSymbol;
                 if (memberSymbol != null)
                 {
-                    // If this has call args, it's a method call
-                    return new BoundVarExpr(null!); // Scoped access TBD
+                    if (typeSymbol.Kind == SymbolKind.Variant)
+                    {
+                        // VariantType::Member(args) parsed as scoped access
+                        BoundExpression? value = null;
+                        if (node.Arguments != null && node.Arguments.Arguments.Count > 0)
+                            value = BuildExpression(node.Arguments.Arguments[0].Expression);
+                        return new BoundVariantLiteralExpr(typeSymbol, memberSymbol, value);
+                    }
+                    if (typeSymbol.Kind == SymbolKind.Enum)
+                        return new BoundEnumLiteralExpr(typeSymbol, memberSymbol);
                 }
             }
         }
@@ -759,6 +962,11 @@ internal sealed class BoundTreeBuilder
     {
         var typeSymbol = _currentScope.LookupRecursive(literal.EnumType.Name) as TypeSymbol;
         var memberSymbol = typeSymbol?.TypeScope?.Lookup(literal.MemberName) as MemberSymbol;
+
+        // If this is actually a variant type, treat it as a variant literal
+        if (typeSymbol?.Kind == SymbolKind.Variant)
+            return new BoundVariantLiteralExpr(typeSymbol!, memberSymbol!, null);
+
         return new BoundEnumLiteralExpr(typeSymbol!, memberSymbol!);
     }
 
@@ -770,6 +978,37 @@ internal sealed class BoundTreeBuilder
         if (literal.Value != null)
             value = BuildExpression(literal.Value);
         return new BoundVariantLiteralExpr(typeSymbol!, memberSymbol!, value);
+    }
+
+    private BoundExpression BuildCtOperator(CtOperatorExprNode ctOperator)
+    {
+        var typeResolver = new TypeResolver(_currentScope, _diagnostics);
+        var resultType = PrimitiveType.USize;
+
+        var opKind = ctOperator.Name switch
+        {
+            "sizeof" => CtOperatorKind.Sizeof,
+            "alignof" => CtOperatorKind.Alignof,
+            "offsetof" => CtOperatorKind.Offsetof,
+            _ => CtOperatorKind.Sizeof,
+        };
+
+        SolidType? typeArg = null;
+        string? memberName = null;
+
+        if (ctOperator.Arguments != null)
+        {
+            for (int i = 0; i < ctOperator.Arguments.Arguments.Count; i++)
+            {
+                var arg = ctOperator.Arguments.Arguments[i];
+                if (arg.Type != null)
+                    typeArg = typeResolver.ResolveType(arg.Type);
+                else if (arg.Expression is PrimaryExprNode p && p.Identifier != null)
+                    memberName = p.Identifier;
+            }
+        }
+
+        return new BoundCtOperatorExpr(opKind, typeArg, memberName, resultType);
     }
 
     // ========================================
@@ -784,4 +1023,26 @@ internal sealed class BoundTreeBuilder
         _scopeMap.TryGetValue(owningNode, out var scope);
         return scope;
     }
+
+    /// <summary>
+    /// Maps a primitive type name (e.g., "i8", "f32") to its PrimitiveType singleton.
+    /// Used for resolving @intrinsic function target types from namespace/method names.
+    /// </summary>
+    private static PrimitiveType? ResolveIntrinsicTypeName(string name) => name switch
+    {
+        "i8" => PrimitiveType.I8,
+        "i16" => PrimitiveType.I16,
+        "i32" => PrimitiveType.I32,
+        "i64" => PrimitiveType.I64,
+        "isize" => PrimitiveType.ISize,
+        "u8" => PrimitiveType.U8,
+        "u16" => PrimitiveType.U16,
+        "u32" => PrimitiveType.U32,
+        "u64" => PrimitiveType.U64,
+        "usize" => PrimitiveType.USize,
+        "f32" => PrimitiveType.F32,
+        "f64" => PrimitiveType.F64,
+        "bool" => PrimitiveType.Bool,
+        _ => null,
+    };
 }

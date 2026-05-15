@@ -60,11 +60,13 @@
       │        └──NamedTypeNode [Vector2]
       └──BodyStmtNode
          ├──VarDeclNode [len]
-         │  └──PrimaryExprNode
-         │     └──VariantLiteralNode [length]
-         │        ├──NamedTypeNode [Vector2]
-         │        └──UnaryExprNode [StarToken]
-         │           └──PrimaryExprNode [self]
+         │  └──ScopedAccessExprNode [length]
+         │     ├──NamedTypeSpacePrefixNode
+         │     │  └──NamedTypeNode [Vector2]
+         │     └──CallArgsNode
+         │        └──CallArgNode
+         │           └──UnaryExprNode [StarToken]
+         │              └──PrimaryExprNode [self]
          └──IfStmtNode
             ├──ComparisonExprNode [GreaterToken]
             │  ├──PrimaryExprNode [len]

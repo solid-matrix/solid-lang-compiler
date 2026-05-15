@@ -85,6 +85,14 @@ public sealed class BoundUnaryExpr : BoundExpression
     public SyntaxKind Operator { get; }
     public BoundExpression Operand { get; }
 
+    public override SolidType? Type => Operator switch
+    {
+        SyntaxKind.StarToken => (Operand.Type as PointerType)?.PointeeType,
+        SyntaxKind.AmpersandToken => Operand.Type != null ? new PointerType(Operand.Type, true) : null,
+        SyntaxKind.MinusToken or SyntaxKind.BangToken or SyntaxKind.TildeToken => Operand.Type,
+        _ => Operand.Type,
+    };
+
     public BoundUnaryExpr(SyntaxKind op, BoundExpression operand)
     {
         Operator = op;
@@ -118,6 +126,7 @@ public sealed class BoundMemberAccessExpr : BoundExpression
     public override BoundKind Kind => BoundKind.MemberAccessExpr;
     public BoundExpression Receiver { get; }
     public MemberSymbol Member { get; }
+    public override SolidType? Type => Member?.MemberType;
 
     public BoundMemberAccessExpr(BoundExpression receiver, MemberSymbol member)
     {
@@ -148,6 +157,7 @@ public sealed class BoundIndexAccessExpr : BoundExpression
 public sealed class BoundStructLiteralExpr : BoundExpression
 {
     public override BoundKind Kind => BoundKind.StructLiteralExpr;
+    public override SolidType? Type => new NamedType(StructType);
     public TypeSymbol StructType { get; }
     public IReadOnlyList<(MemberSymbol Field, BoundExpression Value)> Fields { get; }
 
@@ -165,6 +175,7 @@ public sealed class BoundStructLiteralExpr : BoundExpression
 public sealed class BoundUnionLiteralExpr : BoundExpression
 {
     public override BoundKind Kind => BoundKind.UnionLiteralExpr;
+    public override SolidType? Type => new NamedType(UnionType);
     public TypeSymbol UnionType { get; }
     public MemberSymbol Member { get; }
     public BoundExpression? Value { get; }
@@ -183,6 +194,7 @@ public sealed class BoundUnionLiteralExpr : BoundExpression
 public sealed class BoundEnumLiteralExpr : BoundExpression
 {
     public override BoundKind Kind => BoundKind.EnumLiteralExpr;
+    public override SolidType? Type => new NamedType(EnumType);
     public TypeSymbol EnumType { get; }
     public MemberSymbol Member { get; }
 
@@ -199,6 +211,7 @@ public sealed class BoundEnumLiteralExpr : BoundExpression
 public sealed class BoundVariantLiteralExpr : BoundExpression
 {
     public override BoundKind Kind => BoundKind.VariantLiteralExpr;
+    public override SolidType? Type => new NamedType(VariantType);
     public TypeSymbol VariantType { get; }
     public MemberSymbol Member { get; }
     public BoundExpression? Value { get; }
@@ -252,6 +265,63 @@ public sealed class BoundSwitchPattern : BoundNode
 /// <summary>
 /// Kinds of switch patterns.
 /// </summary>
+/// <summary>
+/// A compiler-builtin method call: to_pointer, to_slice, into, etc.
+/// </summary>
+public sealed class BoundBuiltinCallExpr : BoundExpression
+{
+    public override BoundKind Kind => BoundKind.BuiltinCallExpr;
+    public BuiltinMethodKind MethodKind { get; }
+    public BoundExpression Receiver { get; }
+    public SolidType? TypeArgument { get; }
+    public override SolidType? Type { get; }
+
+    public BoundBuiltinCallExpr(BuiltinMethodKind methodKind, BoundExpression receiver, SolidType? typeArgument, SolidType? resultType)
+    {
+        MethodKind = methodKind;
+        Receiver = receiver;
+        TypeArgument = typeArgument;
+        Type = resultType;
+    }
+}
+
+/// <summary>
+/// Kinds of compiler-builtin methods.
+/// </summary>
+public enum BuiltinMethodKind
+{
+    ToPointer,
+    TypeCast,
+    ToSlice,
+}
+
+/// <summary>
+/// A compile-time operator expression: @sizeof(T), @alignof(T), @offsetof(T, member).
+/// </summary>
+public sealed class BoundCtOperatorExpr : BoundExpression
+{
+    public override BoundKind Kind => BoundKind.CtOperatorExpr;
+    public CtOperatorKind OperatorKind { get; }
+    public SolidType? TypeArgument { get; }
+    public string? MemberName { get; }
+    public override SolidType? Type { get; }
+
+    public BoundCtOperatorExpr(CtOperatorKind operatorKind, SolidType? typeArgument, string? memberName, SolidType? resultType)
+    {
+        OperatorKind = operatorKind;
+        TypeArgument = typeArgument;
+        MemberName = memberName;
+        Type = resultType;
+    }
+}
+
+public enum CtOperatorKind
+{
+    Sizeof,
+    Alignof,
+    Offsetof,
+}
+
 public enum SwitchPatternKind
 {
     Literal,

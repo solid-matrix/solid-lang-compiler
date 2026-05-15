@@ -81,8 +81,7 @@
    │        ├──PrimaryExprNode [color]
    │        ├──SwitchArmNode
    │        │  ├──SwitchPatternNode
-   │        │  │  └──EnumLiteralNode [Red]
-   │        │  │     └──NamedTypeNode [Color]
+   │        │  │  └──NamedTypeNode [Color]
    │        │  └──ExprStmtNode
    │        │     └──PostfixExprNode
    │        │        ├──PrimaryExprNode [print]
@@ -93,11 +92,9 @@
    │        │                    └──StringLiteralNode ["red"]
    │        ├──SwitchArmNode
    │        │  ├──SwitchPatternNode
-   │        │  │  └──EnumLiteralNode [Black]
-   │        │  │     └──NamedTypeNode [Color]
+   │        │  │  └──NamedTypeNode [Color]
    │        │  ├──SwitchPatternNode
-   │        │  │  └──EnumLiteralNode [White]
-   │        │  │     └──NamedTypeNode [Color]
+   │        │  │  └──NamedTypeNode [Color]
    │        │  └──ExprStmtNode
    │        │     └──PostfixExprNode
    │        │        ├──PrimaryExprNode [print]
@@ -156,9 +153,8 @@
             ├──PrimaryExprNode [result]
             ├──SwitchArmNode
             │  ├──SwitchPatternNode
-            │  │  └──VariantLiteralNode [Okay]
-            │  │     ├──NamedTypeNode [Result]
-            │  │     └──PrimaryExprNode [value]
+            │  │  ├──NamedTypeNode [Result]
+            │  │  └──PrimaryExprNode [value]
             │  └──ExprStmtNode
             │     └──PostfixExprNode
             │        ├──PrimaryExprNode [print]
@@ -168,9 +164,8 @@
             │                 └──PrimaryExprNode [value]
             └──SwitchArmNode
                ├──SwitchPatternNode
-               │  └──VariantLiteralNode [Fault]
-               │     ├──NamedTypeNode [Result]
-               │     └──PrimaryExprNode [error]
+               │  ├──NamedTypeNode [Result]
+               │  └──PrimaryExprNode [error]
                └──ExprStmtNode
                   └──PostfixExprNode
                      ├──PrimaryExprNode [print]

@@ -13,11 +13,13 @@
    └──FunctionDeclNode [test_union_literal]
       └──BodyStmtNode
          ├──VarDeclNode [v1]
-         │  └──PrimaryExprNode
-         │     └──VariantLiteralNode [as_i32]
-         │        ├──NamedTypeNode [Value]
-         │        └──PrimaryExprNode
-         │           └──IntegerLiteralNode [12345]
+         │  └──ScopedAccessExprNode [as_i32]
+         │     ├──NamedTypeSpacePrefixNode
+         │     │  └──NamedTypeNode [Value]
+         │     └──CallArgsNode
+         │        └──CallArgNode
+         │           └──PrimaryExprNode
+         │              └──IntegerLiteralNode [12345]
          ├──VarDeclNode [v2]
          │  └──PrimaryExprNode
          │     └──StructLiteralNode

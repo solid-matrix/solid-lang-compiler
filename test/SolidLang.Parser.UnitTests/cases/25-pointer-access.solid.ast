@@ -56,7 +56,7 @@
    │        └──UnaryExprNode [AmpersandToken]
    │           └──PostfixExprNode
    │              ├──PrimaryExprNode [pt]
-   │              └──AddressAccessNode [y]
+   │              └──DotAccessNode [y]
    ├──FunctionDeclNode [test_chained_pointer_access]
    │  └──BodyStmtNode
    │     ├──VarDeclNode [r]

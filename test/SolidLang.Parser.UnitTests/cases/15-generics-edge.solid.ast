@@ -174,8 +174,8 @@
    │  │     └──NamedTypeNode [U]
    │  └──BodyStmtNode
    │     └──ReturnStmtNode
-   │        └──PrimaryExprNode
-   │           └──VariantLiteralNode [new]
+   │        └──ScopedAccessExprNode [new]
+   │           └──NamedTypeSpacePrefixNode
    │              └──NamedTypeNode [List]
    │                 └──TypeArgumentListNode
    │                    └──NamedTypeNode [U]

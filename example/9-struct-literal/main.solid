@@ -1,0 +1,33 @@
+// struct literal expressions
+
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+struct Triple {
+    a: i32,
+    b: i32,
+    c: i32,
+}
+
+func main(): i32 {
+    // Test 1: basic struct literal with all fields
+    var p1 = Point { x = 10, y = 20 };
+    var t1 = p1.x + p1.y;  // 30
+
+    // Test 2: struct literal with partial fields (rest zero)
+    var p2 = Point { x = 5 };
+    var t2 = p2.x + p2.y;  // 5 + 0 = 5
+
+    // Test 3: struct literal with all three fields
+    var t3 = Triple { a = 1, b = 2, c = 4 };
+    var sum3 = t3.a + t3.b + t3.c;  // 7
+
+    // Test 4: empty struct literal (all zero)
+    var p4 = Point {};
+    var t4 = p4.x + p4.y;  // 0 + 0 = 0
+
+    // Total: 30 + 5 + 7 + 0 = 42
+    return t1 + t2 + sum3 + t4;
+}

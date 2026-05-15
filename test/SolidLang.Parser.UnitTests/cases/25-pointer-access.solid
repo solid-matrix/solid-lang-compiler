@@ -21,7 +21,9 @@ func test_pointer_access_basic(){
 
 func test_address_access_basic(){
     var pt = Point{x = 3.0, y = 4.0};
-    var py: *f32 = &pt&.y;  // sugar for &((&pt).y) — pointer to pt.y
+    // &. is for methods: p&.method() = (&p).method() — auto-takes &p to match self:*T
+    // For field pointers use & directly: &pt.y
+    var py: *f32 = &pt.y;
 }
 
 func test_chained_pointer_access(){

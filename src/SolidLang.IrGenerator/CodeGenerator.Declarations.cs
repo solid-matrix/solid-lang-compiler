@@ -15,8 +15,9 @@ public sealed partial class CodeGenerator
         var llvmFunc = _functions[func.Symbol];
         _currentFunc = llvmFunc;
 
-        // Clear local variable state for this function
+        // Clear local state for this function
         _variables.Clear();
+        _deferred.Clear();
 
         // Create entry block
         var entryBlock = llvmFunc.AppendBasicBlock("entry");
@@ -38,10 +39,19 @@ public sealed partial class CodeGenerator
         // Generate body statements
         GenerateBlock(func.Body);
 
-        // If the block didn't terminate with a return, add one
+        // If the body didn't terminate with a return, emit deferred and add implicit return
+        // (explicit returns handle their own deferred in GenerateReturn)
         if (func.ReturnType == null || func.ReturnType is PrimitiveType pt && pt.Name == "void")
+        {
+            foreach (var d in _deferred)
+                GenerateStatement(d);
             _builder.BuildRetVoid();
+        }
         else if (!func.Body.Statements.Any(s => s is BoundReturnStmt))
+        {
+            foreach (var d in _deferred)
+                GenerateStatement(d);
             _builder.BuildRet(LLVMValueRef.CreateConstInt(GetLLVMType(func.ReturnType), 0, false));
+        }
     }
 }

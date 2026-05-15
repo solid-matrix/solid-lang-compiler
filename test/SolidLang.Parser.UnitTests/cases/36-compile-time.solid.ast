@@ -8,45 +8,53 @@
    │     └──StructFieldNode [z]
    │        └──PrimitiveTypeNode [F32Keyword]
    ├──ConstDeclNode [VEC3_SIZE]
-   │  └──CtOperatorExprNode [sizeof]
-   │     └──CtOperatorArgsNode
-   │        └──CtOperatorArgNode
-   │           └──NamedTypeNode [Vector3]
+   │  └──PrimaryExprNode
+   │     └──CtOperatorExprNode [sizeof]
+   │        └──CtOperatorArgsNode
+   │           └──CtOperatorArgNode
+   │              └──NamedTypeNode [Vector3]
    ├──ConstDeclNode [VEC3_ALIGN]
-   │  └──CtOperatorExprNode [alignof]
-   │     └──CtOperatorArgsNode
-   │        └──CtOperatorArgNode
-   │           └──NamedTypeNode [Vector3]
+   │  └──PrimaryExprNode
+   │     └──CtOperatorExprNode [alignof]
+   │        └──CtOperatorArgsNode
+   │           └──CtOperatorArgNode
+   │              └──NamedTypeNode [Vector3]
    ├──ConstDeclNode [VEC3_Y_OFFSET]
-   │  └──CtOperatorExprNode [offsetof]
-   │     └──CtOperatorArgsNode
-   │        ├──CtOperatorArgNode
-   │        │  └──NamedTypeNode [Vector3]
-   │        └──CtOperatorArgNode
-   │           └──NamedTypeNode [y]
+   │  └──PrimaryExprNode
+   │     └──CtOperatorExprNode [offsetof]
+   │        └──CtOperatorArgsNode
+   │           ├──CtOperatorArgNode
+   │           │  └──NamedTypeNode [Vector3]
+   │           └──CtOperatorArgNode
+   │              └──NamedTypeNode [y]
    └──FunctionDeclNode [check_build_config]
       └──BodyStmtNode
          ├──IfStmtNode
-         │  ├──CtOperatorExprNode [is_debug]
+         │  ├──PrimaryExprNode
+         │  │  └──CtOperatorExprNode [is_debug]
          │  └──BodyStmtNode
          ├──IfStmtNode
-         │  ├──CtOperatorExprNode [is_release]
+         │  ├──PrimaryExprNode
+         │  │  └──CtOperatorExprNode [is_release]
          │  └──BodyStmtNode
          ├──IfStmtNode
-         │  ├──CtOperatorExprNode [is_os]
-         │  │  └──CtOperatorArgsNode
-         │  │     └──CtOperatorArgNode
-         │  │        └──NamedTypeNode [linux]
+         │  ├──PrimaryExprNode
+         │  │  └──CtOperatorExprNode [is_os]
+         │  │     └──CtOperatorArgsNode
+         │  │        └──CtOperatorArgNode
+         │  │           └──NamedTypeNode [linux]
          │  └──BodyStmtNode
          ├──IfStmtNode
-         │  ├──CtOperatorExprNode [is_arch]
-         │  │  └──CtOperatorArgsNode
-         │  │     └──CtOperatorArgNode
-         │  │        └──NamedTypeNode [x86_64]
+         │  ├──PrimaryExprNode
+         │  │  └──CtOperatorExprNode [is_arch]
+         │  │     └──CtOperatorArgsNode
+         │  │        └──CtOperatorArgNode
+         │  │           └──NamedTypeNode [x86_64]
          │  └──BodyStmtNode
          └──IfStmtNode
-            ├──CtOperatorExprNode [is_endian]
-            │  └──CtOperatorArgsNode
-            │     └──CtOperatorArgNode
-            │        └──NamedTypeNode [little]
+            ├──PrimaryExprNode
+            │  └──CtOperatorExprNode [is_endian]
+            │     └──CtOperatorArgsNode
+            │        └──CtOperatorArgNode
+            │           └──NamedTypeNode [little]
             └──BodyStmtNode

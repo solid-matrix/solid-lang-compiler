@@ -18,10 +18,12 @@
    │  │     └──NamedTypeNode [String]
    │  └──BodyStmtNode
    │     └──ReturnStmtNode
-   │        └──PrimaryExprNode
-   │           └──VariantLiteralNode [Okay]
-   │              ├──NamedTypeNode [Result]
-   │              └──PrimaryExprNode [value]
+   │        └──ScopedAccessExprNode [Okay]
+   │           ├──NamedTypeSpacePrefixNode
+   │           │  └──NamedTypeNode [Result]
+   │           └──CallArgsNode
+   │              └──CallArgNode
+   │                 └──PrimaryExprNode [value]
    ├──FunctionDeclNode [make_fault]
    │  ├──FuncParametersNode
    │  │  └──FuncParameterNode [msg]
@@ -32,10 +34,12 @@
    │  │     └──NamedTypeNode [String]
    │  └──BodyStmtNode
    │     └──ReturnStmtNode
-   │        └──PrimaryExprNode
-   │           └──VariantLiteralNode [Fault]
-   │              ├──NamedTypeNode [Result]
-   │              └──PrimaryExprNode [msg]
+   │        └──ScopedAccessExprNode [Fault]
+   │           ├──NamedTypeSpacePrefixNode
+   │           │  └──NamedTypeNode [Result]
+   │           └──CallArgsNode
+   │              └──CallArgNode
+   │                 └──PrimaryExprNode [msg]
    ├──StructDeclNode [ErrorInfo]
    │  └──StructFieldsNode
    │     ├──StructFieldNode [code]
@@ -49,15 +53,17 @@
       │     └──NamedTypeNode [ErrorInfo]
       └──BodyStmtNode
          └──ReturnStmtNode
-            └──PrimaryExprNode
-               └──VariantLiteralNode [Fault]
-                  ├──NamedTypeNode [Result]
-                  └──PrimaryExprNode
-                     └──StructLiteralNode
-                        ├──NamedTypeNode [ErrorInfo]
-                        ├──StructLiteralFieldNode [code]
-                        │  └──PrimaryExprNode
-                        │     └──IntegerLiteralNode [404]
-                        └──StructLiteralFieldNode [message]
-                           └──PrimaryExprNode
-                              └──StringLiteralNode ["not found"]
+            └──ScopedAccessExprNode [Fault]
+               ├──NamedTypeSpacePrefixNode
+               │  └──NamedTypeNode [Result]
+               └──CallArgsNode
+                  └──CallArgNode
+                     └──PrimaryExprNode
+                        └──StructLiteralNode
+                           ├──NamedTypeNode [ErrorInfo]
+                           ├──StructLiteralFieldNode [code]
+                           │  └──PrimaryExprNode
+                           │     └──IntegerLiteralNode [404]
+                           └──StructLiteralFieldNode [message]
+                              └──PrimaryExprNode
+                                 └──StringLiteralNode ["not found"]

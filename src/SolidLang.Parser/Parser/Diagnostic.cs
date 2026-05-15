@@ -32,10 +32,3 @@ public sealed class Diagnostic
         return $"{prefix}{codePart}: {Message} at {Span}";
     }
 }
-
-public enum DiagnosticSeverity
-{
-    Error,
-    Warning,
-    Info,
-}
