@@ -6,11 +6,11 @@ namespace SolidLang.Parser.Nodes.Expressions;
 public sealed class ScopeAccessNode : PostfixSuffixNode
 {
     public string Name { get; }
-    public CallArgsNode? Arguments { get; }
+    public IReadOnlyList<CallArgNode> Arguments { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
-    public ScopeAccessNode(string name, CallArgsNode? arguments, TextSpan span, string fullText)
+    public ScopeAccessNode(string name, IReadOnlyList<CallArgNode> arguments, TextSpan span, string fullText)
     {
         Name = name;
         Arguments = arguments;
@@ -23,8 +23,8 @@ public sealed class ScopeAccessNode : PostfixSuffixNode
 
     public override IEnumerable<SyntaxNode> GetChildren()
     {
-        if (Arguments != null)
-            yield return Arguments;
+        foreach (var a in Arguments)
+            yield return a;
     }
 
     public override string GetFullText() => _fullText;

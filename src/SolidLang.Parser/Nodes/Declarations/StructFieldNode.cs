@@ -7,13 +7,13 @@ namespace SolidLang.Parser.Nodes.Declarations;
 /// </summary>
 public sealed class StructFieldNode : SyntaxNode
 {
-    public CtAnnotatesNode? Annotations { get; }
+    public IReadOnlyList<CtAnnotateNode> Annotations { get; }
     public string Name { get; }
     public TypeNode Type { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
-    public StructFieldNode(CtAnnotatesNode? annotations, string name, TypeNode type, TextSpan span, string fullText)
+    public StructFieldNode(IReadOnlyList<CtAnnotateNode> annotations, string name, TypeNode type, TextSpan span, string fullText)
     {
         Annotations = annotations;
         Name = name;
@@ -27,8 +27,8 @@ public sealed class StructFieldNode : SyntaxNode
 
     public override IEnumerable<SyntaxNode> GetChildren()
     {
-        if (Annotations != null)
-            yield return Annotations;
+        foreach (var a in Annotations)
+            yield return a;
         yield return Type;
     }
 

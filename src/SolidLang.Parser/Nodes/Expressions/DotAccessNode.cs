@@ -8,11 +8,11 @@ namespace SolidLang.Parser.Nodes.Expressions;
 public sealed class DotAccessNode : PostfixSuffixNode
 {
     public string Name { get; }
-    public TypeArgumentListNode? TypeArguments { get; }
+    public IReadOnlyList<TypeNode> TypeArguments { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
-    public DotAccessNode(string name, TypeArgumentListNode? typeArguments, TextSpan span, string fullText)
+    public DotAccessNode(string name, IReadOnlyList<TypeNode> typeArguments, TextSpan span, string fullText)
     {
         Name = name;
         TypeArguments = typeArguments;
@@ -25,8 +25,8 @@ public sealed class DotAccessNode : PostfixSuffixNode
 
     public override IEnumerable<SyntaxNode> GetChildren()
     {
-        if (TypeArguments != null)
-            yield return TypeArguments;
+        foreach (var t in TypeArguments)
+            yield return t;
     }
 
     public override string GetFullText() => _fullText;

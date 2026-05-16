@@ -78,9 +78,7 @@ internal sealed class BoundTreeBuilder
             UnionDeclNode u => BuildUnion(u),
             VariantDeclNode v => BuildVariant(v),
             InterfaceDeclNode i => BuildInterface(i),
-            VarDeclNode vd => BuildVariable(vd),
-            ConstDeclNode cd => BuildConstOrStatic(cd),
-            StaticDeclNode sd => BuildConstOrStatic(sd),
+            VariableDeclNode vd => BuildVariable(vd),
             _ => null,
         };
     }
@@ -88,12 +86,11 @@ internal sealed class BoundTreeBuilder
     private static bool ShouldSkipPlatform(DeclNode decl)
     {
         var annotations = GetDeclAnnotations(decl);
-        if (annotations == null) return false;
         var isWindows = OperatingSystem.IsWindows();
-        foreach (var a in annotations.Annotations)
+        foreach (var a in annotations)
         {
             var name = a.Name == "os"
-                ? a.Arguments?.Arguments.FirstOrDefault()?.GetFullText()
+                ? a.Arguments.FirstOrDefault()?.GetFullText()
                 : a.Name;
             if ((name == "windows" || a.Name == "if_msvc") && !isWindows) return true;
             if ((name == "unix" || a.Name == "if_not_msvc") && isWindows) return true;
@@ -101,18 +98,16 @@ internal sealed class BoundTreeBuilder
         return false;
     }
 
-    private static CtAnnotatesNode? GetDeclAnnotations(DeclNode decl) => decl switch
+    private static IReadOnlyList<CtAnnotateNode> GetDeclAnnotations(DeclNode decl) => decl switch
     {
         FunctionDeclNode f => f.Annotations,
-        ConstDeclNode c => c.Annotations,
-        StaticDeclNode s => s.Annotations,
         StructDeclNode s => s.Annotations,
         EnumDeclNode e => e.Annotations,
         UnionDeclNode u => u.Annotations,
         VariantDeclNode v => v.Annotations,
         InterfaceDeclNode i => i.Annotations,
-        VarDeclNode v => v.Annotations,
-        _ => null,
+        VariableDeclNode vd => vd.Annotations,
+        _ => Array.Empty<CtAnnotateNode>(),
     };
 
     private BoundFunctionDecl BuildFunction(FunctionDeclNode node)
@@ -121,7 +116,7 @@ internal sealed class BoundTreeBuilder
         var lookupScope = _currentScope;
         if (node.NamedTypePrefix != null)
         {
-            var namedType = node.NamedTypePrefix.NamedType;
+            var namedType = node.NamedTypePrefix;
             var nsSegments = namedType.NamespacePrefix != null
                 ? namedType.NamespacePrefix.Path.Segments.ToList()
                 : new List<string>();
@@ -150,16 +145,13 @@ internal sealed class BoundTreeBuilder
 
         // Build parameter decls
         var parameters = new List<BoundVariableDecl>();
-        if (node.Parameters != null)
+        foreach (var param in node.Parameters)
         {
-            foreach (var param in node.Parameters.Parameters)
-            {
-                var paramSymbol = _currentScope.Lookup(param.Name) as VariableSymbol;
-                var paramType = typeResolver.ResolveType(param.Type);
-                if (paramSymbol != null)
-                    paramSymbol.DeclaredType = paramType;
-                parameters.Add(new BoundVariableDecl(paramSymbol!, paramType, null));
-            }
+            var paramSymbol = _currentScope.Lookup(param.Name) as VariableSymbol;
+            var paramType = typeResolver.ResolveType(param.Type);
+            if (paramSymbol != null)
+                paramSymbol.DeclaredType = paramType;
+            parameters.Add(new BoundVariableDecl(paramSymbol!, paramType, null));
         }
 
         // Build body
@@ -182,7 +174,7 @@ internal sealed class BoundTreeBuilder
 
     private BoundDeclaration BuildEnum(EnumDeclNode node)
     {
-        return BuildTypeDeclaration(node.Name, node, null, node.Fields,
+        return BuildTypeDeclaration(node.Name, node, Array.Empty<GenericParamNode>(), node.Fields,
             (symbol, fields, typeScope) =>
             {
                 var typeResolver = new TypeResolver(_currentScope, _diagnostics);
@@ -220,25 +212,22 @@ internal sealed class BoundTreeBuilder
         var typeResolver = new TypeResolver(_currentScope, _diagnostics);
         var methods = new List<BoundFieldDecl>();
 
-        if (node.Fields != null)
+        foreach (var method in node.Fields)
         {
-            foreach (var method in node.Fields.Fields)
-            {
-                var methodSymbol = _currentScope.Lookup(method.Name) as MemberSymbol;
-                var returnType = method.ReturnType != null
-                    ? typeResolver.ResolveType(method.ReturnType) : null;
-                methods.Add(new BoundFieldDecl(methodSymbol!, returnType));
-            }
+            var methodSymbol = _currentScope.Lookup(method.Name) as MemberSymbol;
+            var returnType = method.ReturnType != null
+                ? typeResolver.ResolveType(method.ReturnType) : null;
+            methods.Add(new BoundFieldDecl(methodSymbol!, returnType));
         }
 
         _currentScope = savedScope;
         return new BoundInterfaceDecl(typeSymbol, methods, typeSymbol.TypeScope);
     }
 
-    private BoundDeclaration BuildTypeDeclaration<TFields>(
+    private BoundDeclaration BuildTypeDeclaration(
         string name, SyntaxNode declNode,
-        GenericParamsNode? genericParams,
-        TFields? fieldsContainer,
+        IReadOnlyList<GenericParamNode> genericParams,
+        IEnumerable<SyntaxNode> fieldNodes,
         Func<TypeSymbol, IReadOnlyList<BoundFieldDecl>, Scope, BoundDeclaration> factory)
     {
         var typeSymbol = _currentScope.LookupRecursive(name) as TypeSymbol;
@@ -250,30 +239,17 @@ internal sealed class BoundTreeBuilder
         var typeResolver = new TypeResolver(_currentScope, _diagnostics);
         var boundFields = new List<BoundFieldDecl>();
 
-        if (fieldsContainer != null)
+        foreach (var field in fieldNodes)
         {
-            // Use reflection-like approach to get Fields collection
-            IReadOnlyList<object> fieldList = fieldsContainer switch
+            BoundFieldDecl? boundField = field switch
             {
-                StructFieldsNode s => new List<object>(s.Fields.Cast<object>()),
-                EnumFieldsNode e => new List<object>(e.Fields.Cast<object>()),
-                UnionFieldsNode u => new List<object>(u.Fields.Cast<object>()),
-                VariantFieldsNode v => new List<object>(v.Fields.Cast<object>()),
-                _ => new List<object>(),
+                StructFieldNode sf => BuildField(sf, typeResolver),
+                EnumFieldNode ef => BuildEnumField(ef, typeResolver),
+                UnionFieldNode uf => BuildUnionField(uf, typeResolver),
+                VariantFieldNode vf => BuildVariantField(vf, typeResolver),
+                _ => null,
             };
-
-            foreach (var field in fieldList)
-            {
-                BoundFieldDecl? boundField = field switch
-                {
-                    StructFieldNode sf => BuildField(sf, typeResolver),
-                    EnumFieldNode ef => BuildEnumField(ef, typeResolver),
-                    UnionFieldNode uf => BuildUnionField(uf, typeResolver),
-                    VariantFieldNode vf => BuildVariantField(vf, typeResolver),
-                    _ => null,
-                };
-                if (boundField != null) boundFields.Add(boundField);
-            }
+            if (boundField != null) boundFields.Add(boundField);
         }
 
         _currentScope = savedScope;
@@ -316,7 +292,7 @@ internal sealed class BoundTreeBuilder
         return new BoundFieldDecl(symbol, fieldType);
     }
 
-    private BoundVariableDecl BuildVariable(VarDeclNode node)
+    private BoundVariableDecl BuildVariable(VariableDeclNode node)
     {
         var symbol = _currentScope.LookupRecursive(node.Name) as VariableSymbol;
         if (symbol == null) return null!;
@@ -326,7 +302,9 @@ internal sealed class BoundTreeBuilder
         if (node.Type != null)
             declaredType = typeResolver.ResolveType(node.Type);
 
-        var initializer = BuildExpression(node.Initializer);
+        BoundExpression? initializer = null;
+        if (node.Initializer != null)
+            initializer = BuildExpression(node.Initializer);
 
         // Type inference: if no explicit type, infer from initializer
         if (declaredType == null && initializer != null)
@@ -335,45 +313,6 @@ internal sealed class BoundTreeBuilder
         symbol.DeclaredType = declaredType;
 
         return new BoundVariableDecl(symbol, declaredType, initializer);
-    }
-
-    private BoundVariableDecl? BuildConstOrStatic(DeclNode node)
-    {
-        string name;
-        SyntaxNode declNode;
-        ExprNode? initializer;
-
-        switch (node)
-        {
-            case ConstDeclNode c:
-                name = c.Name; declNode = c; initializer = c.Initializer; break;
-            case StaticDeclNode s:
-                name = s.Name; declNode = s; initializer = s.Initializer; break;
-            default: return null;
-        }
-
-        var symbol = _currentScope.LookupRecursive(name) as VariableSymbol;
-        if (symbol == null) return null;
-
-        var typeResolver = new TypeResolver(_currentScope, _diagnostics);
-        SolidType? declaredType = null;
-
-        // Get type annotation from const/static declaration
-        if (node is ConstDeclNode cd && cd.Type != null)
-            declaredType = typeResolver.ResolveType(cd.Type);
-        else if (node is StaticDeclNode sd && sd.Type != null)
-            declaredType = typeResolver.ResolveType(sd.Type);
-
-        symbol.DeclaredType = declaredType;
-
-        BoundExpression? init = initializer != null ? BuildExpression(initializer) : null;
-        return new BoundVariableDecl(symbol, declaredType, init);
-    }
-
-    private BoundVariableStmt? BuildConstOrStaticStmt(DeclNode node)
-    {
-        var decl = BuildConstOrStatic(node);
-        return decl != null ? new BoundVariableStmt(decl) : null;
     }
 
     // ========================================
@@ -405,9 +344,7 @@ internal sealed class BoundTreeBuilder
         return stmt switch
         {
             BodyStmtNode body => BuildBody(body),
-            VarDeclNode vd => new BoundVariableStmt(BuildVariable(vd)),
-            ConstDeclNode cd => BuildConstOrStaticStmt(cd),
-            StaticDeclNode sd => BuildConstOrStaticStmt(sd),
+            VariableDeclNode vd => new BoundVariableStmt(BuildVariable(vd)),
             ExprStmtNode es => new BoundExprStmt(BuildExpression(es.Expression)),
             AssignStmtNode assn => new BoundAssignStmt(BuildExpression(assn.Target), assn.Operator, BuildExpression(assn.Value)),
             IfStmtNode ifStmt => BuildIf(ifStmt),
@@ -721,11 +658,8 @@ internal sealed class BoundTreeBuilder
             if (symbol is FunctionSymbol fs)
             {
                 var args = new List<BoundExpression>();
-                if (call.Arguments != null)
-                {
-                    foreach (var arg in call.Arguments.Arguments)
-                        args.Add(BuildExpression(arg.Expression));
-                }
+                foreach (var arg in call.Arguments)
+                    args.Add(BuildExpression(arg.Expression));
 
                 // Target-type null literals from function parameters.
                 // Resolve parameter types if not already set (may happen when the called
@@ -816,9 +750,9 @@ internal sealed class BoundTreeBuilder
         }
 
         // value.into<T>()
-        if (dot.Name == "into" && dot.TypeArguments?.Arguments.Count > 0)
+        if (dot.Name == "into" && dot.TypeArguments.Count > 0)
         {
-            var targetType = typeResolver.ResolveType(dot.TypeArguments.Arguments[0]);
+            var targetType = typeResolver.ResolveType(dot.TypeArguments[0]);
             return new BoundBuiltinCallExpr(BuiltinMethodKind.TypeCast, receiver, targetType, targetType);
         }
 
@@ -859,7 +793,7 @@ internal sealed class BoundTreeBuilder
     {
         if (node.Prefix != null)
         {
-            var namedType = node.Prefix.NamedType;
+            var namedType = node.Prefix;
 
             // Build full namespace path from prefix segments + type name
             var nsSegments = namedType.NamespacePrefix != null
@@ -874,9 +808,7 @@ internal sealed class BoundTreeBuilder
                 var symbol = nsSymbol.NamespaceScope.Lookup(node.Name);
                 if (symbol is FunctionSymbol funcSym)
                 {
-                    var args = node.Arguments != null
-                        ? node.Arguments.Arguments.Select(a => BuildExpression(a.Expression)).ToList()
-                        : new List<BoundExpression>();
+                    var args = node.Arguments.Select(a => BuildExpression(a.Expression)).ToList();
 
                     // Target-type null literals from function parameters.
                     // Resolve parameter types if not already set (may happen when the called
@@ -920,8 +852,8 @@ internal sealed class BoundTreeBuilder
                     {
                         // VariantType::Member(args) parsed as scoped access
                         BoundExpression? value = null;
-                        if (node.Arguments != null && node.Arguments.Arguments.Count > 0)
-                            value = BuildExpression(node.Arguments.Arguments[0].Expression);
+                        if (node.Arguments.Count > 0)
+                            value = BuildExpression(node.Arguments[0].Expression);
                         return new BoundVariantLiteralExpr(typeSymbol, memberSymbol, value);
                     }
                     if (typeSymbol.Kind == SymbolKind.Enum)
@@ -998,9 +930,9 @@ internal sealed class BoundTreeBuilder
 
         if (ctOperator.Arguments != null)
         {
-            for (int i = 0; i < ctOperator.Arguments.Arguments.Count; i++)
+            for (int i = 0; i < ctOperator.Arguments.Count; i++)
             {
-                var arg = ctOperator.Arguments.Arguments[i];
+                var arg = ctOperator.Arguments[i];
                 if (arg.Type != null)
                     typeArg = typeResolver.ResolveType(arg.Type);
                 else if (arg.Expression is PrimaryExprNode p && p.Identifier != null)

@@ -66,6 +66,13 @@ public sealed partial class Parser
             _line++;
             _column = 1;
         }
+        else if (char.IsHighSurrogate(Current) && char.IsLowSurrogate(Peek()))
+        {
+            // Supplementary-plane character (surrogate pair) — count as one column
+            _position += 2;
+            _column++;
+            return;
+        }
         else
         {
             _column++;
@@ -74,13 +81,19 @@ public sealed partial class Parser
     }
 
     /// <summary>
-    /// Advances and returns the consumed character.
+    /// Advances and returns the consumed character (or surrogate pair as a string).
     /// </summary>
-    private char AdvanceAndReturn()
+    private string AdvanceAndReturn()
     {
+        if (char.IsHighSurrogate(Current) && char.IsLowSurrogate(Peek()))
+        {
+            var pair = new string(new[] { Current, Peek() });
+            Advance();
+            return pair;
+        }
         var c = Current;
         Advance();
-        return c;
+        return c.ToString();
     }
 
     /// <summary>
@@ -175,7 +188,8 @@ public sealed partial class Parser
     /// </summary>
     private TextSpan GetCurrentSpan()
     {
-        return new TextSpan(_position, 1);
+        var len = (char.IsHighSurrogate(Current) && char.IsLowSurrogate(Peek())) ? 2 : 1;
+        return new TextSpan(_position, len);
     }
 
     /// <summary>

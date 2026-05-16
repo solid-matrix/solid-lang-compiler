@@ -161,14 +161,14 @@ public sealed partial class Parser
         var name = ScanIdentifier();
 
         // Generic arguments: <T1, T2, ...>
-        TypeArgumentListNode? typeArgs = null;
+        IReadOnlyList<TypeNode> typeArgs = Array.Empty<TypeNode>();
         if (name.Length > 0 && Current == '<')
         {
             _genericDepth++;
             Advance(); // Skip <
             SkipWhitespaceAndComments();
 
-            var args = ParseCommaSeparatedList(ParseType);
+            typeArgs = ParseCommaSeparatedList(ParseType);
 
             SkipWhitespaceAndComments();
             if (Current == '>')
@@ -181,10 +181,6 @@ public sealed partial class Parser
                 _genericDepth = Math.Max(0, _genericDepth - 1);
                 _diagnostics.MissingGreaterThan(GetCurrentSpan());
             }
-
-            var argsSpan = TextSpan.FromBounds(start + name.Length + 1, _position);
-            var argsText = _source.GetText(argsSpan);
-            typeArgs = new TypeArgumentListNode(args, argsSpan, argsText);
         }
 
         var span = GetSpanFrom(start);
@@ -196,9 +192,8 @@ public sealed partial class Parser
     /// Parses type argument list: &lt;T1, T2, ...&gt;
     /// Expects Current to be '&lt;'. Handles &gt;&gt; ambiguity via _genericDepth.
     /// </summary>
-    internal TypeArgumentListNode ParseTypeArgumentList()
+    internal IReadOnlyList<TypeNode> ParseTypeArgumentList()
     {
-        var start = _position;
         _genericDepth++;
         Advance(); // Skip <
         SkipWhitespaceAndComments();
@@ -217,9 +212,7 @@ public sealed partial class Parser
             _diagnostics.MissingGreaterThan(GetCurrentSpan());
         }
 
-        var span = GetSpanFrom(start);
-        var text = _source.GetText(span);
-        return new TypeArgumentListNode(args, span, text);
+        return args;
     }
 
     /// <summary>
@@ -285,7 +278,7 @@ public sealed partial class Parser
         SkipWhitespaceAndComments();
 
         // Generic arguments: <T1, T2, ...>
-        TypeArgumentListNode? typeArgs = null;
+        IReadOnlyList<TypeNode> typeArgs = Array.Empty<TypeNode>();
         if (name.Length > 0 && Current == '<')
         {
             // ========================================
@@ -296,7 +289,7 @@ public sealed partial class Parser
             Advance(); // Skip <
             SkipWhitespaceAndComments();
 
-            var args = ParseCommaSeparatedList(ParseType);
+            typeArgs = ParseCommaSeparatedList(ParseType);
 
             // Handle closing >
             // In generic context, >> is treated as two > tokens
@@ -311,10 +304,6 @@ public sealed partial class Parser
                 _genericDepth = Math.Max(0, _genericDepth - 1);
                 _diagnostics.MissingGreaterThan(GetCurrentSpan());
             }
-
-            var argsSpan = TextSpan.FromBounds(start + name.Length + 1, _position);
-            var argsText = _source.GetText(argsSpan);
-            typeArgs = new TypeArgumentListNode(args, argsSpan, argsText);
         }
 
         var span = GetSpanFrom(start);

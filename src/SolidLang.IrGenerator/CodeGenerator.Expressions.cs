@@ -437,7 +437,7 @@ public sealed partial class CodeGenerator
 
         // Check for @flags annotation on the enum declaration
         var isFlags = expr.EnumType.Declaration is SolidLang.Parser.Nodes.Declarations.EnumDeclNode enumDecl
-            && enumDecl.Annotations?.Annotations.Any(a => a.Name == "flags") == true;
+            && enumDecl.Annotations.Any(a => a.Name == "flags");
 
         // Extract discriminant from the enum field declaration
         if (expr.Member.Declaration is SolidLang.Parser.Nodes.Declarations.EnumFieldNode enumField

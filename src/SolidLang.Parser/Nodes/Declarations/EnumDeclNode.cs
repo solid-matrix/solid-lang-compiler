@@ -7,20 +7,18 @@ namespace SolidLang.Parser.Nodes.Declarations;
 /// </summary>
 public sealed class EnumDeclNode : DeclNode
 {
-    public CtAnnotatesNode? Annotations { get; }
+    public IReadOnlyList<CtAnnotateNode> Annotations { get; }
     public string Name { get; }
     public Types.TypeNode? UnderlyingType { get; }
-    public EnumFieldsNode? Fields { get; }
-    public bool IsForwardDecl { get; }
+    public IReadOnlyList<EnumFieldNode> Fields { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
     public EnumDeclNode(
-        CtAnnotatesNode? annotations,
+        IReadOnlyList<CtAnnotateNode> annotations,
         string name,
         Types.TypeNode? underlyingType,
-        EnumFieldsNode? fields,
-        bool isForwardDecl,
+        IReadOnlyList<EnumFieldNode> fields,
         TextSpan span,
         string fullText)
     {
@@ -28,7 +26,6 @@ public sealed class EnumDeclNode : DeclNode
         Name = name;
         UnderlyingType = underlyingType;
         Fields = fields;
-        IsForwardDecl = isForwardDecl;
         _span = span;
         _fullText = fullText;
     }
@@ -38,12 +35,12 @@ public sealed class EnumDeclNode : DeclNode
 
     public override IEnumerable<SyntaxNode> GetChildren()
     {
-        if (Annotations != null)
-            yield return Annotations;
+        foreach (var a in Annotations)
+            yield return a;
         if (UnderlyingType != null)
             yield return UnderlyingType;
-        if (Fields != null)
-            yield return Fields;
+        foreach (var f in Fields)
+            yield return f;
     }
 
     public override string GetFullText() => _fullText;

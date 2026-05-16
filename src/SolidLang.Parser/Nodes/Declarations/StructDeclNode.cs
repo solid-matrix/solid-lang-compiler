@@ -7,22 +7,20 @@ namespace SolidLang.Parser.Nodes.Declarations;
 /// </summary>
 public sealed class StructDeclNode : DeclNode
 {
-    public CtAnnotatesNode? Annotations { get; }
+    public IReadOnlyList<CtAnnotateNode> Annotations { get; }
     public string Name { get; }
-    public GenericParamsNode? GenericParams { get; }
-    public WhereClausesNode? WhereClauses { get; }
-    public StructFieldsNode? Fields { get; }
-    public bool IsForwardDecl { get; }
+    public IReadOnlyList<GenericParamNode> GenericParams { get; }
+    public IReadOnlyList<WhereClauseNode> WhereClauses { get; }
+    public IReadOnlyList<StructFieldNode> Fields { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
     public StructDeclNode(
-        CtAnnotatesNode? annotations,
+        IReadOnlyList<CtAnnotateNode> annotations,
         string name,
-        GenericParamsNode? genericParams,
-        WhereClausesNode? whereClauses,
-        StructFieldsNode? fields,
-        bool isForwardDecl,
+        IReadOnlyList<GenericParamNode> genericParams,
+        IReadOnlyList<WhereClauseNode> whereClauses,
+        IReadOnlyList<StructFieldNode> fields,
         TextSpan span,
         string fullText)
     {
@@ -31,7 +29,6 @@ public sealed class StructDeclNode : DeclNode
         GenericParams = genericParams;
         WhereClauses = whereClauses;
         Fields = fields;
-        IsForwardDecl = isForwardDecl;
         _span = span;
         _fullText = fullText;
     }
@@ -41,14 +38,14 @@ public sealed class StructDeclNode : DeclNode
 
     public override IEnumerable<SyntaxNode> GetChildren()
     {
-        if (Annotations != null)
-            yield return Annotations;
-        if (GenericParams != null)
-            yield return GenericParams;
-        if (WhereClauses != null)
-            yield return WhereClauses;
-        if (Fields != null)
-            yield return Fields;
+        foreach (var a in Annotations)
+            yield return a;
+        foreach (var p in GenericParams)
+            yield return p;
+        foreach (var w in WhereClauses)
+            yield return w;
+        foreach (var f in Fields)
+            yield return f;
     }
 
     public override string GetFullText() => _fullText;

@@ -147,9 +147,7 @@ public enum SyntaxKind
     // Declarations (声明节点)
     NamespaceDeclNode,
     UsingDeclNode,
-    ConstDeclNode,
-    StaticDeclNode,
-    VarDeclNode,
+    VariableDeclNode,
     StructDeclNode,
     UnionDeclNode,
     EnumDeclNode,
@@ -160,32 +158,20 @@ public enum SyntaxKind
     // Declaration Components
     NamespacePathNode,
     NamespacePrefixNode,
-    NamedTypeSpacePrefixNode,
-    GenericParamsNode,
     GenericParamNode,
-    WhereClausesNode,
     WhereClauseNode,
-    CtAnnotatesNode,
     CtAnnotateNode,
-    CtAnnotateArgsNode,
     CtAnnotateArgNode,
     CtOperatorExprNode,
-    CtOperatorArgsNode,
     CtOperatorArgNode,
     CallConventionNode,
-    FuncParametersNode,
     FuncParameterNode,
 
-    // Struct/Union/Enum/Variant Fields
-    StructFieldsNode,
+    // Struct/Union/Enum/Variant/Interface Fields
     StructFieldNode,
-    UnionFieldsNode,
     UnionFieldNode,
-    EnumFieldsNode,
     EnumFieldNode,
-    VariantFieldsNode,
     VariantFieldNode,
-    InterfaceFieldsNode,
     InterfaceFieldNode,
 
     // Statements (语句节点)
@@ -238,7 +224,6 @@ public enum SyntaxKind
     PointerAccessNode,       // *.member  (sugar for (*expr).member)
     AddressAccessNode,       // &.member  (sugar for (&expr).member)
     ScopedAccessExprNode,
-    CallArgsNode,
     CallArgNode,
 
     // Types (类型节点)
@@ -251,7 +236,6 @@ public enum SyntaxKind
     PointerTypeNode,
     FuncPointerTypeNode,
     NamedTypeNode,
-    TypeArgumentListNode,
 
     // Literals (字面量节点)
     IntegerLiteralNode,

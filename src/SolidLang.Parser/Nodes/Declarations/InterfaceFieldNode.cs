@@ -7,19 +7,19 @@ namespace SolidLang.Parser.Nodes.Declarations;
 /// </summary>
 public sealed class InterfaceFieldNode : SyntaxNode
 {
-    public CtAnnotatesNode? Annotations { get; }
+    public IReadOnlyList<CtAnnotateNode> Annotations { get; }
     public string Name { get; }
-    public GenericParamsNode? GenericParams { get; }
-    public FuncParametersNode? Parameters { get; }
+    public IReadOnlyList<GenericParamNode> GenericParams { get; }
+    public IReadOnlyList<FuncParameterNode> Parameters { get; }
     public Types.TypeNode? ReturnType { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
     public InterfaceFieldNode(
-        CtAnnotatesNode? annotations,
+        IReadOnlyList<CtAnnotateNode> annotations,
         string name,
-        GenericParamsNode? genericParams,
-        FuncParametersNode? parameters,
+        IReadOnlyList<GenericParamNode> genericParams,
+        IReadOnlyList<FuncParameterNode> parameters,
         Types.TypeNode? returnType,
         TextSpan span,
         string fullText)
@@ -38,12 +38,12 @@ public sealed class InterfaceFieldNode : SyntaxNode
 
     public override IEnumerable<SyntaxNode> GetChildren()
     {
-        if (Annotations != null)
-            yield return Annotations;
-        if (GenericParams != null)
-            yield return GenericParams;
-        if (Parameters != null)
-            yield return Parameters;
+        foreach (var a in Annotations)
+            yield return a;
+        foreach (var p in GenericParams)
+            yield return p;
+        foreach (var p in Parameters)
+            yield return p;
         if (ReturnType != null)
             yield return ReturnType;
     }

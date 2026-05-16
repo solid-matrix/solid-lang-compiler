@@ -7,14 +7,14 @@ public sealed class NamedTypeNode : TypeNode
 {
     public Declarations.NamespacePrefixNode? NamespacePrefix { get; }
     public string Name { get; }
-    public TypeArgumentListNode? TypeArguments { get; }
+    public IReadOnlyList<TypeNode> TypeArguments { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
     public NamedTypeNode(
         Declarations.NamespacePrefixNode? namespacePrefix,
         string name,
-        TypeArgumentListNode? typeArguments,
+        IReadOnlyList<TypeNode> typeArguments,
         TextSpan span,
         string fullText)
     {
@@ -32,8 +32,8 @@ public sealed class NamedTypeNode : TypeNode
     {
         if (NamespacePrefix != null)
             yield return NamespacePrefix;
-        if (TypeArguments != null)
-            yield return TypeArguments;
+        foreach (var t in TypeArguments)
+            yield return t;
     }
 
     public override string GetFullText() => _fullText;

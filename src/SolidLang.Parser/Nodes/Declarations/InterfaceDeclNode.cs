@@ -7,20 +7,20 @@ namespace SolidLang.Parser.Nodes.Declarations;
 /// </summary>
 public sealed class InterfaceDeclNode : DeclNode
 {
-    public CtAnnotatesNode? Annotations { get; }
+    public IReadOnlyList<CtAnnotateNode> Annotations { get; }
     public string Name { get; }
-    public GenericParamsNode? GenericParams { get; }
-    public WhereClausesNode? WhereClauses { get; }
-    public InterfaceFieldsNode? Fields { get; }
+    public IReadOnlyList<GenericParamNode> GenericParams { get; }
+    public IReadOnlyList<WhereClauseNode> WhereClauses { get; }
+    public IReadOnlyList<InterfaceFieldNode> Fields { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
     public InterfaceDeclNode(
-        CtAnnotatesNode? annotations,
+        IReadOnlyList<CtAnnotateNode> annotations,
         string name,
-        GenericParamsNode? genericParams,
-        WhereClausesNode? whereClauses,
-        InterfaceFieldsNode? fields,
+        IReadOnlyList<GenericParamNode> genericParams,
+        IReadOnlyList<WhereClauseNode> whereClauses,
+        IReadOnlyList<InterfaceFieldNode> fields,
         TextSpan span,
         string fullText)
     {
@@ -38,14 +38,14 @@ public sealed class InterfaceDeclNode : DeclNode
 
     public override IEnumerable<SyntaxNode> GetChildren()
     {
-        if (Annotations != null)
-            yield return Annotations;
-        if (GenericParams != null)
-            yield return GenericParams;
-        if (WhereClauses != null)
-            yield return WhereClauses;
-        if (Fields != null)
-            yield return Fields;
+        foreach (var a in Annotations)
+            yield return a;
+        foreach (var p in GenericParams)
+            yield return p;
+        foreach (var w in WhereClauses)
+            yield return w;
+        foreach (var f in Fields)
+            yield return f;
     }
 
     public override string GetFullText() => _fullText;

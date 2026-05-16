@@ -69,19 +69,19 @@ public sealed partial class Parser
         if (LookAheadKeyword("var"))
         {
             var annotations = ParseAnnotations();
-            return ParseVarDecl(annotations, start);
+            return ParseVariableDecl(annotations, start, SyntaxKind.VarKeyword);
         }
 
         if (LookAheadKeyword("const"))
         {
             var annotations = ParseAnnotations();
-            return ParseConstDecl(annotations, start);
+            return ParseVariableDecl(annotations, start, SyntaxKind.ConstKeyword);
         }
 
         if (LookAheadKeyword("static"))
         {
             var annotations = ParseAnnotations();
-            return ParseStaticDecl(annotations, start);
+            return ParseVariableDecl(annotations, start, SyntaxKind.StaticKeyword);
         }
 
         // Expression statement or assignment

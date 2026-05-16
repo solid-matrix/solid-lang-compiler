@@ -1,4 +1,3 @@
-using SolidLang.Parser.Nodes.Declarations;
 using SolidLang.Parser.Nodes.Types;
 
 namespace SolidLang.Parser.Nodes.Expressions;
@@ -10,14 +9,14 @@ namespace SolidLang.Parser.Nodes.Expressions;
 /// </summary>
 public sealed class ScopedAccessExprNode : ExprNode
 {
-    public NamedTypeSpacePrefixNode? Prefix { get; }
+    public NamedTypeNode? Prefix { get; }
     public string Name { get; }
-    public CallArgsNode? Arguments { get; }
-    public TypeArgumentListNode? TypeArguments { get; }
+    public IReadOnlyList<CallArgNode> Arguments { get; }
+    public IReadOnlyList<TypeNode> TypeArguments { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
-    public ScopedAccessExprNode(NamedTypeSpacePrefixNode? prefix, string name, CallArgsNode? arguments, TypeArgumentListNode? typeArguments, TextSpan span, string fullText)
+    public ScopedAccessExprNode(NamedTypeNode? prefix, string name, IReadOnlyList<CallArgNode> arguments, IReadOnlyList<TypeNode> typeArguments, TextSpan span, string fullText)
     {
         Prefix = prefix;
         Name = name;
@@ -34,10 +33,10 @@ public sealed class ScopedAccessExprNode : ExprNode
     {
         if (Prefix != null)
             yield return Prefix;
-        if (TypeArguments != null)
-            yield return TypeArguments;
-        if (Arguments != null)
-            yield return Arguments;
+        foreach (var t in TypeArguments)
+            yield return t;
+        foreach (var a in Arguments)
+            yield return a;
     }
 
     public override string GetFullText() => _fullText;

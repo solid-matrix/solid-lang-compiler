@@ -221,34 +221,34 @@ public class ParserTests
         var funcs = program.Declarations.OfType<FunctionDeclNode>().ToList();
 
         var malloc = funcs.First(f => f.Name == "malloc");
-        Assert.True(malloc.IsForwardDecl);
+        Assert.Null(malloc.Body);
         Assert.NotNull(malloc.Annotations);
         Assert.NotNull(malloc.CallingConvention);
         Assert.Equal(SyntaxKind.CDeclKeyword, malloc.CallingConvention!.Convention);
 
         var createWindow = funcs.First(f => f.Name == "create_window");
-        Assert.True(createWindow.IsForwardDecl);
+        Assert.Null(createWindow.Body);
         Assert.NotNull(createWindow.CallingConvention);
         Assert.Equal(SyntaxKind.StdCallKeyword, createWindow.CallingConvention!.Convention);
 
-        var add = funcs.First(f => f.Name == "add" && f.NamedTypePrefix == null && f.WhereClauses == null);
-        Assert.False(add.IsForwardDecl);
+        var add = funcs.First(f => f.Name == "add" && f.NamedTypePrefix == null && f.WhereClauses.Count == 0);
+        Assert.NotNull(add.Body);
         Assert.NotNull(add.Body);
         Assert.NotNull(add.Parameters);
-        Assert.Equal(2, add.Parameters!.Parameters.Count);
+        Assert.Equal(2, add.Parameters.Count);
 
         var getSize = funcs.First(f => f.Name == "get_size");
         Assert.NotNull(getSize.GenericParams);
-        Assert.Single(getSize.GenericParams!.Parameters);
+        Assert.Single(getSize.GenericParams);
 
-        var flat = funcs.First(f => f.Name == "flat" && f.GenericParams != null);
+        var flat = funcs.First(f => f.Name == "flat" && f.GenericParams.Count > 0);
         Assert.NotNull(flat.Parameters);
-        Assert.Single(flat.Parameters!.Parameters);
+        Assert.Single(flat.Parameters);
 
         var main = funcs.Last(f => f.Name == "main");
         Assert.NotNull(main.Parameters);
-        Assert.Single(main.Parameters!.Parameters);
-        Assert.Equal("args", main.Parameters.Parameters[0].Name);
+        Assert.Single(main.Parameters);
+        Assert.Equal("args", main.Parameters[0].Name);
 
         var recursive = funcs.First(f => f.Name == "resursive");
         Assert.NotNull(recursive.Body);
@@ -257,12 +257,12 @@ public class ParserTests
         Assert.NotNull(vecAdd2);
         Assert.NotNull(vecAdd2.Body);
 
-        var vecAddT = funcs.FirstOrDefault(f => f.Name == "add" && f.NamedTypePrefix != null && f.WhereClauses != null);
+        var vecAddT = funcs.FirstOrDefault(f => f.Name == "add" && f.NamedTypePrefix != null && f.WhereClauses.Count > 0);
         Assert.NotNull(vecAddT);
         Assert.NotNull(vecAddT.NamedTypePrefix);
         Assert.NotNull(vecAddT.WhereClauses);
-        Assert.Single(vecAddT.WhereClauses!.Clauses);
-        Assert.Equal("T", vecAddT.WhereClauses.Clauses[0].TypeParamName);
+        Assert.Single(vecAddT.WhereClauses);
+        Assert.Equal("T", vecAddT.WhereClauses[0].TypeParamName);
     }
 
     // ========================================

@@ -4,21 +4,31 @@ using SolidLang.Parser.Nodes.Types;
 namespace SolidLang.Parser.Nodes.Declarations;
 
 /// <summary>
-/// Represents a constant declaration: const [Type::]name: type = expr;
+/// Represents a variable declaration: var/const/static [Type::]name: type = expr;
 /// </summary>
-public sealed class ConstDeclNode : DeclNode
+public sealed class VariableDeclNode : DeclNode
 {
-    public CtAnnotatesNode? Annotations { get; }
-    public NamedTypeSpacePrefixNode? NamedTypePrefix { get; }
+    public IReadOnlyList<CtAnnotateNode> Annotations { get; }
+    public SyntaxKind Keyword { get; }
+    public NamedTypeNode? NamedTypePrefix { get; }
     public string Name { get; }
     public TypeNode? Type { get; }
     public ExprNode? Initializer { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
-    public ConstDeclNode(CtAnnotatesNode? annotations, NamedTypeSpacePrefixNode? namedTypePrefix, string name, TypeNode? type, ExprNode? initializer, TextSpan span, string fullText)
+    public VariableDeclNode(
+        IReadOnlyList<CtAnnotateNode> annotations,
+        SyntaxKind keyword,
+        NamedTypeNode? namedTypePrefix,
+        string name,
+        TypeNode? type,
+        ExprNode? initializer,
+        TextSpan span,
+        string fullText)
     {
         Annotations = annotations;
+        Keyword = keyword;
         NamedTypePrefix = namedTypePrefix;
         Name = name;
         Type = type;
@@ -27,13 +37,13 @@ public sealed class ConstDeclNode : DeclNode
         _fullText = fullText;
     }
 
-    public override SyntaxKind Kind => SyntaxKind.ConstDeclNode;
+    public override SyntaxKind Kind => SyntaxKind.VariableDeclNode;
     public override TextSpan Span => _span;
 
     public override IEnumerable<SyntaxNode> GetChildren()
     {
-        if (Annotations != null)
-            yield return Annotations;
+        foreach (var a in Annotations)
+            yield return a;
         if (NamedTypePrefix != null)
             yield return NamedTypePrefix;
         if (Type != null)
@@ -46,6 +56,6 @@ public sealed class ConstDeclNode : DeclNode
 
     protected override void WriteAdditionalInfo(TextWriter writer)
     {
-        writer.Write($" [{Name}]");
+        writer.Write($" [{Keyword} {Name}]");
     }
 }

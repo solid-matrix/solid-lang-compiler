@@ -5,11 +5,11 @@ namespace SolidLang.Parser.Nodes.Expressions;
 /// </summary>
 public sealed class CallExprNode : PostfixSuffixNode
 {
-    public CallArgsNode? Arguments { get; }
+    public IReadOnlyList<CallArgNode> Arguments { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
-    public CallExprNode(CallArgsNode? arguments, TextSpan span, string fullText)
+    public CallExprNode(IReadOnlyList<CallArgNode> arguments, TextSpan span, string fullText)
     {
         Arguments = arguments;
         _span = span;
@@ -21,8 +21,8 @@ public sealed class CallExprNode : PostfixSuffixNode
 
     public override IEnumerable<SyntaxNode> GetChildren()
     {
-        if (Arguments != null)
-            yield return Arguments;
+        foreach (var a in Arguments)
+            yield return a;
     }
 
     public override string GetFullText() => _fullText;

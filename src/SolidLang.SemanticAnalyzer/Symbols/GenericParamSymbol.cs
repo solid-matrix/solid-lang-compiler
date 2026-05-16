@@ -10,7 +10,7 @@ public sealed class GenericParamSymbol : Symbol
 {
     public override SymbolKind Kind => SymbolKind.GenericParam;
     public override string Name { get; }
-    public override SyntaxNode Declaration { get; }
+    public override SyntaxNode Declaration { get; internal set; }
 
     public GenericParamSymbol(string name, GenericParamNode declaration)
     {

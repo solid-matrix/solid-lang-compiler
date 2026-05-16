@@ -6,11 +6,11 @@ namespace SolidLang.Parser.Nodes.Declarations;
 public sealed class CtAnnotateNode : SyntaxNode
 {
     public string Name { get; }
-    public CtAnnotateArgsNode? Arguments { get; }
+    public IReadOnlyList<CtAnnotateArgNode> Arguments { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
-    public CtAnnotateNode(string name, CtAnnotateArgsNode? arguments, TextSpan span, string fullText)
+    public CtAnnotateNode(string name, IReadOnlyList<CtAnnotateArgNode> arguments, TextSpan span, string fullText)
     {
         Name = name;
         Arguments = arguments;
@@ -23,8 +23,8 @@ public sealed class CtAnnotateNode : SyntaxNode
 
     public override IEnumerable<SyntaxNode> GetChildren()
     {
-        if (Arguments != null)
-            yield return Arguments;
+        foreach (var a in Arguments)
+            yield return a;
     }
 
     public override string GetFullText() => _fullText;

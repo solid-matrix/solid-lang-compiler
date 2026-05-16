@@ -9,7 +9,7 @@ public sealed class MemberSymbol : Symbol
 {
     public override SymbolKind Kind { get; }
     public override string Name { get; }
-    public override SyntaxNode Declaration { get; }
+    public override SyntaxNode Declaration { get; internal set; }
 
     /// <summary>
     /// The type of this member: field type, enum discriminant type, variant payload type,

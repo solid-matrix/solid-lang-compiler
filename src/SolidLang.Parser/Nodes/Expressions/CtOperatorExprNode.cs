@@ -6,11 +6,11 @@ namespace SolidLang.Parser.Nodes.Expressions;
 public sealed class CtOperatorExprNode : ExprNode
 {
     public string Name { get; }
-    public CtOperatorArgsNode? Arguments { get; }
+    public IReadOnlyList<CtOperatorArgNode> Arguments { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
-    public CtOperatorExprNode(string name, CtOperatorArgsNode? arguments, TextSpan span, string fullText)
+    public CtOperatorExprNode(string name, IReadOnlyList<CtOperatorArgNode> arguments, TextSpan span, string fullText)
     {
         Name = name;
         Arguments = arguments;
@@ -23,8 +23,8 @@ public sealed class CtOperatorExprNode : ExprNode
 
     public override IEnumerable<SyntaxNode> GetChildren()
     {
-        if (Arguments != null)
-            yield return Arguments;
+        foreach (var a in Arguments)
+            yield return a;
     }
 
     public override string GetFullText() => _fullText;

@@ -3,6 +3,7 @@ using SolidLang.Parser.Nodes;
 using SolidLang.Parser.Nodes.Declarations;
 using SolidLang.Parser.Nodes.Expressions;
 using SolidLang.Parser.Nodes.Statements;
+using SolidLang.Parser.Nodes.Types;
 using SolidLang.Parser.Parser;
 
 namespace SolidLang.SemanticAnalyzer;
@@ -151,9 +152,7 @@ internal sealed class SymbolBuilderPass
             case UnionDeclNode un: WalkUnion(un); break;
             case VariantDeclNode vr: WalkVariant(vr); break;
             case InterfaceDeclNode iface: WalkInterface(iface); break;
-            case VarDeclNode vd: WalkVariable(vd); break;
-            case ConstDeclNode cd: WalkConstOrStatic(cd); break;
-            case StaticDeclNode sd: WalkConstOrStatic(sd); break;
+            case VariableDeclNode vd: WalkVariable(vd); break;
             case BadDeclNode: break; // Skip error recovery nodes
         }
     }
@@ -168,7 +167,7 @@ internal sealed class SymbolBuilderPass
         Scope? targetScope = null;
         if (node.NamedTypePrefix != null)
         {
-            var namedType = node.NamedTypePrefix.NamedType;
+            var namedType = node.NamedTypePrefix;
 
             // First, try as type (for Struct::method out-of-line members)
             var typeSymbol = _currentScope.LookupRecursive(namedType.Name) as TypeSymbol;
@@ -198,9 +197,9 @@ internal sealed class SymbolBuilderPass
         FunctionSymbol funcSymbol;
         var skipRegistration = false;
 
-        if (existing is FunctionSymbol fs && fs.IsForwardDecl)
+        if (existing is FunctionSymbol fs && ((FunctionDeclNode)fs.Declaration).Body == null)
         {
-            fs.IsForwardDecl = false;
+            fs.SetDeclaration(node);
             fs.ImportName ??= ExtractImportName(node.Annotations);
             fs.IsIntrinsic = isIntrinsic || fs.IsIntrinsic;
             funcSymbol = fs;
@@ -210,7 +209,7 @@ internal sealed class SymbolBuilderPass
             // Allow duplicate names for @intrinsic functions (overloading by param type)
             if (isIntrinsic && existing is FunctionSymbol existingFs && existingFs.IsIntrinsic)
             {
-                funcSymbol = new FunctionSymbol(node.Name, node, node.IsForwardDecl, isIntrinsic: true);
+                funcSymbol = new FunctionSymbol(node.Name, node, isIntrinsic: true);
                 skipRegistration = true;
             }
             else
@@ -221,7 +220,7 @@ internal sealed class SymbolBuilderPass
         }
         else
         {
-            funcSymbol = new FunctionSymbol(node.Name, node, node.IsForwardDecl, isIntrinsic: isIntrinsic);
+            funcSymbol = new FunctionSymbol(node.Name, node, isIntrinsic: isIntrinsic);
             actualScope.Declare(funcSymbol);
         }
 
@@ -240,25 +239,19 @@ internal sealed class SymbolBuilderPass
         _currentScope = funcScope;
 
         // Register generic params in function scope
-        if (node.GenericParams != null)
+        foreach (var gp in node.GenericParams)
         {
-            foreach (var gp in node.GenericParams.Parameters)
-            {
-                var gpSymbol = new GenericParamSymbol(gp.Name, gp);
-                _currentScope.Declare(gpSymbol);
-            }
+            var gpSymbol = new GenericParamSymbol(gp.Name, gp);
+            _currentScope.Declare(gpSymbol);
         }
 
         // Register parameters in function scope
         var paramSymbols = new List<VariableSymbol>();
-        if (node.Parameters != null)
+        foreach (var param in node.Parameters)
         {
-            foreach (var param in node.Parameters.Parameters)
-            {
-                var paramSymbol = new VariableSymbol(SymbolKind.Parameter, param.Name, param);
-                _currentScope.Declare(paramSymbol);
-                paramSymbols.Add(paramSymbol);
-            }
+            var paramSymbol = new VariableSymbol(SymbolKind.Parameter, param.Name, param);
+            _currentScope.Declare(paramSymbol);
+            paramSymbols.Add(paramSymbol);
         }
         funcSymbol.Parameters = paramSymbols;
 
@@ -277,10 +270,10 @@ internal sealed class SymbolBuilderPass
 
     private void WalkStruct(StructDeclNode node)
     {
-        var typeSymbol = RegisterTypeDeclaration(node.Name, node, SymbolKind.Struct, node.IsForwardDecl);
+        var typeSymbol = RegisterTypeDeclaration(node.Name, node, SymbolKind.Struct, node.Fields.Count == 0);
         if (typeSymbol == null) return;
 
-        if (node.Fields != null && !node.IsForwardDecl)
+        if (node.Fields.Count > 0)
         {
             var typeScope = new Scope(ScopeKind.Type, _currentScope, node);
             _scopeMap[node] = typeScope;
@@ -292,12 +285,12 @@ internal sealed class SymbolBuilderPass
             // Register generic params
             if (node.GenericParams != null)
             {
-                foreach (var gp in node.GenericParams.Parameters)
+                foreach (var gp in node.GenericParams)
                     _currentScope.Declare(new GenericParamSymbol(gp.Name, gp));
             }
 
             // Register fields
-            foreach (var field in node.Fields.Fields)
+            foreach (var field in node.Fields)
             {
                 var memberSymbol = new MemberSymbol(SymbolKind.StructField, field.Name, field);
                 _currentScope.Declare(memberSymbol);
@@ -313,10 +306,10 @@ internal sealed class SymbolBuilderPass
 
     private void WalkEnum(EnumDeclNode node)
     {
-        var typeSymbol = RegisterTypeDeclaration(node.Name, node, SymbolKind.Enum, node.IsForwardDecl);
+        var typeSymbol = RegisterTypeDeclaration(node.Name, node, SymbolKind.Enum, node.Fields.Count == 0);
         if (typeSymbol == null) return;
 
-        if (node.Fields != null && !node.IsForwardDecl)
+        if (node.Fields.Count > 0)
         {
             var typeScope = new Scope(ScopeKind.Type, _currentScope, node);
             _scopeMap[node] = typeScope;
@@ -325,7 +318,7 @@ internal sealed class SymbolBuilderPass
             var savedScope = _currentScope;
             _currentScope = typeScope;
 
-            foreach (var field in node.Fields.Fields)
+            foreach (var field in node.Fields)
             {
                 var memberSymbol = new MemberSymbol(SymbolKind.EnumField, field.Name, field);
                 _currentScope.Declare(memberSymbol);
@@ -341,10 +334,10 @@ internal sealed class SymbolBuilderPass
 
     private void WalkUnion(UnionDeclNode node)
     {
-        var typeSymbol = RegisterTypeDeclaration(node.Name, node, SymbolKind.Union, node.IsForwardDecl);
+        var typeSymbol = RegisterTypeDeclaration(node.Name, node, SymbolKind.Union, node.Fields.Count == 0);
         if (typeSymbol == null) return;
 
-        if (node.Fields != null && !node.IsForwardDecl)
+        if (node.Fields.Count > 0)
         {
             var typeScope = new Scope(ScopeKind.Type, _currentScope, node);
             _scopeMap[node] = typeScope;
@@ -355,11 +348,11 @@ internal sealed class SymbolBuilderPass
 
             if (node.GenericParams != null)
             {
-                foreach (var gp in node.GenericParams.Parameters)
+                foreach (var gp in node.GenericParams)
                     _currentScope.Declare(new GenericParamSymbol(gp.Name, gp));
             }
 
-            foreach (var field in node.Fields.Fields)
+            foreach (var field in node.Fields)
             {
                 var memberSymbol = new MemberSymbol(SymbolKind.UnionField, field.Name, field);
                 _currentScope.Declare(memberSymbol);
@@ -375,10 +368,10 @@ internal sealed class SymbolBuilderPass
 
     private void WalkVariant(VariantDeclNode node)
     {
-        var typeSymbol = RegisterTypeDeclaration(node.Name, node, SymbolKind.Variant, node.IsForwardDecl);
+        var typeSymbol = RegisterTypeDeclaration(node.Name, node, SymbolKind.Variant, node.Fields.Count == 0);
         if (typeSymbol == null) return;
 
-        if (node.Fields != null && !node.IsForwardDecl)
+        if (node.Fields.Count > 0)
         {
             var typeScope = new Scope(ScopeKind.Type, _currentScope, node);
             _scopeMap[node] = typeScope;
@@ -389,11 +382,11 @@ internal sealed class SymbolBuilderPass
 
             if (node.GenericParams != null)
             {
-                foreach (var gp in node.GenericParams.Parameters)
+                foreach (var gp in node.GenericParams)
                     _currentScope.Declare(new GenericParamSymbol(gp.Name, gp));
             }
 
-            foreach (var field in node.Fields.Fields)
+            foreach (var field in node.Fields)
             {
                 var memberSymbol = new MemberSymbol(SymbolKind.VariantField, field.Name, field);
                 _currentScope.Declare(memberSymbol);
@@ -412,82 +405,60 @@ internal sealed class SymbolBuilderPass
         var typeSymbol = RegisterTypeDeclaration(node.Name, node, SymbolKind.Interface, false);
         if (typeSymbol == null) return;
 
-        if (node.Fields != null)
+        var typeScope = new Scope(ScopeKind.Type, _currentScope, node);
+        _scopeMap[node] = typeScope;
+        typeSymbol.TypeScope = typeScope;
+
+        var savedScope = _currentScope;
+        _currentScope = typeScope;
+
+        foreach (var gp in node.GenericParams)
+            _currentScope.Declare(new GenericParamSymbol(gp.Name, gp));
+
+        foreach (var method in node.Fields)
         {
-            var typeScope = new Scope(ScopeKind.Type, _currentScope, node);
-            _scopeMap[node] = typeScope;
-            typeSymbol.TypeScope = typeScope;
-
-            var savedScope = _currentScope;
-            _currentScope = typeScope;
-
-            if (node.GenericParams != null)
-            {
-                foreach (var gp in node.GenericParams.Parameters)
-                    _currentScope.Declare(new GenericParamSymbol(gp.Name, gp));
-            }
-
-            foreach (var method in node.Fields.Fields)
-            {
-                var memberSymbol = new MemberSymbol(SymbolKind.InterfaceMethod, method.Name, method);
-                _currentScope.Declare(memberSymbol);
-            }
-
-            _currentScope = savedScope;
+            var memberSymbol = new MemberSymbol(SymbolKind.InterfaceMethod, method.Name, method);
+            _currentScope.Declare(memberSymbol);
         }
+
+        _currentScope = savedScope;
     }
 
     // ========================================
     // Variable declarations
     // ========================================
 
-    private void WalkVariable(VarDeclNode node)
+    private void WalkVariable(VariableDeclNode node)
     {
-        var symbol = new VariableSymbol(SymbolKind.VarVariable, node.Name, node);
-        if (!_currentScope.TryDeclare(symbol))
+        var kind = node.Keyword switch
         {
-            var existing = _currentScope.Lookup(node.Name)!;
-            _diagnostics.DuplicateName(node.Name, "variable", node.Span, existing.Declaration?.Span ?? node.Span);
-        }
-    }
+            SyntaxKind.VarKeyword => SymbolKind.VarVariable,
+            SyntaxKind.ConstKeyword => SymbolKind.ConstVariable,
+            SyntaxKind.StaticKeyword => SymbolKind.StaticVariable,
+            _ => SymbolKind.VarVariable,
+        };
 
-    private void WalkConstOrStatic(DeclNode node)
-    {
-        string name;
-        SyntaxNode declNode;
-        SymbolKind kind;
-        NamedTypeSpacePrefixNode? prefix = null;
-
-        switch (node)
-        {
-            case ConstDeclNode c:
-                name = c.Name; declNode = c; kind = SymbolKind.ConstVariable; prefix = c.NamedTypePrefix; break;
-            case StaticDeclNode s:
-                name = s.Name; declNode = s; kind = SymbolKind.StaticVariable; prefix = s.NamedTypePrefix; break;
-            default: return;
-        }
-
-        // Handle out-of-line member
+        // Handle out-of-line member (const/static)
         var targetScope = _currentScope;
-        if (prefix != null)
+        if (node.NamedTypePrefix is { } prefix)
         {
-            var typeName = prefix.NamedType.Name;
+            var typeName = prefix.Name;
             var typeSymbol = targetScope.LookupRecursive(typeName) as TypeSymbol;
             if (typeSymbol?.TypeScope == null)
             {
-                _diagnostics.UndefinedName(typeName, prefix.NamedType.Span);
+                _diagnostics.UndefinedName(typeName, prefix.Span);
                 return;
             }
             targetScope = typeSymbol.TypeScope;
         }
 
-        var symbol = new VariableSymbol(kind, name, declNode);
-        symbol.ImportName = ExtractImportName(
-            (declNode as ConstDeclNode)?.Annotations ?? (declNode as StaticDeclNode)?.Annotations);
+        var symbol = new VariableSymbol(kind, node.Name, node);
+        if (kind != SymbolKind.VarVariable)
+            symbol.ImportName = ExtractImportName(node.Annotations);
         if (!targetScope.TryDeclare(symbol))
         {
-            var existing = targetScope.Lookup(name)!;
-            _diagnostics.DuplicateName(name, kind.ToString(), ((SyntaxNode)declNode).Span, existing.Declaration?.Span ?? ((SyntaxNode)declNode).Span);
+            var existing = targetScope.Lookup(node.Name)!;
+            _diagnostics.DuplicateName(node.Name, kind.ToString(), node.Span, existing.Declaration?.Span ?? node.Span);
         }
     }
 
@@ -513,9 +484,7 @@ internal sealed class SymbolBuilderPass
         switch (stmt)
         {
             case BodyStmtNode body: WalkBody(body); break;
-            case VarDeclNode vd: WalkVariable(vd); break;
-            case ConstDeclNode cd: WalkConstOrStatic(cd); break;
-            case StaticDeclNode sd: WalkConstOrStatic(sd); break;
+            case VariableDeclNode vd: WalkVariable(vd); break;
             case IfStmtNode ifStmt: WalkIf(ifStmt); break;
             case ForStmtNode forStmt: WalkFor(forStmt); break;
             case SwitchStmtNode switchStmt: WalkSwitch(switchStmt); break;
@@ -595,20 +564,19 @@ internal sealed class SymbolBuilderPass
     /// <summary>
     /// Returns true if the function has the @intrinsic annotation.
     /// </summary>
-    private static bool IsIntrinsicFunction(CtAnnotatesNode? annotations)
+    private static bool IsIntrinsicFunction(IReadOnlyList<CtAnnotateNode> annotations)
     {
-        return annotations?.Annotations.Any(a => a.Name == "intrinsic") == true;
+        return annotations.Any(a => a.Name == "intrinsic");
     }
 
     /// <summary>
     /// Extracts the linker symbol name from @import(name) annotation.
     /// Returns null if @import has no argument (use the declared name).
     /// </summary>
-    private static string? ExtractImportName(CtAnnotatesNode? annotations)
+    private static string? ExtractImportName(IReadOnlyList<CtAnnotateNode> annotations)
     {
-        if (annotations == null) return null;
-        var importAnnot = annotations.Annotations.FirstOrDefault(a => a.Name == "import");
-        var firstArg = importAnnot?.Arguments?.Arguments.FirstOrDefault();
+        var importAnnot = annotations.FirstOrDefault(a => a.Name == "import");
+        var firstArg = importAnnot?.Arguments.FirstOrDefault();
         return firstArg?.GetFullText();
     }
 
@@ -620,12 +588,11 @@ internal sealed class SymbolBuilderPass
     private static bool ShouldSkipPlatform(DeclNode decl)
     {
         var annotations = GetDeclAnnotations(decl);
-        if (annotations == null) return false;
         var isWindows = OperatingSystem.IsWindows();
-        foreach (var a in annotations.Annotations)
+        foreach (var a in annotations)
         {
             var name = a.Name == "os"
-                ? a.Arguments?.Arguments.FirstOrDefault()?.GetFullText()
+                ? a.Arguments.FirstOrDefault()?.GetFullText()
                 : a.Name;
             if ((name == "windows" || a.Name == "if_msvc") && !isWindows) return true;
             if ((name == "unix" || a.Name == "if_not_msvc") && isWindows) return true;
@@ -633,34 +600,33 @@ internal sealed class SymbolBuilderPass
         return false;
     }
 
-    private static CtAnnotatesNode? GetDeclAnnotations(DeclNode decl) => decl switch
+    private static IReadOnlyList<CtAnnotateNode> GetDeclAnnotations(DeclNode decl) => decl switch
     {
         FunctionDeclNode f => f.Annotations,
-        ConstDeclNode c => c.Annotations,
-        StaticDeclNode s => s.Annotations,
         StructDeclNode s => s.Annotations,
         EnumDeclNode e => e.Annotations,
         UnionDeclNode u => u.Annotations,
         VariantDeclNode v => v.Annotations,
         InterfaceDeclNode i => i.Annotations,
-        VarDeclNode v => v.Annotations,
-        _ => null,
+        VariableDeclNode vd => vd.Annotations,
+        _ => Array.Empty<CtAnnotateNode>(),
     };
 
     /// <summary>
     /// Creates or merges a TypeSymbol for a type declaration.
     /// Returns null on error.
     /// </summary>
-    private TypeSymbol? RegisterTypeDeclaration(string name, SyntaxNode node, SymbolKind kind, bool isForwardDecl)
+    private TypeSymbol? RegisterTypeDeclaration(string name, SyntaxNode node, SymbolKind kind, bool isForward)
     {
         var existing = _currentScope.Lookup(name);
 
         if (existing is TypeSymbol ts)
         {
+            var existingIsForward = IsForwardTypeDecl(ts);
             // Forward decl + definition = merge
-            if (ts.IsForwardDecl && !isForwardDecl)
+            if (existingIsForward && !isForward)
             {
-                ts.IsForwardDecl = false;
+                ts.SetDeclaration(node);
                 if (ts.Kind != kind)
                 {
                     _diagnostics.KindMismatch(name, kind.ToString(), ts.Kind.ToString(), node.Span);
@@ -669,7 +635,7 @@ internal sealed class SymbolBuilderPass
                 return ts;
             }
             // Forward decl + forward decl = OK (same kind)
-            if (ts.IsForwardDecl && isForwardDecl && ts.Kind == kind)
+            if (existingIsForward && isForward && ts.Kind == kind)
                 return ts;
 
             // Definition already exists = error
@@ -677,8 +643,17 @@ internal sealed class SymbolBuilderPass
             return null;
         }
 
-        var typeSymbol = new TypeSymbol(kind, name, node, isForwardDecl);
+        var typeSymbol = new TypeSymbol(kind, name, node);
         _currentScope.Declare(typeSymbol);
         return typeSymbol;
     }
+
+    private static bool IsForwardTypeDecl(TypeSymbol ts) => ts.Declaration switch
+    {
+        StructDeclNode s => s.Fields.Count == 0,
+        EnumDeclNode e => e.Fields.Count == 0,
+        UnionDeclNode u => u.Fields.Count == 0,
+        VariantDeclNode v => v.Fields.Count == 0,
+        _ => true,
+    };
 }

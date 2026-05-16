@@ -1,3 +1,4 @@
+using SolidLang.Parser.Nodes.Declarations;
 using SolidLang.Parser.Nodes.Expressions;
 
 namespace SolidLang.Parser.Nodes.Statements;
@@ -7,13 +8,13 @@ namespace SolidLang.Parser.Nodes.Statements;
 /// </summary>
 public sealed class ForVarDeclNode : ForInitNode
 {
-    public Declarations.CtAnnotatesNode? Annotations { get; }
+    public IReadOnlyList<CtAnnotateNode> Annotations { get; }
     public string Name { get; }
     public ExprNode Initializer { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
-    public ForVarDeclNode(Declarations.CtAnnotatesNode? annotations, string name, ExprNode initializer, TextSpan span, string fullText)
+    public ForVarDeclNode(IReadOnlyList<CtAnnotateNode> annotations, string name, ExprNode initializer, TextSpan span, string fullText)
     {
         Annotations = annotations;
         Name = name;
@@ -27,8 +28,8 @@ public sealed class ForVarDeclNode : ForInitNode
 
     public override IEnumerable<SyntaxNode> GetChildren()
     {
-        if (Annotations != null)
-            yield return Annotations;
+        foreach (var a in Annotations)
+            yield return a;
         yield return Initializer;
     }
 

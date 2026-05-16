@@ -9,7 +9,7 @@ public sealed class NamespaceSymbol : Symbol
 {
     public override SymbolKind Kind => SymbolKind.Namespace;
     public override string Name { get; }
-    public override SyntaxNode Declaration { get; }
+    public override SyntaxNode Declaration { get; internal set; }
 
     /// <summary>
     /// The scope containing all members of this namespace.

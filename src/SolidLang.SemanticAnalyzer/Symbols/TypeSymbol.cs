@@ -9,12 +9,7 @@ public sealed class TypeSymbol : Symbol
 {
     public override SymbolKind Kind { get; }
     public override string Name { get; }
-    public override SyntaxNode? Declaration { get; }
-
-    /// <summary>
-    /// Whether this is a forward declaration awaiting a full definition.
-    /// </summary>
-    public bool IsForwardDecl { get; internal set; }
+    public override SyntaxNode? Declaration { get; internal set; }
 
     /// <summary>
     /// The generic type parameters declared on this type, if any. Empty for non-generic types.
@@ -31,13 +26,12 @@ public sealed class TypeSymbol : Symbol
     /// <summary>
     /// Constructor for user-defined types.
     /// </summary>
-    public TypeSymbol(SymbolKind kind, string name, SyntaxNode declaration, bool isForwardDecl,
+    public TypeSymbol(SymbolKind kind, string name, SyntaxNode declaration,
         IReadOnlyList<GenericParamSymbol>? genericParams = null, Scope? typeScope = null)
     {
         Kind = kind;
         Name = name;
         Declaration = declaration;
-        IsForwardDecl = isForwardDecl;
         GenericParams = genericParams ?? Array.Empty<GenericParamSymbol>();
         TypeScope = typeScope;
 
@@ -46,11 +40,13 @@ public sealed class TypeSymbol : Symbol
             s.OwningTypeSymbol = this;
     }
 
+    internal void SetDeclaration(SyntaxNode node) => Declaration = node;
+
     /// <summary>
     /// Factory for built-in primitive types (i8, bool, etc.).
     /// </summary>
     public static TypeSymbol CreatePrimitive(string name)
     {
-        return new TypeSymbol(SymbolKind.Primitive, name, null!, false, null, null);
+        return new TypeSymbol(SymbolKind.Primitive, name, null!, null, null);
     }
 }

@@ -167,13 +167,13 @@ public sealed partial class Parser
             return ParseInterfaceDecl(annotations, start);
 
         if (LookAheadKeyword("const"))
-            return ParseConstDecl(annotations, start);
+            return ParseVariableDecl(annotations, start, SyntaxKind.ConstKeyword);
 
         if (LookAheadKeyword("static"))
-            return ParseStaticDecl(annotations, start);
+            return ParseVariableDecl(annotations, start, SyntaxKind.StaticKeyword);
 
         if (LookAheadKeyword("var"))
-            return ParseVarDecl(annotations, start);
+            return ParseVariableDecl(annotations, start, SyntaxKind.VarKeyword);
 
         // Check for function definition without 'func' keyword:
         // TypeName<generics>::method_name(params): return_type { body }
@@ -189,25 +189,15 @@ public sealed partial class Parser
         return new BadDeclNode(GetCurrentSpan());
     }
 
-    private CtAnnotatesNode? ParseAnnotations()
+    private IReadOnlyList<CtAnnotateNode> ParseAnnotations()
     {
         var annotations = new List<CtAnnotateNode>();
-
         while (Current == '@')
         {
             annotations.Add(ParseAnnotation());
             SkipWhitespaceAndComments();
         }
-
-        if (annotations.Count == 0)
-            return null;
-
-        var start = annotations[0].Span.Start;
-        var end = annotations[^1].Span.End;
-        var span = TextSpan.FromBounds(start, end);
-        var text = _source.GetText(span);
-
-        return new CtAnnotatesNode(annotations, span, text);
+        return annotations;
     }
 
     private CtAnnotateNode ParseAnnotation()
@@ -218,30 +208,26 @@ public sealed partial class Parser
         var name = ScanIdentifier();
         SkipWhitespaceAndComments();
 
-        CtAnnotateArgsNode? args = null;
+        var args = new List<CtAnnotateArgNode>();
         if (Current == '(')
         {
-            var argsStart = _position;
             Advance();
             SkipWhitespaceAndComments();
 
-            var argList = new List<CtAnnotateArgNode>();
             if (Current != ')')
             {
-                argList.Add(ParseAnnotateArg());
+                args.Add(ParseAnnotateArg());
 
                 while (Current == ',')
                 {
                     Advance();
                     SkipWhitespaceAndComments();
-                    argList.Add(ParseAnnotateArg());
+                    args.Add(ParseAnnotateArg());
                 }
             }
 
             SkipWhitespaceAndComments();
             Expect(')');
-            var argsSpan = GetSpanFrom(argsStart);
-            args = new CtAnnotateArgsNode(argList, argsSpan, _source.GetText(argsSpan));
         }
 
         var span = GetSpanFrom(start);
@@ -282,7 +268,7 @@ public sealed partial class Parser
     /// Each segment may be followed by optional generic params.
     /// The last segment is the type name; earlier segments form the namespace prefix.
     /// </summary>
-    private NamedTypeSpacePrefixNode? TryParseNamedTypePrefix()
+    private NamedTypeNode? TryParseNamedTypePrefix()
     {
         var savedPos = _position;
         var savedDiagCount = _diagnostics.Count;
@@ -374,31 +360,29 @@ public sealed partial class Parser
         typeName = ScanIdentifier();
         SkipWhitespaceAndComments();
 
-        TypeArgumentListNode? typeArgs = null;
+        IReadOnlyList<TypeNode> typeArgs = Array.Empty<TypeNode>();
+        int typeArgsEnd = _position;
         if (Current == '<')
         {
             typeArgs = ParseTypeArgumentList();
+            typeArgsEnd = _position;
             SkipWhitespaceAndComments();
         }
 
         // Build the NamedType (spans from type start to just before the trailing ::)
         var namedTypeSpanStart = nsPrefix != null ? nsPrefix.Span.Start : typeNameStart;
-        var namedTypeSpanEnd = typeArgs != null ? typeArgs.Span.End : _position;
+        var namedTypeSpanEnd = typeArgs.Count > 0 ? typeArgsEnd : _position;
         var namedTypeSpan = TextSpan.FromBounds(namedTypeSpanStart, namedTypeSpanEnd);
         var namedTypeText = _source.GetText(namedTypeSpan);
         var namedType = new NamedTypeNode(nsPrefix, typeName, typeArgs, namedTypeSpan, namedTypeText);
 
-        // Preix span: from start to before the member name (includes the trailing ::)
-        var prefixSpan = TextSpan.FromBounds(savedPos, memberStart);
-        var prefixText = _source.GetText(prefixSpan);
-
         // Restore position so the caller can scan the member name
         _position = savedAfterPrefix;
 
-        return new NamedTypeSpacePrefixNode(namedType, prefixSpan, prefixText);
+        return namedType;
     }
 
-    private FunctionDeclNode ParseFunctionDecl(CtAnnotatesNode? annotations, int start)
+    private FunctionDeclNode ParseFunctionDecl(IReadOnlyList<CtAnnotateNode> annotations, int start)
     {
         Match("func");
         SkipWhitespaceAndComments();
@@ -409,7 +393,7 @@ public sealed partial class Parser
         SkipWhitespaceAndComments();
 
         // generic_params? (function-level generics)
-        GenericParamsNode? genericParams = null;
+        IReadOnlyList<GenericParamNode> genericParams = new List<GenericParamNode>();
         if (Current == '<')
         {
             genericParams = ParseGenericParams();
@@ -420,7 +404,7 @@ public sealed partial class Parser
         Expect('(');
         SkipWhitespaceAndComments();
 
-        FuncParametersNode? parameters = null;
+        IReadOnlyList<FuncParameterNode> parameters = new List<FuncParameterNode>();
         if (Current != ')')
             parameters = ParseFuncParameters();
 
@@ -441,7 +425,7 @@ public sealed partial class Parser
         }
 
         // where_clauses?
-        WhereClausesNode? whereClauses = null;
+        IReadOnlyList<WhereClauseNode> whereClauses = new List<WhereClauseNode>();
         if (LookAheadKeyword("where"))
             whereClauses = ParseWhereClauses();
 
@@ -449,7 +433,6 @@ public sealed partial class Parser
 
         // body_stmt | ;
         BodyStmtNode? body = null;
-        bool isForward = false;
 
         if (Current == '{')
         {
@@ -458,7 +441,6 @@ public sealed partial class Parser
         else if (Current == ';')
         {
             Advance();
-            isForward = true;
         }
         else
         {
@@ -467,12 +449,11 @@ public sealed partial class Parser
 
         var span = GetSpanFrom(start);
         var fullText = _source.GetText(span);
-        return new FunctionDeclNode(annotations, namedTypePrefix, name, genericParams, parameters, callConv, returnType, whereClauses, body, isForward, span, fullText);
+        return new FunctionDeclNode(annotations, namedTypePrefix, name, genericParams, parameters, callConv, returnType, whereClauses, body, span, fullText);
     }
 
-    private GenericParamsNode ParseGenericParams()
+    private IReadOnlyList<GenericParamNode> ParseGenericParams()
     {
-        var start = _position;
         Expect('<');
         SkipWhitespaceAndComments();
 
@@ -510,19 +491,12 @@ public sealed partial class Parser
             _diagnostics.MissingGreaterThan(GetCurrentSpan());
         }
 
-        var span = GetSpanFrom(start);
-        var text = _source.GetText(span);
-        return new GenericParamsNode(paramList, span, text);
+        return paramList;
     }
 
-    private FuncParametersNode ParseFuncParameters()
+    private IReadOnlyList<FuncParameterNode> ParseFuncParameters()
     {
-        var start = _position;
-        var parameters = ParseCommaSeparatedList(ParseFuncParameter);
-
-        var span = GetSpanFrom(start);
-        var text = _source.GetText(span);
-        return new FuncParametersNode(parameters, span, text);
+        return ParseCommaSeparatedList(ParseFuncParameter);
     }
 
     private FuncParameterNode ParseFuncParameter()
@@ -544,7 +518,7 @@ public sealed partial class Parser
         return new FuncParameterNode(annotations, name, type, span, text);
     }
 
-    private WhereClausesNode ParseWhereClauses()
+    private IReadOnlyList<WhereClauseNode> ParseWhereClauses()
     {
         var clauses = new List<WhereClauseNode>();
 
@@ -554,12 +528,7 @@ public sealed partial class Parser
             SkipWhitespaceAndComments();
         }
 
-        var start = clauses[0].Span.Start;
-        var end = clauses[^1].Span.End;
-        var span = TextSpan.FromBounds(start, end);
-        var text = _source.GetText(span);
-
-        return new WhereClausesNode(clauses, span, text);
+        return clauses;
     }
 
     private WhereClauseNode ParseWhereClause()
@@ -585,7 +554,7 @@ public sealed partial class Parser
     // Type Declarations
     // ========================================
 
-    private StructDeclNode ParseStructDecl(CtAnnotatesNode? annotations, int start)
+    private StructDeclNode ParseStructDecl(IReadOnlyList<CtAnnotateNode> annotations, int start)
     {
         Match("struct");
         SkipWhitespaceAndComments();
@@ -593,22 +562,21 @@ public sealed partial class Parser
         var name = ScanIdentifier();
         SkipWhitespaceAndComments();
 
-        GenericParamsNode? genericParams = null;
+        IReadOnlyList<GenericParamNode> genericParams = new List<GenericParamNode>();
         if (Current == '<')
         {
             genericParams = ParseGenericParams();
             SkipWhitespaceAndComments();
         }
 
-        WhereClausesNode? whereClauses = null;
+        IReadOnlyList<WhereClauseNode> whereClauses = new List<WhereClauseNode>();
         if (LookAheadKeyword("where"))
         {
             whereClauses = ParseWhereClauses();
             SkipWhitespaceAndComments();
         }
 
-        StructFieldsNode? fields = null;
-        bool isForward = false;
+        IReadOnlyList<StructFieldNode> fields = new List<StructFieldNode>();
 
         if (Current == '{')
         {
@@ -617,17 +585,15 @@ public sealed partial class Parser
         else if (Current == ';')
         {
             Advance();
-            isForward = true;
         }
 
         var span = GetSpanFrom(start);
         var text = _source.GetText(span);
-        return new StructDeclNode(annotations, name, genericParams, whereClauses, fields, isForward, span, text);
+        return new StructDeclNode(annotations, name, genericParams, whereClauses, fields, span, text);
     }
 
-    private StructFieldsNode ParseStructFields()
+    private IReadOnlyList<StructFieldNode> ParseStructFields()
     {
-        var start = _position;
         Expect('{');
         SkipWhitespaceAndComments();
 
@@ -635,9 +601,7 @@ public sealed partial class Parser
 
         Expect('}');
 
-        var span = GetSpanFrom(start);
-        var text = _source.GetText(span);
-        return new StructFieldsNode(fields, span, text);
+        return fields;
     }
 
     private StructFieldNode ParseStructField()
@@ -662,7 +626,7 @@ public sealed partial class Parser
     // Similar implementations for Enum, Union, Variant, Interface...
     // (abbreviated for brevity, full implementation would follow same pattern)
 
-    private EnumDeclNode ParseEnumDecl(CtAnnotatesNode? annotations, int start)
+    private EnumDeclNode ParseEnumDecl(IReadOnlyList<CtAnnotateNode> annotations, int start)
     {
         Match("enum");
         SkipWhitespaceAndComments();
@@ -679,8 +643,7 @@ public sealed partial class Parser
             SkipWhitespaceAndComments();
         }
 
-        EnumFieldsNode? fields = null;
-        bool isForward = false;
+        IReadOnlyList<EnumFieldNode> fields = new List<EnumFieldNode>();
 
         if (Current == '{')
         {
@@ -689,17 +652,15 @@ public sealed partial class Parser
         else if (Current == ';')
         {
             Advance();
-            isForward = true;
         }
 
         var span = GetSpanFrom(start);
         var text = _source.GetText(span);
-        return new EnumDeclNode(annotations, name, underlyingType, fields, isForward, span, text);
+        return new EnumDeclNode(annotations, name, underlyingType, fields, span, text);
     }
 
-    private EnumFieldsNode ParseEnumFields()
+    private IReadOnlyList<EnumFieldNode> ParseEnumFields()
     {
-        var start = _position;
         Expect('{');
         SkipWhitespaceAndComments();
 
@@ -707,9 +668,7 @@ public sealed partial class Parser
 
         Expect('}');
 
-        var span = GetSpanFrom(start);
-        var text = _source.GetText(span);
-        return new EnumFieldsNode(fields, span, text);
+        return fields;
     }
 
     private EnumFieldNode ParseEnumField()
@@ -734,7 +693,7 @@ public sealed partial class Parser
         return new EnumFieldNode(annotations, name, value, span, text);
     }
 
-    private UnionDeclNode ParseUnionDecl(CtAnnotatesNode? annotations, int start)
+    private UnionDeclNode ParseUnionDecl(IReadOnlyList<CtAnnotateNode> annotations, int start)
     {
         Match("union");
         SkipWhitespaceAndComments();
@@ -742,22 +701,21 @@ public sealed partial class Parser
         var name = ScanIdentifier();
         SkipWhitespaceAndComments();
 
-        GenericParamsNode? genericParams = null;
+        IReadOnlyList<GenericParamNode> genericParams = new List<GenericParamNode>();
         if (Current == '<')
         {
             genericParams = ParseGenericParams();
             SkipWhitespaceAndComments();
         }
 
-        WhereClausesNode? whereClauses = null;
+        IReadOnlyList<WhereClauseNode> whereClauses = new List<WhereClauseNode>();
         if (LookAheadKeyword("where"))
         {
             whereClauses = ParseWhereClauses();
             SkipWhitespaceAndComments();
         }
 
-        UnionFieldsNode? fields = null;
-        bool isForward = false;
+        IReadOnlyList<UnionFieldNode> fields = new List<UnionFieldNode>();
 
         if (Current == '{')
         {
@@ -766,17 +724,15 @@ public sealed partial class Parser
         else if (Current == ';')
         {
             Advance();
-            isForward = true;
         }
 
         var span = GetSpanFrom(start);
         var text = _source.GetText(span);
-        return new UnionDeclNode(annotations, name, genericParams, whereClauses, fields, isForward, span, text);
+        return new UnionDeclNode(annotations, name, genericParams, whereClauses, fields, span, text);
     }
 
-    private UnionFieldsNode ParseUnionFields()
+    private IReadOnlyList<UnionFieldNode> ParseUnionFields()
     {
-        var start = _position;
         Expect('{');
         SkipWhitespaceAndComments();
 
@@ -784,9 +740,7 @@ public sealed partial class Parser
 
         Expect('}');
 
-        var span = GetSpanFrom(start);
-        var text = _source.GetText(span);
-        return new UnionFieldsNode(fields, span, text);
+        return fields;
     }
 
     private UnionFieldNode ParseUnionField()
@@ -808,7 +762,7 @@ public sealed partial class Parser
         return new UnionFieldNode(annotations, name, type, span, text);
     }
 
-    private VariantDeclNode ParseVariantDecl(CtAnnotatesNode? annotations, int start)
+    private VariantDeclNode ParseVariantDecl(IReadOnlyList<CtAnnotateNode> annotations, int start)
     {
         Match("variant");
         SkipWhitespaceAndComments();
@@ -816,7 +770,7 @@ public sealed partial class Parser
         var name = ScanIdentifier();
         SkipWhitespaceAndComments();
 
-        GenericParamsNode? genericParams = null;
+        IReadOnlyList<GenericParamNode> genericParams = new List<GenericParamNode>();
         if (Current == '<')
         {
             genericParams = ParseGenericParams();
@@ -832,15 +786,14 @@ public sealed partial class Parser
             SkipWhitespaceAndComments();
         }
 
-        WhereClausesNode? whereClauses = null;
+        IReadOnlyList<WhereClauseNode> whereClauses = new List<WhereClauseNode>();
         if (LookAheadKeyword("where"))
         {
             whereClauses = ParseWhereClauses();
             SkipWhitespaceAndComments();
         }
 
-        VariantFieldsNode? fields = null;
-        bool isForward = false;
+        IReadOnlyList<VariantFieldNode> fields = new List<VariantFieldNode>();
 
         if (Current == '{')
         {
@@ -849,17 +802,15 @@ public sealed partial class Parser
         else if (Current == ';')
         {
             Advance();
-            isForward = true;
         }
 
         var span = GetSpanFrom(start);
         var text = _source.GetText(span);
-        return new VariantDeclNode(annotations, name, genericParams, tagType, whereClauses, fields, isForward, span, text);
+        return new VariantDeclNode(annotations, name, genericParams, tagType, whereClauses, fields, span, text);
     }
 
-    private VariantFieldsNode ParseVariantFields()
+    private IReadOnlyList<VariantFieldNode> ParseVariantFields()
     {
-        var start = _position;
         Expect('{');
         SkipWhitespaceAndComments();
 
@@ -867,9 +818,7 @@ public sealed partial class Parser
 
         Expect('}');
 
-        var span = GetSpanFrom(start);
-        var text = _source.GetText(span);
-        return new VariantFieldsNode(fields, span, text);
+        return fields;
     }
 
     private VariantFieldNode ParseVariantField()
@@ -894,7 +843,7 @@ public sealed partial class Parser
         return new VariantFieldNode(annotations, name, type, span, text);
     }
 
-    private InterfaceDeclNode ParseInterfaceDecl(CtAnnotatesNode? annotations, int start)
+    private InterfaceDeclNode ParseInterfaceDecl(IReadOnlyList<CtAnnotateNode> annotations, int start)
     {
         Match("interface");
         SkipWhitespaceAndComments();
@@ -902,14 +851,14 @@ public sealed partial class Parser
         var name = ScanIdentifier();
         SkipWhitespaceAndComments();
 
-        GenericParamsNode? genericParams = null;
+        IReadOnlyList<GenericParamNode> genericParams = new List<GenericParamNode>();
         if (Current == '<')
         {
             genericParams = ParseGenericParams();
             SkipWhitespaceAndComments();
         }
 
-        WhereClausesNode? whereClauses = null;
+        IReadOnlyList<WhereClauseNode> whereClauses = new List<WhereClauseNode>();
         if (LookAheadKeyword("where"))
         {
             whereClauses = ParseWhereClauses();
@@ -936,14 +885,9 @@ public sealed partial class Parser
 
         Expect('}');
 
-        var fieldsStart = fields.Count > 0 ? fields[0].Span.Start : _position - 1;
-        var fieldsEnd = fields.Count > 0 ? fields[^1].Span.End : _position;
-        var fieldsSpan = TextSpan.FromBounds(fieldsStart, fieldsEnd);
-        var fieldsNode = new InterfaceFieldsNode(fields, fieldsSpan, _source.GetText(fieldsSpan));
-
         var span = GetSpanFrom(start);
         var text = _source.GetText(span);
-        return new InterfaceDeclNode(annotations, name, genericParams, whereClauses, fieldsNode, span, text);
+        return new InterfaceDeclNode(annotations, name, genericParams, whereClauses, fields, span, text);
     }
 
     private InterfaceFieldNode ParseInterfaceField()
@@ -958,7 +902,7 @@ public sealed partial class Parser
         var name = ScanIdentifier();
         SkipWhitespaceAndComments();
 
-        GenericParamsNode? genericParams = null;
+        IReadOnlyList<GenericParamNode> genericParams = new List<GenericParamNode>();
         if (Current == '<')
         {
             genericParams = ParseGenericParams();
@@ -968,7 +912,7 @@ public sealed partial class Parser
         Expect('(');
         SkipWhitespaceAndComments();
 
-        FuncParametersNode? parameters = null;
+        IReadOnlyList<FuncParameterNode> parameters = new List<FuncParameterNode>();
         if (Current != ')')
             parameters = ParseFuncParameters();
 
@@ -992,14 +936,20 @@ public sealed partial class Parser
     // Variable Declarations
     // ========================================
 
-    private static bool HasImportAnnotation(CtAnnotatesNode? annotations)
+    private static bool HasImportAnnotation(IReadOnlyList<CtAnnotateNode> annotations)
     {
-        return annotations?.Annotations.Any(a => a.Name == "import") ?? false;
+        return annotations.Any(a => a.Name == "import");
     }
 
-    private ConstDeclNode ParseConstDecl(CtAnnotatesNode? annotations, int start)
+    private VariableDeclNode ParseVariableDecl(IReadOnlyList<CtAnnotateNode> annotations, int start, SyntaxKind keyword)
     {
-        Match("const");
+        Match(keyword switch
+        {
+            SyntaxKind.ConstKeyword => "const",
+            SyntaxKind.StaticKeyword => "static",
+            SyntaxKind.VarKeyword => "var",
+            _ => throw new ArgumentOutOfRangeException(nameof(keyword))
+        });
         SkipWhitespaceAndComments();
 
         var namedTypePrefix = TryParseNamedTypePrefix();
@@ -1017,9 +967,9 @@ public sealed partial class Parser
         }
 
         ExprNode? initializer = null;
-        if (HasImportAnnotation(annotations))
+        if (HasImportAnnotation(annotations) && keyword != SyntaxKind.VarKeyword)
         {
-            // @import const — external declaration, no initializer
+            // @import const/static — external declaration, no initializer
             Expect(';');
         }
         else
@@ -1033,76 +983,7 @@ public sealed partial class Parser
 
         var span = GetSpanFrom(start);
         var text = _source.GetText(span);
-        return new ConstDeclNode(annotations, namedTypePrefix, name, type, initializer, span, text);
-    }
-
-    private StaticDeclNode ParseStaticDecl(CtAnnotatesNode? annotations, int start)
-    {
-        Match("static");
-        SkipWhitespaceAndComments();
-
-        var namedTypePrefix = TryParseNamedTypePrefix();
-        SkipWhitespaceAndComments();
-        var name = ScanIdentifier();
-        SkipWhitespaceAndComments();
-
-        TypeNode? type = null;
-        if (Current == ':')
-        {
-            Advance();
-            SkipWhitespaceAndComments();
-            type = ParseType();
-            SkipWhitespaceAndComments();
-        }
-
-        ExprNode? initializer = null;
-        if (HasImportAnnotation(annotations))
-        {
-            // @import static — external declaration, no initializer
-            Expect(';');
-        }
-        else
-        {
-            Expect('=');
-            SkipWhitespaceAndComments();
-            initializer = ParseExpression();
-            SkipWhitespaceAndComments();
-            Expect(';');
-        }
-
-        var span = GetSpanFrom(start);
-        var text = _source.GetText(span);
-        return new StaticDeclNode(annotations, namedTypePrefix, name, type, initializer, span, text);
-    }
-
-    private VarDeclNode ParseVarDecl(CtAnnotatesNode? annotations, int start)
-    {
-        Match("var");
-        SkipWhitespaceAndComments();
-
-        var name = ScanIdentifier();
-        SkipWhitespaceAndComments();
-
-        TypeNode? type = null;
-        if (Current == ':')
-        {
-            Advance();
-            SkipWhitespaceAndComments();
-            type = ParseType();
-            SkipWhitespaceAndComments();
-        }
-
-        Expect('=');
-        SkipWhitespaceAndComments();
-
-        var initializer = ParseExpression();
-        SkipWhitespaceAndComments();
-
-        Expect(';');
-
-        var span = GetSpanFrom(start);
-        var text = _source.GetText(span);
-        return new VarDeclNode(annotations, name, type, initializer, span, text);
+        return new VariableDeclNode(annotations, keyword, namedTypePrefix, name, type, initializer, span, text);
     }
 
     // ========================================
@@ -1114,7 +995,7 @@ public sealed partial class Parser
     /// Pattern: TypeName&lt;generics&gt;::method_name(params): return_type { body }
     /// Returns null if the current tokens don't match this pattern.
     /// </summary>
-    private FunctionDeclNode? TryParseKeywordlessFunctionDecl(CtAnnotatesNode? annotations, int start)
+    private FunctionDeclNode? TryParseKeywordlessFunctionDecl(IReadOnlyList<CtAnnotateNode> annotations, int start)
     {
         var savedPos = _position;
         var savedDiagCount = _diagnostics.Count;
@@ -1167,7 +1048,7 @@ public sealed partial class Parser
         Advance(); // Skip (
         SkipWhitespaceAndComments();
 
-        FuncParametersNode? parameters = null;
+        IReadOnlyList<FuncParameterNode> parameters = new List<FuncParameterNode>();
         if (Current != ')')
             parameters = ParseFuncParameters();
 
@@ -1185,7 +1066,7 @@ public sealed partial class Parser
         }
 
         // Optional where clauses
-        WhereClausesNode? whereClauses = null;
+        IReadOnlyList<WhereClauseNode> whereClauses = new List<WhereClauseNode>();
         if (LookAheadKeyword("where"))
             whereClauses = ParseWhereClauses();
 
@@ -1193,7 +1074,6 @@ public sealed partial class Parser
 
         // Body or forward declaration
         BodyStmtNode? body = null;
-        bool isForward = false;
         if (Current == '{')
         {
             body = ParseBodyStmt();
@@ -1201,12 +1081,11 @@ public sealed partial class Parser
         else if (Current == ';')
         {
             Advance();
-            isForward = true;
         }
 
         var span = GetSpanFrom(start);
         var fullText = _source.GetText(span);
-        return new FunctionDeclNode(annotations, null, name, null, parameters, null, returnType, whereClauses, body, isForward, span, fullText);
+        return new FunctionDeclNode(annotations, null, name, new List<GenericParamNode>(), parameters, null, returnType, whereClauses, body, span, fullText);
     }
 
     // ========================================

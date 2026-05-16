@@ -7,13 +7,13 @@ namespace SolidLang.Parser.Nodes.Declarations;
 /// </summary>
 public sealed class VariantFieldNode : SyntaxNode
 {
-    public CtAnnotatesNode? Annotations { get; }
+    public IReadOnlyList<CtAnnotateNode> Annotations { get; }
     public string Name { get; }
-    public Types.TypeNode? Type { get; }
+    public TypeNode? Type { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
-    public VariantFieldNode(CtAnnotatesNode? annotations, string name, Types.TypeNode? type, TextSpan span, string fullText)
+    public VariantFieldNode(IReadOnlyList<CtAnnotateNode> annotations, string name, Types.TypeNode? type, TextSpan span, string fullText)
     {
         Annotations = annotations;
         Name = name;
@@ -27,8 +27,8 @@ public sealed class VariantFieldNode : SyntaxNode
 
     public override IEnumerable<SyntaxNode> GetChildren()
     {
-        if (Annotations != null)
-            yield return Annotations;
+        foreach (var a in Annotations)
+            yield return a;
         if (Type != null)
             yield return Type;
     }

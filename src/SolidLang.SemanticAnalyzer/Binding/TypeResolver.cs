@@ -76,11 +76,8 @@ internal sealed class TypeResolver
 
         // Resolve type arguments
         var typeArgs = new List<SolidType>();
-        if (node.TypeArguments != null)
-        {
-            foreach (var arg in node.TypeArguments.Arguments)
-                typeArgs.Add(ResolveType(arg));
-        }
+        foreach (var arg in node.TypeArguments)
+            typeArgs.Add(ResolveType(arg));
 
         return new NamedType(typeSymbol, typeArgs);
     }
@@ -134,7 +131,8 @@ internal sealed class TypeResolver
                     && vs.Declaration != null)
                 {
                     // Try to evaluate the const initializer
-                    if (vs.Declaration is SolidLang.Parser.Nodes.Declarations.ConstDeclNode constDecl
+                    if (vs.Declaration is SolidLang.Parser.Nodes.Declarations.VariableDeclNode constDecl
+                        && constDecl.Keyword == SolidLang.Parser.SyntaxKind.ConstKeyword
                         && constDecl.Initializer != null)
                     {
                         return TryEvaluateConstantSize(constDecl.Initializer);

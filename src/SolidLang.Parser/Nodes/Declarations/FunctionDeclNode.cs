@@ -9,30 +9,28 @@ namespace SolidLang.Parser.Nodes.Declarations;
 /// </summary>
 public sealed class FunctionDeclNode : DeclNode
 {
-    public CtAnnotatesNode? Annotations { get; }
-    public NamedTypeSpacePrefixNode? NamedTypePrefix { get; }
+    public IReadOnlyList<CtAnnotateNode> Annotations { get; }
+    public NamedTypeNode? NamedTypePrefix { get; }
     public string Name { get; }
-    public GenericParamsNode? GenericParams { get; }
-    public FuncParametersNode? Parameters { get; }
+    public IReadOnlyList<GenericParamNode> GenericParams { get; }
+    public IReadOnlyList<FuncParameterNode> Parameters { get; }
     public CallConventionNode? CallingConvention { get; }
     public Types.TypeNode? ReturnType { get; }
-    public WhereClausesNode? WhereClauses { get; }
+    public IReadOnlyList<WhereClauseNode> WhereClauses { get; }
     public BodyStmtNode? Body { get; }
-    public bool IsForwardDecl { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
     public FunctionDeclNode(
-        CtAnnotatesNode? annotations,
-        NamedTypeSpacePrefixNode? namedTypePrefix,
+        IReadOnlyList<CtAnnotateNode> annotations,
+        NamedTypeNode? namedTypePrefix,
         string name,
-        GenericParamsNode? genericParams,
-        FuncParametersNode? parameters,
+        IReadOnlyList<GenericParamNode> genericParams,
+        IReadOnlyList<FuncParameterNode> parameters,
         CallConventionNode? callingConvention,
         Types.TypeNode? returnType,
-        WhereClausesNode? whereClauses,
+        IReadOnlyList<WhereClauseNode> whereClauses,
         BodyStmtNode? body,
-        bool isForwardDecl,
         TextSpan span,
         string fullText)
     {
@@ -45,7 +43,6 @@ public sealed class FunctionDeclNode : DeclNode
         ReturnType = returnType;
         WhereClauses = whereClauses;
         Body = body;
-        IsForwardDecl = isForwardDecl;
         _span = span;
         _fullText = fullText;
     }
@@ -55,20 +52,20 @@ public sealed class FunctionDeclNode : DeclNode
 
     public override IEnumerable<SyntaxNode> GetChildren()
     {
-        if (Annotations != null)
-            yield return Annotations;
+        foreach (var a in Annotations)
+            yield return a;
         if (NamedTypePrefix != null)
             yield return NamedTypePrefix;
-        if (GenericParams != null)
-            yield return GenericParams;
-        if (Parameters != null)
-            yield return Parameters;
+        foreach (var p in GenericParams)
+            yield return p;
+        foreach (var p in Parameters)
+            yield return p;
         if (CallingConvention != null)
             yield return CallingConvention;
         if (ReturnType != null)
             yield return ReturnType;
-        if (WhereClauses != null)
-            yield return WhereClauses;
+        foreach (var w in WhereClauses)
+            yield return w;
         if (Body != null)
             yield return Body;
     }

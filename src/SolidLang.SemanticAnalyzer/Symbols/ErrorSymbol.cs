@@ -11,7 +11,7 @@ public sealed class ErrorSymbol : Symbol
 
     public override SymbolKind Kind => SymbolKind.Error;
     public override string Name => "?error?";
-    public override SyntaxNode? Declaration => null;
+    public override SyntaxNode? Declaration { get; internal set; } = null;
 
     private ErrorSymbol() { }
 }

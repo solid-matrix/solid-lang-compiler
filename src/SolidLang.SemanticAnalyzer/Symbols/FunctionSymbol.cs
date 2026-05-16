@@ -9,9 +9,8 @@ public sealed class FunctionSymbol : Symbol
 {
     public override SymbolKind Kind => SymbolKind.Function;
     public override string Name { get; }
-    public override SyntaxNode Declaration { get; }
+    public override SyntaxNode Declaration { get; internal set; }
 
-    public bool IsForwardDecl { get; internal set; }
     public bool IsIntrinsic { get; internal set; }
     public IReadOnlyList<GenericParamSymbol> GenericParams { get; }
     public IReadOnlyList<VariableSymbol> Parameters { get; internal set; }
@@ -20,7 +19,7 @@ public sealed class FunctionSymbol : Symbol
     public Scope? BodyScope { get; internal set; }  // function body scope (for locals)
     public string? ImportName { get; internal set; } // @import(name) linker symbol, null = use Name
 
-    public FunctionSymbol(string name, SyntaxNode declaration, bool isForwardDecl,
+    public FunctionSymbol(string name, SyntaxNode declaration,
         IReadOnlyList<GenericParamSymbol>? genericParams = null,
         IReadOnlyList<VariableSymbol>? parameters = null,
         SolidType? returnType = null,
@@ -29,11 +28,12 @@ public sealed class FunctionSymbol : Symbol
     {
         Name = name;
         Declaration = declaration;
-        IsForwardDecl = isForwardDecl;
         GenericParams = genericParams ?? Array.Empty<GenericParamSymbol>();
         Parameters = parameters ?? Array.Empty<VariableSymbol>();
         ReturnType = returnType;
         CallingConvention = callingConvention;
         IsIntrinsic = isIntrinsic;
     }
+
+    internal void SetDeclaration(SyntaxNode node) => Declaration = node;
 }

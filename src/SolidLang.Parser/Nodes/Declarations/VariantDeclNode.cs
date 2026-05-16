@@ -7,24 +7,22 @@ namespace SolidLang.Parser.Nodes.Declarations;
 /// </summary>
 public sealed class VariantDeclNode : DeclNode
 {
-    public CtAnnotatesNode? Annotations { get; }
+    public IReadOnlyList<CtAnnotateNode> Annotations { get; }
     public string Name { get; }
-    public GenericParamsNode? GenericParams { get; }
-    public Types.TypeNode? TagType { get; }
-    public WhereClausesNode? WhereClauses { get; }
-    public VariantFieldsNode? Fields { get; }
-    public bool IsForwardDecl { get; }
+    public IReadOnlyList<GenericParamNode> GenericParams { get; }
+    public TypeNode? TagType { get; }
+    public IReadOnlyList<WhereClauseNode> WhereClauses { get; }
+    public IReadOnlyList<VariantFieldNode> Fields { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
     public VariantDeclNode(
-        CtAnnotatesNode? annotations,
+        IReadOnlyList<CtAnnotateNode> annotations,
         string name,
-        GenericParamsNode? genericParams,
-        Types.TypeNode? tagType,
-        WhereClausesNode? whereClauses,
-        VariantFieldsNode? fields,
-        bool isForwardDecl,
+        IReadOnlyList<GenericParamNode> genericParams,
+        TypeNode? tagType,
+        IReadOnlyList<WhereClauseNode> whereClauses,
+        IReadOnlyList<VariantFieldNode> fields,
         TextSpan span,
         string fullText)
     {
@@ -34,7 +32,6 @@ public sealed class VariantDeclNode : DeclNode
         TagType = tagType;
         WhereClauses = whereClauses;
         Fields = fields;
-        IsForwardDecl = isForwardDecl;
         _span = span;
         _fullText = fullText;
     }
@@ -44,16 +41,16 @@ public sealed class VariantDeclNode : DeclNode
 
     public override IEnumerable<SyntaxNode> GetChildren()
     {
-        if (Annotations != null)
-            yield return Annotations;
-        if (GenericParams != null)
-            yield return GenericParams;
+        foreach (var a in Annotations)
+            yield return a;
+        foreach (var p in GenericParams)
+            yield return p;
         if (TagType != null)
             yield return TagType;
-        if (WhereClauses != null)
-            yield return WhereClauses;
-        if (Fields != null)
-            yield return Fields;
+        foreach (var w in WhereClauses)
+            yield return w;
+        foreach (var f in Fields)
+            yield return f;
     }
 
     public override string GetFullText() => _fullText;

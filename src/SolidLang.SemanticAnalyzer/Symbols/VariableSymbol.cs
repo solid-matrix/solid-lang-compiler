@@ -9,7 +9,7 @@ public sealed class VariableSymbol : Symbol
 {
     public override SymbolKind Kind { get; }
     public override string Name { get; }
-    public override SyntaxNode Declaration { get; }
+    public override SyntaxNode Declaration { get; internal set; }
 
     /// <summary>
     /// The declared type from the : type annotation, or null if type-inferred.

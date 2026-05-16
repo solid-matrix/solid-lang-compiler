@@ -561,7 +561,7 @@ public sealed partial class Parser
                 SkipWhitespaceAndComments();
 
                 // Check for generic type arguments: .method<T>
-                TypeArgumentListNode? typeArgs = null;
+                IReadOnlyList<TypeNode> typeArgs = Array.Empty<TypeNode>();
                 if (name.Length > 0 && Current == '<')
                 {
                     var savedPos = _position;
@@ -575,7 +575,7 @@ public sealed partial class Parser
                     {
                         _position = savedPos;
                         _diagnostics.TruncateTo(savedDiag);
-                        typeArgs = null;
+                        typeArgs = Array.Empty<TypeNode>();
                     }
                 }
 
@@ -604,7 +604,7 @@ public sealed partial class Parser
                 Advance();
                 SkipWhitespaceAndComments();
 
-                CallArgsNode? args = null;
+                IReadOnlyList<CallArgNode> args = Array.Empty<CallArgNode>();
                 if (Current != ')')
                 {
                     args = ParseCallArgs();
@@ -659,7 +659,7 @@ public sealed partial class Parser
         return new PostfixExprNode(primary, suffixes, exprSpan, exprText);
     }
 
-    private CallArgsNode ParseCallArgs()
+    private IReadOnlyList<CallArgNode> ParseCallArgs()
     {
         var start = _position;
         var args = new List<CallArgNode>();
@@ -677,9 +677,7 @@ public sealed partial class Parser
             SkipWhitespaceAndComments();
         }
 
-        var span = GetSpanFrom(start);
-        var text = _source.GetText(span);
-        return new CallArgsNode(args, span, text);
+        return args;
     }
 
     // Primary: literals, identifiers, parenthesized expressions
@@ -744,7 +742,7 @@ public sealed partial class Parser
             SkipWhitespaceAndComments();
 
             // Check for generic type arguments: identity<T>(args)
-            TypeArgumentListNode? typeArgs = null;
+            IReadOnlyList<TypeNode> typeArgs = Array.Empty<TypeNode>();
             if (name.Length > 0 && Current == '<')
             {
                 var savedPos = _position;
@@ -759,7 +757,7 @@ public sealed partial class Parser
                     Advance();
                     SkipWhitespaceAndComments();
 
-                    CallArgsNode? callArgs = null;
+                    IReadOnlyList<CallArgNode> callArgs = Array.Empty<CallArgNode>();
                     if (Current != ')')
                         callArgs = ParseCallArgs();
 
@@ -786,7 +784,7 @@ public sealed partial class Parser
         var memberName = ScanIdentifier();
         SkipWhitespaceAndComments();
 
-        CallArgsNode? args = null;
+        IReadOnlyList<CallArgNode> args = Array.Empty<CallArgNode>();
         if (Current == '(')
         {
             Advance();
@@ -801,7 +799,7 @@ public sealed partial class Parser
 
         var exprSpan2 = GetSpanFrom(start);
         var exprText2 = _source.GetText(exprSpan2);
-        return new ScopedAccessExprNode(namedTypePrefix, memberName, args, null, exprSpan2, exprText2);
+        return new ScopedAccessExprNode(namedTypePrefix, memberName, args, Array.Empty<TypeNode>(), exprSpan2, exprText2);
     }
 
     private CtOperatorExprNode ParseCtOperatorExpr()
@@ -812,7 +810,7 @@ public sealed partial class Parser
         var name = ScanIdentifier();
         SkipWhitespaceAndComments();
 
-        CtOperatorArgsNode? args = null;
+        var args = new List<CtOperatorArgNode>();
         if (Current == '(')
         {
             Advance();
@@ -820,7 +818,7 @@ public sealed partial class Parser
 
             if (Current != ')')
             {
-                args = ParseCtOperatorArgs();
+                args = ParseCommaSeparatedList(ParseCtOperatorArg);
             }
 
             Expect(')');
@@ -829,16 +827,6 @@ public sealed partial class Parser
         var span = GetSpanFrom(start);
         var text = _source.GetText(span);
         return new CtOperatorExprNode(name, args, span, text);
-    }
-
-    private CtOperatorArgsNode ParseCtOperatorArgs()
-    {
-        var start = _position;
-        var args = ParseCommaSeparatedList(ParseCtOperatorArg);
-
-        var span = GetSpanFrom(start);
-        var text = _source.GetText(span);
-        return new CtOperatorArgsNode(args, span, text);
     }
 
     private CtOperatorArgNode ParseCtOperatorArg()

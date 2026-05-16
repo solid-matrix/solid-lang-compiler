@@ -7,13 +7,13 @@ namespace SolidLang.Parser.Nodes.Declarations;
 /// </summary>
 public sealed class EnumFieldNode : SyntaxNode
 {
-    public CtAnnotatesNode? Annotations { get; }
+    public IReadOnlyList<CtAnnotateNode> Annotations { get; }
     public string Name { get; }
     public ExprNode? Value { get; }
     private readonly TextSpan _span;
     private readonly string _fullText;
 
-    public EnumFieldNode(CtAnnotatesNode? annotations, string name, ExprNode? value, TextSpan span, string fullText)
+    public EnumFieldNode(IReadOnlyList<CtAnnotateNode> annotations, string name, ExprNode? value, TextSpan span, string fullText)
     {
         Annotations = annotations;
         Name = name;
@@ -27,8 +27,8 @@ public sealed class EnumFieldNode : SyntaxNode
 
     public override IEnumerable<SyntaxNode> GetChildren()
     {
-        if (Annotations != null)
-            yield return Annotations;
+        foreach (var a in Annotations)
+            yield return a;
         if (Value != null)
             yield return Value;
     }
